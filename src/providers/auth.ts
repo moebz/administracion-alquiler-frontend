@@ -1,15 +1,18 @@
 import type { AuthProvider } from "@refinedev/core";
 import { TOKEN_KEY } from "./constants";
 import { kyInstance } from "./data";
+import { getPriorityRole, roleHomePath } from "./roles";
 
 type LoginResponse = {
   token: string;
+  user: UserResponse;
 };
 
 type UserResponse = {
   id: number;
   name: string;
   email: string;
+  roles: string[];
 };
 
 export const authProvider: AuthProvider = {
@@ -19,11 +22,13 @@ export const authProvider: AuthProvider = {
     });
 
     if (response.ok) {
-      const { token } = await response.json<LoginResponse>();
+      const { token, user } = await response.json<LoginResponse>();
       localStorage.setItem(TOKEN_KEY, token);
+
+      const priorityRole = getPriorityRole(user.roles);
       return {
         success: true,
-        redirectTo: "/",
+        redirectTo: priorityRole ? roleHomePath(priorityRole) : "/",
       };
     }
 
@@ -87,6 +92,7 @@ export const authProvider: AuthProvider = {
       id: user.id,
       name: user.name,
       email: user.email,
+      roles: user.roles,
     };
   },
   onError: async (error) => {

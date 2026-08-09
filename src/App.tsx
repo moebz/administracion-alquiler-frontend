@@ -19,7 +19,6 @@ import "@refinedev/antd/dist/reset.css";
 import { App as AntdApp } from "antd";
 import { BrowserRouter, Route, Routes, Outlet } from "react-router";
 import routerProvider, {
-  NavigateToResource,
   CatchAllNavigate,
   UnsavedChangesNotifier,
   DocumentTitleHandler,
@@ -43,6 +42,10 @@ import { Login } from "./pages/login";
 import { Register } from "./pages/register";
 import { ForgotPassword } from "./pages/forgotPassword";
 import { authProvider } from "./providers/auth";
+import { RoleHome } from "./pages/role-home";
+import { RoleRoute } from "./components/role-route";
+import { RoleBasedIndex } from "./components/role-based-index";
+import { ROLE_PRIORITY } from "./providers/roles";
 
 function App() {
   return (
@@ -101,10 +104,18 @@ function App() {
                       </Authenticated>
                     }
                   >
-                    <Route
-                      index
-                      element={<NavigateToResource resource="blog_posts" />}
-                    />
+                    <Route index element={<RoleBasedIndex />} />
+                    {ROLE_PRIORITY.map((role) => (
+                      <Route
+                        key={role}
+                        path={`/${role}/home`}
+                        element={
+                          <RoleRoute role={role}>
+                            <RoleHome role={role} />
+                          </RoleRoute>
+                        }
+                      />
+                    ))}
                     <Route path="/blog-posts">
                       <Route index element={<BlogPostList />} />
                       <Route path="create" element={<BlogPostCreate />} />
@@ -125,7 +136,7 @@ function App() {
                         key="authenticated-outer"
                         fallback={<Outlet />}
                       >
-                        <NavigateToResource />
+                        <RoleBasedIndex />
                       </Authenticated>
                     }
                   >

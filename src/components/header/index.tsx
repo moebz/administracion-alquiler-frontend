@@ -10,6 +10,7 @@ import {
 } from "antd";
 import React, { useContext } from "react";
 import { ColorModeContext } from "../../contexts/color-mode";
+import { RoleSwitcher } from "../role-switcher";
 
 const { Text } = Typography;
 const { useToken } = theme;
@@ -51,6 +52,7 @@ export const Header: React.FC<RefineThemedLayoutHeaderProps> = ({
           onChange={() => setMode(mode === "light" ? "dark" : "light")}
           defaultChecked={mode === "dark"}
         />
+        <RoleSwitcher />
         <Space style={{ marginLeft: "8px" }} size="middle">
           {user?.name && <Text strong>{user.name}</Text>}
           {user?.avatar && <Avatar src={user?.avatar} alt={user?.name} />}
