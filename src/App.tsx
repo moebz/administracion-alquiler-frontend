@@ -39,13 +39,14 @@ import { dataProvider } from "./providers/data";
 import { ColorModeContextProvider } from "./contexts/color-mode";
 import { Header } from "./components/header";
 import { Login } from "./pages/login";
-import { Register } from "./pages/register";
 import { ForgotPassword } from "./pages/forgotPassword";
+import { UpdatePassword } from "./pages/updatePassword";
 import { authProvider } from "./providers/auth";
 import { RoleHome } from "./pages/role-home";
 import { RoleRoute } from "./components/role-route";
 import { RoleBasedIndex } from "./components/role-based-index";
 import { ROLE_PRIORITY } from "./providers/roles";
+import { UserList, UserCreate, UserEdit } from "./pages/users";
 
 function App() {
   return (
@@ -79,6 +80,15 @@ function App() {
                     show: "/categories/show/:id",
                     meta: {
                       canDelete: true,
+                    },
+                  },
+                  {
+                    name: "users",
+                    list: "/administrador/usuarios",
+                    create: "/administrador/usuarios/create",
+                    edit: "/administrador/usuarios/edit/:id",
+                    meta: {
+                      label: "Usuarios",
                     },
                   },
                 ]}
@@ -128,6 +138,32 @@ function App() {
                       <Route path="edit/:id" element={<CategoryEdit />} />
                       <Route path="show/:id" element={<CategoryShow />} />
                     </Route>
+                    <Route path="/administrador/usuarios">
+                      <Route
+                        index
+                        element={
+                          <RoleRoute role="administrador">
+                            <UserList />
+                          </RoleRoute>
+                        }
+                      />
+                      <Route
+                        path="create"
+                        element={
+                          <RoleRoute role="administrador">
+                            <UserCreate />
+                          </RoleRoute>
+                        }
+                      />
+                      <Route
+                        path="edit/:id"
+                        element={
+                          <RoleRoute role="administrador">
+                            <UserEdit />
+                          </RoleRoute>
+                        }
+                      />
+                    </Route>
                     <Route path="*" element={<ErrorComponent />} />
                   </Route>
                   <Route
@@ -141,10 +177,13 @@ function App() {
                     }
                   >
                     <Route path="/login" element={<Login />} />
-                    <Route path="/register" element={<Register />} />
                     <Route
                       path="/forgot-password"
                       element={<ForgotPassword />}
+                    />
+                    <Route
+                      path="/update-password"
+                      element={<UpdatePassword />}
                     />
                   </Route>
                 </Routes>
