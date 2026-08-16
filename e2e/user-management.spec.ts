@@ -37,6 +37,7 @@ test.describe("ABM de usuarios (admin)", () => {
     const email = uniqueEmail("create-ui");
 
     await loginViaUi(page, SEED_ADMIN_EMAIL, SEED_PASSWORD);
+    await expect(page).toHaveURL(/\/administrador\/home/);
     await page.goto("/administrador/usuarios/create");
 
     await page.getByLabel("Nombre").fill("Creado desde Playwright");
@@ -46,7 +47,7 @@ test.describe("ABM de usuarios (admin)", () => {
     await page.getByTitle("propietario", { exact: true }).click();
     await page.keyboard.press("Escape");
 
-    await page.getByRole("button", { name: "Save" }).click();
+    await page.getByRole("button", { name: "Guardar" }).click();
 
     await expect(page).toHaveURL(/\/administrador\/usuarios$/);
     const row = page.getByRole("row", { name: new RegExp(email) });
@@ -58,6 +59,7 @@ test.describe("ABM de usuarios (admin)", () => {
     const user = await createUserViaApi(admin, { email: uniqueEmail("toggle") });
 
     await loginViaUi(page, SEED_ADMIN_EMAIL, SEED_PASSWORD);
+    await expect(page).toHaveURL(/\/administrador\/home/);
     await page.goto("/administrador/usuarios");
 
     const row = page.getByRole("row", { name: new RegExp(user.email) });

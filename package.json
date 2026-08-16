@@ -12,10 +12,11 @@
     "@refinedev/kbar": "^2.0.0",
     "@refinedev/react-router": "^2.0.0",
     "@refinedev/rest": "^2.1.0",
-    "@uiw/react-md-editor": "^4.0.8",
     "antd": "^5.23.0",
+    "i18next": "^26.3.6",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-i18next": "^17.0.11",
     "react-router": "^7.0.2"
   },
   "devDependencies": {

@@ -43,15 +43,15 @@ test.describe("invitacion y recuperacion de contrasena", () => {
 
     await page.goto("/forgot-password");
     await page.getByLabel("Email").fill(user.email);
-    await page.getByRole("button", { name: "Send reset instructions" }).click();
+    await page.getByRole("button", { name: "Enviar instrucciones" }).click();
 
     const recoveryLink = await getLatestUpdatePasswordLink(user.email);
     const newPassword = "password-recuperada-456";
 
     await page.goto(recoveryLink);
-    await page.getByLabel("New Password").fill(newPassword);
-    await page.getByLabel("Confirm New Password").fill(newPassword);
-    await page.getByRole("button", { name: "Update" }).click();
+    await page.getByLabel("Nueva contraseña", { exact: true }).fill(newPassword);
+    await page.getByLabel("Confirmar nueva contraseña").fill(newPassword);
+    await page.getByRole("button", { name: "Actualizar" }).click();
     await expect(page).toHaveURL(/\/login/);
 
     await loginViaUi(page, user.email, newPassword);
@@ -62,9 +62,9 @@ test.describe("invitacion y recuperacion de contrasena", () => {
   test("un link invalido muestra un error claro", async ({ page }) => {
     await page.goto("/update-password?token=token-invalido&email=nadie@inmova.test");
 
-    await page.getByLabel("New Password").fill("cualquier-password-123");
-    await page.getByLabel("Confirm New Password").fill("cualquier-password-123");
-    await page.getByRole("button", { name: "Update" }).click();
+    await page.getByLabel("Nueva contraseña", { exact: true }).fill("cualquier-password-123");
+    await page.getByLabel("Confirmar nueva contraseña").fill("cualquier-password-123");
+    await page.getByRole("button", { name: "Actualizar" }).click();
 
     await expect(page.getByText(/link no es válido o venció/i)).toBeVisible();
   });

@@ -1,6 +1,11 @@
 import { type APIRequestContext, request } from "@playwright/test";
 
-const API_URL = process.env.PLAYWRIGHT_API_URL ?? "http://api.inmova.test:2090/api";
+// Barra final a propósito: `request.newContext({ baseURL })` resuelve paths
+// relativos ("login", "users/...") con la regla estándar de URL — sin la
+// barra, el último segmento ("api") se pisa en vez de conservarse y las
+// requests terminan pegándole a `/login` en vez de `/api/login` (404 en
+// todos los tests). Si se pisa por env var, mantener la barra final.
+const API_URL = process.env.PLAYWRIGHT_API_URL ?? "http://api.inmova.test:2090/api/";
 
 // Mismas credenciales que crea `RoleSeeder` (ver backend/database/seeders/RoleSeeder.php).
 // La password sale de DEFAULT_SEED_PASSWORD en backend/.env — si tu .env local

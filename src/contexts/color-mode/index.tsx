@@ -5,6 +5,7 @@ import {
   useState,
 } from "react";
 import { ConfigProvider, theme } from "antd";
+import esES from "antd/locale/es_ES";
 import { RefineThemes } from "@refinedev/antd";
 
 type ColorModeContextType = {
@@ -56,6 +57,10 @@ export const ColorModeContextProvider: React.FC<PropsWithChildren> = ({
           ...RefineThemes.Blue,
           algorithm: mode === "light" ? defaultAlgorithm : darkAlgorithm,
         }}
+        // Textos propios de antd que no pasan por el i18nProvider de Refine
+        // (paginación de tablas, Popconfirm "Sí"/"No", DatePicker, etc.) —
+        // ver `providers/i18n.ts` para la traducción de los textos de Refine.
+        locale={esES}
       >
         {children}
       </ConfigProvider>

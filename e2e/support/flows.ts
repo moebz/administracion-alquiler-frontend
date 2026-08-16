@@ -6,8 +6,8 @@ import { getLatestUpdatePasswordLink } from "./mail-log";
 export const loginViaUi = async (page: Page, email: string, password: string): Promise<void> => {
   await page.goto("/login");
   await page.getByLabel("Email").fill(email);
-  await page.getByLabel("Password").fill(password);
-  await page.getByRole("button", { name: "Sign in" }).click();
+  await page.getByLabel("Contraseña").fill(password);
+  await page.getByRole("button", { name: "Iniciar sesión" }).click();
 };
 
 /**
@@ -17,9 +17,9 @@ export const loginViaUi = async (page: Page, email: string, password: string): P
  */
 export const setPasswordViaUi = async (page: Page, link: string, password: string): Promise<void> => {
   await page.goto(link);
-  await page.getByLabel("New Password").fill(password);
-  await page.getByLabel("Confirm New Password").fill(password);
-  await page.getByRole("button", { name: "Update" }).click();
+  await page.getByLabel("Nueva contraseña", { exact: true }).fill(password);
+  await page.getByLabel("Confirmar nueva contraseña").fill(password);
+  await page.getByRole("button", { name: "Actualizar" }).click();
 };
 
 /**
