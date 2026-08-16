@@ -13,7 +13,13 @@
 FROM node:20.20.0-slim AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci
+# --legacy-peer-deps: @typescript-eslint/eslint-plugin y @typescript-eslint/parser
+# (v5, sin usar de verdad — el eslint.config.js real usa el paquete unificado
+# "typescript-eslint" v8) piden eslint@^8, en conflicto con eslint@^9.25.0 del
+# proyecto. "npm ci" es estricto con esto y sin el flag falla. No se sacan esas
+# 2 dependencias muertas de package.json a propósito (decisión explícita del
+# usuario, alcance acotado a este Dockerfile).
+RUN npm ci --legacy-peer-deps
 
 # ---- Stage: builder -----------------------------------------------------
 FROM node:20.20.0-slim AS builder
