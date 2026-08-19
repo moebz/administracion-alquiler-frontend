@@ -1,6 +1,7 @@
 import { EditButton, List, useTable } from "@refinedev/antd";
 import { App, Button, Space, Table, Tag } from "antd";
 import { kyInstance } from "../../providers/data";
+import { extractErrorMessage } from "../../providers/auth";
 import { getUserStatus, USER_STATUS_COLOR, USER_STATUS_LABEL, type UserRow } from "./user-status";
 
 export const UserList = () => {
@@ -15,7 +16,10 @@ export const UserList = () => {
       message.success("Invitación reenviada.");
       tableQuery.refetch();
     } else {
-      message.error("No se pudo reenviar la invitación.");
+      // El backend explica por qué falló (ej. "Este usuario ya activó su
+      // cuenta, no hay invitación para reenviar.") — se muestra ese mensaje
+      // en vez de uno genérico que lo tapa.
+      message.error(await extractErrorMessage(response, "No se pudo reenviar la invitación."));
     }
   };
 
@@ -26,7 +30,9 @@ export const UserList = () => {
       message.success(record.is_active ? "Usuario desactivado." : "Usuario activado.");
       tableQuery.refetch();
     } else {
-      message.error("No se pudo actualizar el estado.");
+      // Ídem: acá vive el mensaje de "no podés desactivarte a vos mismo" /
+      // "no podés sacarte tu propio rol de administrador".
+      message.error(await extractErrorMessage(response, "No se pudo actualizar el estado."));
     }
   };
 

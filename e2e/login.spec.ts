@@ -31,7 +31,7 @@ test.describe("login", () => {
     await loginViaUi(page, SEED_ADMIN_EMAIL, "definitivamente-no-es-la-password");
 
     await expect(page).toHaveURL(/\/login/);
-    await expect(page.getByText(/credentials are incorrect/i)).toBeVisible();
+    await expect(page.getByText(/email o la contraseña son incorrectos/i)).toBeVisible();
   });
 
   test("una cuenta que nunca activo su contrasena muestra un mensaje especifico", async ({

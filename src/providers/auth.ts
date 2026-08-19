@@ -66,7 +66,10 @@ export const authProvider: AuthProvider = {
     return {
       success: false,
       error: {
-        name: "LoginError",
+        // `name` es el título del toast de error (`useLogin` de Refine lo
+        // usa tal cual, sin pasar por el i18nProvider) — un nombre técnico
+        // en inglés quedaba pegado arriba de un mensaje en español.
+        name: "Error de inicio de sesión",
         message: await extractErrorMessage(response, "Usuario o contraseña inválidos"),
       },
     };
@@ -131,7 +134,9 @@ export const authProvider: AuthProvider = {
       return {
         success: false,
         error: {
-          name: "UpdatePasswordError",
+          // Mismo motivo que en `login`: título del toast, no pasa por el
+        // i18nProvider.
+        name: "Error al actualizar la contraseña",
           message: "Este link no es válido o venció. Pedí que te reenvíen la invitación o el mail de recuperación.",
         },
       };
@@ -155,7 +160,9 @@ export const authProvider: AuthProvider = {
     return {
       success: false,
       error: {
-        name: "UpdatePasswordError",
+        // Mismo motivo que en `login`: título del toast, no pasa por el
+        // i18nProvider.
+        name: "Error al actualizar la contraseña",
         message: await extractErrorMessage(response, "Este link no es válido o venció."),
       },
     };
