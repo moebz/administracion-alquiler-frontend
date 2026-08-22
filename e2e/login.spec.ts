@@ -38,7 +38,7 @@ test.describe("login", () => {
     page,
   }) => {
     // Se crea vía API y nunca se completa /update-password — password_set_at
-    // queda null (ver ESTADO.md, checklist de CRUD de usuarios).
+    // queda null (ver PROGRESO.md, checklist de CRUD de usuarios).
     const user = await createUserViaApi(admin, { email: uniqueEmail("never-activated") });
 
     await loginViaUi(page, user.email, "cualquier-cosa");

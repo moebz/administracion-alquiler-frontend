@@ -5,7 +5,7 @@ import { ROLE_PRIORITY } from "../../providers/roles";
 const ROLE_OPTIONS = ROLE_PRIORITY.map((role) => ({ label: role, value: role }));
 
 // Sin campo de contraseña, a propósito: el admin nunca la escribe ni la
-// conoce (ver DECISIONES.md, "Alta de usuarios") — se dispara una invitación
+// conoce (ver ARQUITECTURA.md, "Alta de usuarios") — se dispara una invitación
 // por mail al crear.
 export const UserCreate = () => {
   const { formProps, saveButtonProps } = useForm({

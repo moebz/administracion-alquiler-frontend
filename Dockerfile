@@ -3,11 +3,11 @@
 # Dockerfile de producción (build + serve estático). En desarrollo el
 # contenedor "frontend" del docker-compose.yml raíz no usa esta imagen —
 # corre "npm run dev" directo sobre node:20.20.0 con el código por bind
-# mount, ver DECISIONES.md ("Estructura de archivos").
+# mount, ver ARQUITECTURA.md ("Estructura de archivos").
 #
 # node:20.20.0-slim (imagen oficial) en las 3 stages, no refinedev/node:18
 # (imagen de terceros, versión de Node desalineada con la ya decidida para
-# este proyecto) — ver DECISIONES.md, sección Deploy/ARM.
+# este proyecto) — ver ARQUITECTURA.md, sección Deploy/ARM.
 
 # ---- Stage: deps -------------------------------------------------------
 FROM node:20.20.0-slim AS deps

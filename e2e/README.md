@@ -1,7 +1,7 @@
 # E2E (Playwright)
 
 Tests de punta a punta contra la app real (frontend + backend + DB) — no
-contra mocks. **Nunca se corrieron todavía** (ver DECISIONES.md, "Testing de
+contra mocks. **Nunca se corrieron todavía** (ver ARQUITECTURA.md, "Testing de
 frontend con Playwright"): quedaron escritos y listos, pero hace falta
 correrlos manualmente al menos una vez para confirmar que los selectores
 (labels/textos de botones, inferidos leyendo el código de `@refinedev/antd`,
@@ -16,7 +16,7 @@ no viéndolos renderizados) matchean pixel a pixel.
    pasan por invitación/recuperación de contraseña (`set-password.spec.ts`,
    parte de `login.spec.ts`) leen el link directo de
    `backend/storage/logs/laravel.log` en vez de un mail real (mismo mecanismo
-   manual que ya documenta ESTADO.md, automatizado en
+   manual que ya documenta PROGRESO.md, automatizado en
    `e2e/support/mail-log.ts`).
 3. **El `RoleSeeder` tiene que estar corrido** (`administrador@inmova.test`,
    `propietario@inmova.test`, etc.) — los tests lo asumen para loguearse como
@@ -26,7 +26,7 @@ no viéndolos renderizados) matchean pixel a pixel.
 
 | Variable | Default | Para qué |
 |---|---|---|
-| `PLAYWRIGHT_BASE_URL` | `http://app.inmova.test:25173` | Frontend (dev en Docker, ver DECISIONES.md) |
+| `PLAYWRIGHT_BASE_URL` | `http://app.inmova.test:25173` | Frontend (dev en Docker, ver ARQUITECTURA.md) |
 | `PLAYWRIGHT_API_URL` | `http://api.inmova.test:2090/api` | Backend, para el setup vía API |
 | `SEED_PASSWORD` | `password` | Password de las cuentas seedeadas — pisalo si tu `backend/.env` tiene un `DEFAULT_SEED_PASSWORD` custom (ej. `SEED_PASSWORD=$(grep DEFAULT_SEED_PASSWORD ../backend/.env \| cut -d= -f2) npm run test:e2e`) |
 | `PLAYWRIGHT_BACKEND_LOG_PATH` | `../backend/storage/logs/laravel.log` (relativo al repo) | Si el log del backend vive en otro lado (ej. corriendo en otra máquina/VM) |

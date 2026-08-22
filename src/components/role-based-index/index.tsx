@@ -9,7 +9,7 @@ type Identity = {
 /**
  * Reemplaza el `NavigateToResource` default en "/" (y al entrar autenticado a
  * `/login`): manda al home del rol de mayor jerarquía del usuario en vez de a
- * un resource fijo. Ver DECISIONES.md ("Login con multi-rol").
+ * un resource fijo. Ver ARQUITECTURA.md ("Login con multi-rol").
  */
 export const RoleBasedIndex = () => {
   const { data: identity, isLoading } = useGetIdentity<Identity>();

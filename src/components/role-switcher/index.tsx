@@ -11,7 +11,7 @@ type Identity = {
  * Selector de rol activo, visible en cualquier sección del layout autenticado.
  * Solo se muestra si el usuario tiene más de un rol — cambiar de rol es
  * navegación normal a la URL del otro rol, no hay "contexto" que mutar (ver
- * DECISIONES.md).
+ * ARQUITECTURA.md).
  */
 export const RoleSwitcher = () => {
   const { data: identity } = useGetIdentity<Identity>();

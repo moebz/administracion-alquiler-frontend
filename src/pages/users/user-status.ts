@@ -1,6 +1,6 @@
 // Tipo + lógica de estado del listado de usuarios, separados del JSX de
 // `list.tsx` a propósito: son funciones puras, fáciles de testear el día
-// que el proyecto tenga un test runner de frontend (ver DECISIONES.md).
+// que el proyecto tenga un test runner de frontend (ver ARQUITECTURA.md).
 
 export type UserRow = {
   id: number;

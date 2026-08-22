@@ -27,7 +27,7 @@ export const { dataProvider: baseDataProvider, kyInstance } = createSimpleRestDa
  * devolver un `HttpError` "limpio": `message` legible para el toast de
  * notificación, y `errors` con la forma `{campo: string[]}` que ya manda
  * Laravel — `useForm` de `@refinedev/antd` lo mapea solo a cada campo del
- * formulario (ver DECISIONES.md, "Notificaciones de create/edit ya no
+ * formulario (ver ARQUITECTURA.md, "Notificaciones de create/edit ya no
  * muestran un blob de JSON").
  */
 const cleanHttpError = (error: unknown): HttpError => {

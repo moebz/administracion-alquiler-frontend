@@ -126,7 +126,7 @@ export const authProvider: AuthProvider = {
   },
   // Paso final compartido por invitación de alta (admin) y recuperación
   // self-service (arriba) — mismo endpoint, misma pantalla /update-password.
-  // Ver DECISIONES.md, "Alta de usuarios".
+  // Ver ARQUITECTURA.md, "Alta de usuarios".
   updatePassword: async ({ password }) => {
     const { token, email } = parseUpdatePasswordParams(window.location.search);
 

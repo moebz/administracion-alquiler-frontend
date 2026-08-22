@@ -10,7 +10,7 @@ type Identity = {
 
 /**
  * Home de test por rol: valida el flujo de login/redirect/guard antes de
- * construir las pantallas reales de cada rol. Ver ESTADO.md.
+ * construir las pantallas reales de cada rol. Ver PROGRESO.md.
  */
 export const RoleHome = ({ role }: { role: Role }) => {
   const { data: identity } = useGetIdentity<Identity>();

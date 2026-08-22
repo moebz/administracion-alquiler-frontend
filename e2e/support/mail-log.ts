@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
 
-// Mismo mecanismo manual documentado en ESTADO.md ("copiar el link del log a
+// Mismo mecanismo manual documentado en PROGRESO.md ("copiar el link del log a
 // mano"), automatizado acá: con MAIL_MAILER=log el backend vuelca el mail
 // entero (con el link de /update-password) a este archivo en vez de mandarlo
 // de verdad. Si el backend corre en un lugar donde este path relativo no

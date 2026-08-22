@@ -1,5 +1,5 @@
 // Roles de negocio del proyecto y su jerarquía para el redirect post-login
-// cuando un usuario tiene más de uno. Ver DECISIONES.md ("Login con multi-rol").
+// cuando un usuario tiene más de uno. Ver ARQUITECTURA.md ("Login con multi-rol").
 export const ROLE_PRIORITY = ["administrador", "propietario", "inquilino"] as const;
 
 export type Role = (typeof ROLE_PRIORITY)[number];

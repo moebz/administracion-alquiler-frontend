@@ -5,7 +5,7 @@ export const Login = () => {
     <AuthPage
       type="login"
       // Sin link de "Sign up": el alta de usuarios es solo del admin, no
-      // existe una ruta pública de registro (ver DECISIONES.md).
+      // existe una ruta pública de registro (ver ARQUITECTURA.md).
       registerLink={false}
       formProps={{
         initialValues: { email: "demo@refine.dev", password: "demodemo" },
