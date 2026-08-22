@@ -30,6 +30,7 @@ import { RoleRoute } from "./components/role-route";
 import { RoleBasedIndex } from "./components/role-based-index";
 import { ROLE_PRIORITY } from "./providers/roles";
 import { UserList, UserCreate, UserEdit } from "./pages/users";
+import { RoleList } from "./pages/roles";
 
 function App() {
   return (
@@ -53,6 +54,13 @@ function App() {
                     edit: "/administrador/usuarios/edit/:id",
                     meta: {
                       label: "Usuarios",
+                    },
+                  },
+                  {
+                    name: "roles",
+                    list: "/administrador/roles",
+                    meta: {
+                      label: "Roles y permisos",
                     },
                   },
                 ]}
@@ -116,6 +124,14 @@ function App() {
                         }
                       />
                     </Route>
+                    <Route
+                      path="/administrador/roles"
+                      element={
+                        <RoleRoute role="administrador">
+                          <RoleList />
+                        </RoleRoute>
+                      }
+                    />
                     <Route path="*" element={<ErrorComponent />} />
                   </Route>
                   <Route
