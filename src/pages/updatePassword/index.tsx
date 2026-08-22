@@ -1,19 +1,22 @@
+import { CheckCircleFilled, CloseCircleOutlined } from "@ant-design/icons";
 import { useTranslate, useUpdatePassword } from "@refinedev/core";
-import { Button, Card, Col, Form, Input, Layout, Row, Typography } from "antd";
+import { Button, Card, Col, Form, Input, Layout, Row, Space, Typography } from "antd";
+import { PASSWORD_REQUIREMENTS, passwordMeetsComplexity } from "../../utils/password";
 
 // Pantalla compartida por invitación de alta (admin) y recuperación
 // self-service — mismo authProvider.updatePassword, mismo link de mail
 // (/update-password?token=...&email=...). Ver ARQUITECTURA.md, "Alta de usuarios".
 //
 // No usa <AuthPage type="updatePassword"> (a diferencia de login/forgot-password):
-// ese scaffold no deja agregar un `extra` bajo el campo de contraseña, y acá
-// hace falta mostrar la regla de complejidad ANTES de que la persona escriba
-// (no solo como error después de fallar) — ver App\Providers\AppServiceProvider
-// del backend para la regla real.
+// ese scaffold no deja agregar contenido extra bajo el campo de contraseña, y
+// acá hace falta mostrar en vivo qué requisitos de complejidad todavía faltan
+// mientras se escribe (no solo como error después de fallar) — ver
+// App\Providers\AppServiceProvider del backend para la regla real.
 export const UpdatePassword = () => {
   const [form] = Form.useForm();
   const translate = useTranslate();
   const { mutate: updatePassword, isPending } = useUpdatePassword();
+  const password = Form.useWatch("password", form) ?? "";
 
   return (
     <Layout style={{ background: "transparent" }}>
@@ -32,10 +35,6 @@ export const UpdatePassword = () => {
               <Form.Item
                 name="password"
                 label={translate("pages.updatePassword.fields.password", "Nueva contraseña")}
-                extra={translate(
-                  "pages.updatePassword.hints.password",
-                  "Mínimo 8 caracteres, con mayúsculas, minúsculas, números y símbolos.",
-                )}
                 rules={[
                   {
                     required: true,
@@ -44,10 +43,33 @@ export const UpdatePassword = () => {
                       "La contraseña es obligatoria",
                     ),
                   },
+                  {
+                    validator: (_, value: string | undefined) =>
+                      !value || passwordMeetsComplexity(value)
+                        ? Promise.resolve()
+                        : Promise.reject(
+                            new Error(
+                              translate(
+                                "pages.updatePassword.errors.passwordComplexity",
+                                "La contraseña no cumple con los requisitos de complejidad",
+                              ),
+                            ),
+                          ),
+                  },
                 ]}
               >
                 <Input.Password size="large" />
               </Form.Item>
+              <Space direction="vertical" size={2} style={{ display: "flex", marginBottom: 24 }}>
+                {PASSWORD_REQUIREMENTS.map((requirement) => {
+                  const met = requirement.test(password);
+                  return (
+                    <Typography.Text key={requirement.key} type={met ? "success" : "secondary"}>
+                      {met ? <CheckCircleFilled /> : <CloseCircleOutlined />} {requirement.label}
+                    </Typography.Text>
+                  );
+                })}
+              </Space>
               <Form.Item
                 name="confirmPassword"
                 label={translate(

@@ -89,16 +89,14 @@ const es = {
           password: "Nueva contraseña",
           confirmPassword: "Confirmar nueva contraseña",
         },
-        hints: {
-          // Tiene que reflejar la regla real del backend (ver
-          // App\Providers\AppServiceProvider::boot) — mostrarla antes de que
-          // la persona escriba, no solo como error después de fallar.
-          password: "Mínimo 8 caracteres, con mayúsculas, minúsculas, números y símbolos.",
-        },
         errors: {
           requiredPassword: "La contraseña es obligatoria",
           requiredConfirmPassword: "Tenés que confirmar la contraseña",
           confirmPasswordNotMatch: "Las contraseñas no coinciden",
+          // El checklist en vivo (utils/password.ts) ya muestra qué falta
+          // mientras se escribe — este mensaje es el que aparece si de
+          // todas formas se intenta enviar sin cumplir todo.
+          passwordComplexity: "La contraseña no cumple con los requisitos de complejidad",
         },
         buttons: {
           submit: "Actualizar",
