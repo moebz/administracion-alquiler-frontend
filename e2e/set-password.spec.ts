@@ -23,7 +23,7 @@ test.describe("invitacion y recuperacion de contrasena", () => {
     const { user, password } = await createAndActivateUser(
       page,
       admin,
-      "invitacion-password-123",
+      "Invitacion-Password-123",
       { email: uniqueEmail("invitation") },
     );
 
@@ -37,7 +37,7 @@ test.describe("invitacion y recuperacion de contrasena", () => {
   }) => {
     // Se activa primero con una contraseña inicial (no se toca ninguna
     // cuenta seedeada compartida, para no romper otros tests).
-    const { user } = await createAndActivateUser(page, admin, "password-inicial-123", {
+    const { user } = await createAndActivateUser(page, admin, "Password-Inicial-123", {
       email: uniqueEmail("recovery"),
     });
 
@@ -46,7 +46,7 @@ test.describe("invitacion y recuperacion de contrasena", () => {
     await page.getByRole("button", { name: "Enviar instrucciones" }).click();
 
     const recoveryLink = await getLatestUpdatePasswordLink(user.email);
-    const newPassword = "password-recuperada-456";
+    const newPassword = "Password-Recuperada-456";
 
     await page.goto(recoveryLink);
     await page.getByLabel("Nueva contraseña", { exact: true }).fill(newPassword);

@@ -47,7 +47,7 @@ test.describe("login", () => {
   });
 
   test("una cuenta desactivada muestra un mensaje especifico", async ({ page }) => {
-    const { user, password } = await createAndActivateUser(page, admin, "una-password-valida-123");
+    const { user, password } = await createAndActivateUser(page, admin, "Una-Password-Valida-123");
     await deactivateUserViaApi(admin, user.id);
 
     await loginViaUi(page, user.email, password);
