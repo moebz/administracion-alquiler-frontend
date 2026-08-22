@@ -1,8 +1,6 @@
 import { Edit, useForm } from "@refinedev/antd";
 import { Form, Input, Select } from "antd";
-import { ROLE_PRIORITY } from "../../providers/roles";
-
-const ROLE_OPTIONS = ROLE_PRIORITY.map((role) => ({ label: role, value: role }));
+import { ROLE_OPTIONS } from "../../providers/roles";
 
 // Mismo criterio que create.tsx: sin campo de contraseña.
 export const UserEdit = () => {

@@ -2,6 +2,7 @@ import { EditButton, List, useTable } from "@refinedev/antd";
 import { App, Button, Space, Table, Tag } from "antd";
 import { kyInstance } from "../../providers/data";
 import { extractErrorMessage } from "../../providers/auth";
+import { capitalize } from "../../utils/strings";
 import { getUserStatus, USER_STATUS_COLOR, USER_STATUS_LABEL, type UserRow } from "./user-status";
 
 export const UserList = () => {
@@ -44,7 +45,7 @@ export const UserList = () => {
         <Table.Column
           dataIndex="roles"
           title="Roles"
-          render={(roles: string[]) => roles.join(", ")}
+          render={(roles: string[]) => roles.map(capitalize).join(", ")}
         />
         <Table.Column
           title="Estado"

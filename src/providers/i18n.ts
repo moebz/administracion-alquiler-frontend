@@ -32,11 +32,11 @@ const es = {
     notifications: {
       success: "Listo",
       error: "Error (código {{statusCode}})",
-      createSuccess: "{{resource}} creado con éxito",
+      createSuccess: "Se creó {{resource}} con éxito",
       createError: "Hubo un error al crear {{resource}} (código {{statusCode}})",
-      deleteSuccess: "{{resource}} eliminado con éxito",
+      deleteSuccess: "Se eliminó {{resource}} con éxito",
       deleteError: "Error al eliminar {{resource}} (código {{statusCode}})",
-      editSuccess: "{{resource}} editado con éxito",
+      editSuccess: "Se editó {{resource}} con éxito",
       editError: "Error al editar {{resource}} (código {{statusCode}})",
       undoable: "Tenés {{seconds}} segundos para deshacer",
       importProgress: "Importando: {{processed}}/{{total}}",
@@ -113,6 +113,22 @@ const es = {
   },
 };
 
+// Título de cada pantalla de un resource (Edit/Create/Show/Clone): Refine
+// pide una clave por resource (`${identifier}.titles.edit`, etc.), que no
+// tiene sentido traducir una por una para cada resource nuevo. El fallback
+// en inglés que llega siempre tiene la forma "Edit {label}" con el label ya
+// en español (sale de `resource.meta.label`) — alcanza con traducir el verbo
+// del principio, reusando el mismo texto que ya usan los botones.
+const TITLE_ACTION_KEY: Record<string, string> = {
+  Create: "buttons.create",
+  Edit: "buttons.edit",
+  Show: "buttons.show",
+  Clone: "buttons.clone",
+};
+
+const translateResourceTitle = (fallback: string): string =>
+  fallback.replace(/^(Create|Edit|Show|Clone)\b/, (word) => i18n.t(TITLE_ACTION_KEY[word]) as string);
+
 i18n.use(initReactI18next).init({
   resources: { es },
   lng: "es",
@@ -129,6 +145,10 @@ export const i18nProvider: I18nProvider = {
     // dos formas para que ningún string se quede sin fallback en inglés.
     const [i18nOptions, fallback] =
       typeof options === "string" ? [undefined, options] : [options, defaultMessage];
+
+    if (/\.titles\.(create|edit|show|clone)$/.test(key) && !i18n.exists(key) && typeof fallback === "string") {
+      return translateResourceTitle(fallback);
+    }
 
     return i18n.t(key, { ...i18nOptions, defaultValue: fallback ?? key }) as string;
   },

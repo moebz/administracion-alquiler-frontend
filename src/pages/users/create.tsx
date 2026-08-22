@@ -1,8 +1,6 @@
 import { Create, useForm } from "@refinedev/antd";
 import { Form, Input, Select } from "antd";
-import { ROLE_PRIORITY } from "../../providers/roles";
-
-const ROLE_OPTIONS = ROLE_PRIORITY.map((role) => ({ label: role, value: role }));
+import { ROLE_OPTIONS } from "../../providers/roles";
 
 // Sin campo de contraseña, a propósito: el admin nunca la escribe ni la
 // conoce (ver ARQUITECTURA.md, "Alta de usuarios") — se dispara una invitación
