@@ -1,4 +1,4 @@
-import { Refine, GitHubBanner, Authenticated } from "@refinedev/core";
+import { Refine, Authenticated } from "@refinedev/core";
 import { DevtoolsPanel, DevtoolsProvider } from "@refinedev/devtools";
 import { RefineKbar, RefineKbarProvider } from "@refinedev/kbar";
 
@@ -38,7 +38,6 @@ import { RoleList } from "./pages/roles";
 function App() {
   return (
     <BrowserRouter>
-      <GitHubBanner />
       <RefineKbarProvider>
         <ColorModeContextProvider>
           <AntdApp>
@@ -71,10 +70,6 @@ function App() {
                   syncWithLocation: true,
                   warnWhenUnsavedChanges: true,
                   projectId: "jMr9IO-7L6vwi-jkJRSg",
-                  // Nombre de la app en el menú lateral y en las pantallas
-                  // de login/forgot-password (que usan este mismo default
-                  // cuando no se les pasa un `title` propio) — ver
-                  // ARQUITECTURA.md, "Branding: Inmova en vez del logo de Refine".
                   title: { text: <AppWordmark />, icon: <AppIcon /> },
                 }}
               >

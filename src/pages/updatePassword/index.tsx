@@ -4,15 +4,6 @@ import { Button, Card, Col, Form, Input, Layout, Row, Space, Typography } from "
 import { AppTitle } from "../../components/app-title";
 import { PASSWORD_REQUIREMENTS, passwordMeetsComplexity } from "../../utils/password";
 
-// Pantalla compartida por invitación de alta (admin) y recuperación
-// self-service — mismo authProvider.updatePassword, mismo link de mail
-// (/update-password?token=...&email=...). Ver ARQUITECTURA.md, "Alta de usuarios".
-//
-// No usa <AuthPage type="updatePassword"> (a diferencia de login/forgot-password):
-// ese scaffold no deja agregar contenido extra bajo el campo de contraseña, y
-// acá hace falta mostrar en vivo qué requisitos de complejidad todavía faltan
-// mientras se escribe (no solo como error después de fallar) — ver
-// App\Providers\AppServiceProvider del backend para la regla real.
 export const UpdatePassword = () => {
   const [form] = Form.useForm();
   const translate = useTranslate();

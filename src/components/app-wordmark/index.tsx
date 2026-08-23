@@ -1,17 +1,3 @@
-// Wordmark "inmova" en trazos vectoriales (Space Grotesk Bold convertida a
-// paths), extraído de public/inmova-logo.svg — mismos 6 <path> (uno por
-// letra, cada uno con su propio transform de posición) sin el ícono ni el
-// <g> de traslado que traía el archivo original, y con `currentColor` en
-// vez del negro fijo. El viewBox está recortado a mano al bounding box real
-// de las 6 letras (calculado a partir de sus coordenadas), no al canvas
-// completo de 700x200 del logo original — si no, quedaba un margen vacío a
-// la izquierda (donde iba el ícono) que corría el texto visualmente.
-//
-// Ojo: a diferencia de la versión anterior (texto plano con
-// text-transform: lowercase), esto es arte fijo — dice "inmova" siempre,
-// no sigue a APP_NAME si se cambia el nombre de la app. APP_NAME se sigue
-// usando tal cual en los usos de texto plano (asunto de mails, <title> de
-// la pestaña, etc.), solo el logo estilizado queda fijo.
 export const AppWordmark = () => (
   <svg
     viewBox="165 55 360 95"

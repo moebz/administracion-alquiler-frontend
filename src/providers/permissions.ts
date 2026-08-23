@@ -1,7 +1,3 @@
-// Tipos + lógica pura para la pantalla de "Roles y permisos"
-// (pages/roles/list.tsx), separados del JSX por el mismo motivo que
-// pages/users/user-status.ts: son funciones fáciles de testear.
-
 export type Permission = {
   name: string;
   label: string;

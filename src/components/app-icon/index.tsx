@@ -1,11 +1,3 @@
-// Ícono "apartments" (dos edificios en isométrico), adaptado de
-// public/apartments.svg (SVG Repo, licencia libre) — mismo path, sin el
-// <g> envolvente ni el color fijo del original. `currentColor` en vez de un
-// color fijo: dentro de ThemedTitle (menú lateral, login/forgot-password)
-// el ícono queda en un <div> con `color: token.colorPrimary` puesto por la
-// propia librería, así que sigue el color del tema solo. public/favicon.svg
-// usa el mismo path, recoloreado a mano (los archivos estáticos no pueden
-// leer `currentColor` en runtime).
 export const AppIcon = () => (
   <svg
     viewBox="0 0 392.408 392.408"
