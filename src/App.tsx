@@ -20,6 +20,9 @@ import routerProvider, {
 import { dataProvider } from "./providers/data";
 import { ColorModeContextProvider } from "./contexts/color-mode";
 import { Header } from "./components/header";
+import { AppIcon } from "./components/app-icon";
+import { AppWordmark } from "./components/app-wordmark";
+import { AppTitle } from "./components/app-title";
 import { Login } from "./pages/login";
 import { ForgotPassword } from "./pages/forgotPassword";
 import { UpdatePassword } from "./pages/updatePassword";
@@ -68,6 +71,11 @@ function App() {
                   syncWithLocation: true,
                   warnWhenUnsavedChanges: true,
                   projectId: "jMr9IO-7L6vwi-jkJRSg",
+                  // Nombre de la app en el menú lateral y en las pantallas
+                  // de login/forgot-password (que usan este mismo default
+                  // cuando no se les pasa un `title` propio) — ver
+                  // ARQUITECTURA.md, "Branding: Inmova en vez del logo de Refine".
+                  title: { text: <AppWordmark />, icon: <AppIcon /> },
                 }}
               >
                 <Routes>
@@ -79,7 +87,9 @@ function App() {
                       >
                         <ThemedLayout
                           Header={Header}
-                          Sider={(props) => <ThemedSider {...props} fixed />}
+                          Sider={(props) => (
+                            <ThemedSider {...props} fixed Title={AppTitle} />
+                          )}
                         >
                           <Outlet />
                         </ThemedLayout>

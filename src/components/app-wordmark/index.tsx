@@ -1,0 +1,49 @@
+// Wordmark "inmova" en trazos vectoriales (Space Grotesk Bold convertida a
+// paths), extraído de public/inmova-logo.svg — mismos 6 <path> (uno por
+// letra, cada uno con su propio transform de posición) sin el ícono ni el
+// <g> de traslado que traía el archivo original, y con `currentColor` en
+// vez del negro fijo. El viewBox está recortado a mano al bounding box real
+// de las 6 letras (calculado a partir de sus coordenadas), no al canvas
+// completo de 700x200 del logo original — si no, quedaba un margen vacío a
+// la izquierda (donde iba el ícono) que corría el texto visualmente.
+//
+// Ojo: a diferencia de la versión anterior (texto plano con
+// text-transform: lowercase), esto es arte fijo — dice "inmova" siempre,
+// no sigue a APP_NAME si se cambia el nombre de la app. APP_NAME se sigue
+// usando tal cual en los usos de texto plano (asunto de mails, <title> de
+// la pestaña, etc.), solo el logo estilizado queda fijo.
+export const AppWordmark = () => (
+  <svg
+    viewBox="165 55 360 95"
+    style={{ height: 22, width: "auto", display: "block" }}
+    role="img"
+    aria-label="Inmova"
+  >
+    <g fill="currentColor">
+      <path
+        d="M70 0V496H196V0ZM133 554Q99 554 75.5 576.0Q52 598 52 634Q52 670 75.5 692.0Q99 714 133 714Q168 714 191.0 692.0Q214 670 214 634Q214 598 191.0 576.0Q168 554 133 554Z"
+        transform="translate(172.00,138) scale(0.1,-0.1)"
+      />
+      <path
+        d="M70 0V496H194V431H212Q224 457 257.0 480.5Q290 504 357 504Q415 504 458.5 477.5Q502 451 526.0 404.5Q550 358 550 296V0H424V286Q424 342 396.5 370.0Q369 398 318 398Q260 398 228.0 359.5Q196 321 196 252V0Z"
+        transform="translate(197.60,138) scale(0.1,-0.1)"
+      />
+      <path
+        d="M70 0V496H194V442H212Q225 467 255.0 485.5Q285 504 334 504Q387 504 419.0 483.5Q451 463 468 430H486Q503 462 534.0 483.0Q565 504 622 504Q668 504 705.5 484.5Q743 465 765.5 425.5Q788 386 788 326V0H662V317Q662 358 641.0 378.5Q620 399 582 399Q539 399 515.5 371.5Q492 344 492 293V0H366V317Q366 358 345.0 378.5Q324 399 286 399Q243 399 219.5 371.5Q196 344 196 293V0Z"
+        transform="translate(258.20,138) scale(0.1,-0.1)"
+      />
+      <path
+        d="M306 -14Q232 -14 173.0 16.0Q114 46 80.0 103.0Q46 160 46 240V256Q46 336 80.0 393.0Q114 450 173.0 480.0Q232 510 306 510Q380 510 439.0 480.0Q498 450 532.0 393.0Q566 336 566 256V240Q566 160 532.0 103.0Q498 46 439.0 16.0Q380 -14 306 -14ZM306 98Q364 98 402.0 135.5Q440 173 440 243V253Q440 323 402.5 360.5Q365 398 306 398Q248 398 210.0 360.5Q172 323 172 253V243Q172 173 210.0 135.5Q248 98 306 98Z"
+        transform="translate(342.60,138) scale(0.1,-0.1)"
+      />
+      <path
+        d="M174 0 16 496H150L265 92H283L398 496H532L374 0Z"
+        transform="translate(402.80,138) scale(0.1,-0.1)"
+      />
+      <path
+        d="M224 -14Q171 -14 129.0 4.5Q87 23 62.5 58.5Q38 94 38 145Q38 196 62.5 230.5Q87 265 130.5 282.5Q174 300 230 300H366V328Q366 363 344.0 385.5Q322 408 274 408Q227 408 204.0 386.5Q181 365 174 331L58 370Q70 408 96.5 439.5Q123 471 167.5 490.5Q212 510 276 510Q374 510 431.0 461.0Q488 412 488 319V134Q488 104 516 104H556V0H472Q435 0 411.0 18.0Q387 36 387 66V67H368Q364 55 350.0 35.5Q336 16 306.0 1.0Q276 -14 224 -14ZM246 88Q299 88 332.5 117.5Q366 147 366 196V206H239Q204 206 184.0 191.0Q164 176 164 149Q164 122 185.0 105.0Q206 88 246 88Z"
+        transform="translate(456.60,138) scale(0.1,-0.1)"
+      />
+    </g>
+  </svg>
+);

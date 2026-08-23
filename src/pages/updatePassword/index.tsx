@@ -1,6 +1,7 @@
 import { CheckCircleFilled, CloseCircleOutlined } from "@ant-design/icons";
 import { useTranslate, useUpdatePassword } from "@refinedev/core";
 import { Button, Card, Col, Form, Input, Layout, Row, Space, Typography } from "antd";
+import { AppTitle } from "../../components/app-title";
 import { PASSWORD_REQUIREMENTS, passwordMeetsComplexity } from "../../utils/password";
 
 // Pantalla compartida por invitación de alta (admin) y recuperación
@@ -22,8 +23,11 @@ export const UpdatePassword = () => {
     <Layout style={{ background: "transparent" }}>
       <Row justify="center" align="middle" style={{ padding: "16px 0", minHeight: "100dvh" }}>
         <Col xs={22} sm={20} md={16} lg={8}>
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: 32 }}>
+            <AppTitle />
+          </div>
           <Card>
-            <Typography.Title level={3} style={{ textAlign: "center", marginTop: 0 }}>
+            <Typography.Title level={4} style={{ marginTop: 0 }}>
               {translate("pages.updatePassword.title", "Elegí tu nueva contraseña")}
             </Typography.Title>
             <Form

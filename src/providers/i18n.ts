@@ -1,6 +1,7 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import type { I18nProvider } from "@refinedev/core";
+import { APP_NAME } from "./constants";
 
 /**
  * Traducciones de los textos que renderiza el propio Refine/@refinedev/antd
@@ -104,8 +105,8 @@ const es = {
       },
     },
     documentTitle: {
-      default: "Inmova",
-      suffix: " | Inmova",
+      default: APP_NAME,
+      suffix: ` | ${APP_NAME}`,
     },
     // Nombre singular de cada resource — lo usan los mensajes de
     // notificación (`{{resource}} creado con éxito`, etc.) vía la clave
