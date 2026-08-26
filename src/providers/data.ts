@@ -2,6 +2,31 @@ import { createSimpleRestDataProvider } from "@refinedev/rest/simple-rest";
 import type { DataProvider, HttpError } from "@refinedev/core";
 import { API_URL, TOKEN_KEY } from "./constants";
 
+/**
+ * `getList`/`getOne` de `createSimpleRestDataProvider` no chequean
+ * `response.ok` (a diferencia de `create`/`update`/`deleteOne`, que sí) — con
+ * un 4xx devuelven el body de error tal cual como si fuera data, y eso
+ * después rompe `<Table dataSource={...}>` porque no es un array. Este hook
+ * hace que esas respuestas también rechacen la promesa, como cualquier otro
+ * método.
+ */
+const throwOnFailedGet = async (request: Request, _options: unknown, response: Response) => {
+  if (request.method !== "GET" || response.ok) {
+    return;
+  }
+
+  const body = (await response
+    .clone()
+    .json()
+    .catch(() => null)) as { message?: string } | null;
+
+  const error: HttpError = {
+    message: body?.message ?? "Ocurrió un error inesperado.",
+    statusCode: response.status,
+  };
+  throw error;
+};
+
 export const { dataProvider: baseDataProvider, kyInstance } = createSimpleRestDataProvider({
   apiURL: API_URL,
   kyOptions: {
@@ -14,6 +39,7 @@ export const { dataProvider: baseDataProvider, kyInstance } = createSimpleRestDa
           }
         },
       ],
+      afterResponse: [throwOnFailedGet],
     },
   },
 });

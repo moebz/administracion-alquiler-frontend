@@ -34,6 +34,9 @@ import { RoleBasedIndex } from "./components/role-based-index";
 import { ROLE_PRIORITY } from "./providers/roles";
 import { UserList, UserCreate, UserEdit } from "./pages/users";
 import { RoleList } from "./pages/roles";
+import { EdificioList, EdificioCreate, EdificioEdit } from "./pages/edificios";
+import { UnidadList, UnidadCreate, UnidadEdit } from "./pages/unidades";
+import { BancoList, BancoCreate, BancoEdit } from "./pages/bancos";
 
 function App() {
   return (
@@ -63,6 +66,33 @@ function App() {
                     list: "/administrador/roles",
                     meta: {
                       label: "Roles y permisos",
+                    },
+                  },
+                  {
+                    name: "edificios",
+                    list: "/administrador/edificios",
+                    create: "/administrador/edificios/create",
+                    edit: "/administrador/edificios/edit/:id",
+                    meta: {
+                      label: "Edificios",
+                    },
+                  },
+                  {
+                    name: "unidades",
+                    list: "/administrador/unidades",
+                    create: "/administrador/unidades/create",
+                    edit: "/administrador/unidades/edit/:id",
+                    meta: {
+                      label: "Unidades",
+                    },
+                  },
+                  {
+                    name: "bancos",
+                    list: "/administrador/bancos",
+                    create: "/administrador/bancos/create",
+                    edit: "/administrador/bancos/edit/:id",
+                    meta: {
+                      label: "Bancos",
                     },
                   },
                 ]}
@@ -137,6 +167,84 @@ function App() {
                         </RoleRoute>
                       }
                     />
+                    <Route path="/administrador/edificios">
+                      <Route
+                        index
+                        element={
+                          <RoleRoute role="administrador">
+                            <EdificioList />
+                          </RoleRoute>
+                        }
+                      />
+                      <Route
+                        path="create"
+                        element={
+                          <RoleRoute role="administrador">
+                            <EdificioCreate />
+                          </RoleRoute>
+                        }
+                      />
+                      <Route
+                        path="edit/:id"
+                        element={
+                          <RoleRoute role="administrador">
+                            <EdificioEdit />
+                          </RoleRoute>
+                        }
+                      />
+                    </Route>
+                    <Route path="/administrador/unidades">
+                      <Route
+                        index
+                        element={
+                          <RoleRoute role="administrador">
+                            <UnidadList />
+                          </RoleRoute>
+                        }
+                      />
+                      <Route
+                        path="create"
+                        element={
+                          <RoleRoute role="administrador">
+                            <UnidadCreate />
+                          </RoleRoute>
+                        }
+                      />
+                      <Route
+                        path="edit/:id"
+                        element={
+                          <RoleRoute role="administrador">
+                            <UnidadEdit />
+                          </RoleRoute>
+                        }
+                      />
+                    </Route>
+                    <Route path="/administrador/bancos">
+                      <Route
+                        index
+                        element={
+                          <RoleRoute role="administrador">
+                            <BancoList />
+                          </RoleRoute>
+                        }
+                      />
+                      <Route
+                        path="create"
+                        element={
+                          <RoleRoute role="administrador">
+                            <BancoCreate />
+                          </RoleRoute>
+                        }
+                      />
+                      <Route
+                        path="edit/:id"
+                        element={
+                          <RoleRoute role="administrador">
+                            <BancoEdit />
+                          </RoleRoute>
+                        }
+                      />
+                    </Route>
                     <Route path="*" element={<ErrorComponent />} />
                   </Route>
                   <Route
