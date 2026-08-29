@@ -28,7 +28,7 @@ export type UnidadRow = {
     edificio: { id: number; nombre: string };
   };
   propietario_id: number;
-  propietario: { id: number; name: string; email: string };
+  propietario: { id: number; nombre: string };
   numero: string;
   piso: string | null;
   superficie_m2: number | null;

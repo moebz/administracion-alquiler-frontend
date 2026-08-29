@@ -129,6 +129,9 @@ const es = {
     proveedores: {
       proveedores: "proveedor",
     },
+    "contratos-alquiler": {
+      "contratos-alquiler": "contrato de alquiler",
+    },
     "tipos-documento": {
       "tipos-documento": "tipo de documento",
     },

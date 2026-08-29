@@ -5,6 +5,7 @@ import {
   StarOutlined,
   BlockOutlined,
   HomeOutlined,
+  FileTextOutlined,
   ShopOutlined,
   TagsOutlined,
   DatabaseOutlined,
@@ -51,6 +52,11 @@ import { RoleList } from "./pages/roles";
 import { EdificioList, EdificioCreate, EdificioEdit } from "./pages/edificios";
 import { BloqueList, BloqueCreate, BloqueEdit } from "./pages/bloques";
 import { UnidadList, UnidadCreate, UnidadEdit } from "./pages/unidades";
+import {
+  ContratoAlquilerList,
+  ContratoAlquilerCreate,
+  ContratoAlquilerEdit,
+} from "./pages/contratos-alquiler";
 import { BancoList, BancoCreate, BancoEdit } from "./pages/bancos";
 import { ComodidadList, ComodidadCreate, ComodidadEdit } from "./pages/comodidades";
 import { ProveedorList, ProveedorCreate, ProveedorEdit } from "./pages/proveedores";
@@ -163,6 +169,26 @@ function App() {
                       label: "Unidades",
                       icon: <HomeOutlined />,
                       parent: "bloques",
+                    },
+                  },
+                  {
+                    name: "unidades-todos",
+                    list: "/administrador/unidades",
+                    meta: {
+                      label: "Unidades",
+                      icon: <HomeOutlined />,
+                      parent: "unidades",
+                    },
+                  },
+                  {
+                    name: "contratos-alquiler",
+                    list: "/administrador/contratos-alquiler",
+                    create: "/administrador/contratos-alquiler/create",
+                    edit: "/administrador/contratos-alquiler/edit/:id",
+                    meta: {
+                      label: "Contratos de alquiler",
+                      icon: <FileTextOutlined />,
+                      parent: "unidades",
                     },
                   },
                   {
@@ -407,6 +433,32 @@ function App() {
                         element={
                           <RoleRoute role="administrador">
                             <UnidadEdit />
+                          </RoleRoute>
+                        }
+                      />
+                    </Route>
+                    <Route path="/administrador/contratos-alquiler">
+                      <Route
+                        index
+                        element={
+                          <RoleRoute role="administrador">
+                            <ContratoAlquilerList />
+                          </RoleRoute>
+                        }
+                      />
+                      <Route
+                        path="create"
+                        element={
+                          <RoleRoute role="administrador">
+                            <ContratoAlquilerCreate />
+                          </RoleRoute>
+                        }
+                      />
+                      <Route
+                        path="edit/:id"
+                        element={
+                          <RoleRoute role="administrador">
+                            <ContratoAlquilerEdit />
                           </RoleRoute>
                         }
                       />

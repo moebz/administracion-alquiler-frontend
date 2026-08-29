@@ -55,7 +55,7 @@ export const UnidadList = () => {
         <Table.Column
           title="Propietario"
           dataIndex="propietario"
-          render={(propietario: UnidadRow["propietario"]) => propietario.name}
+          render={(propietario: UnidadRow["propietario"]) => propietario.nombre}
         />
         <Table.Column dataIndex="piso" title="Piso" />
         <Table.Column

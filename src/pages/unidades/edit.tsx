@@ -35,13 +35,9 @@ export const UnidadEdit = () => {
   });
 
   const { selectProps: propietarioSelectProps } = useSelect({
-    resource: "users",
-    optionLabel: "name",
+    resource: "personas",
+    optionLabel: "nombre",
     optionValue: "id",
-    filters: [
-      { field: "role", operator: "eq", value: "propietario" },
-      { field: "is_active", operator: "eq", value: true },
-    ],
     defaultValue: formProps.initialValues?.propietario_id,
   });
 
