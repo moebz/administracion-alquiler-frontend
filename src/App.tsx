@@ -1,3 +1,17 @@
+import {
+  UserOutlined,
+  SafetyCertificateOutlined,
+  ApartmentOutlined,
+  StarOutlined,
+  BlockOutlined,
+  HomeOutlined,
+  ShopOutlined,
+  TagsOutlined,
+  DatabaseOutlined,
+  BankOutlined,
+  IdcardOutlined,
+  ShareAltOutlined,
+} from "@ant-design/icons";
 import { Refine, Authenticated } from "@refinedev/core";
 import { DevtoolsPanel, DevtoolsProvider } from "@refinedev/devtools";
 import { RefineKbar, RefineKbarProvider } from "@refinedev/kbar";
@@ -69,6 +83,16 @@ function App() {
                     edit: "/administrador/usuarios/edit/:id",
                     meta: {
                       label: "Usuarios",
+                      icon: <UserOutlined />,
+                    },
+                  },
+                  {
+                    name: "users-todos",
+                    list: "/administrador/usuarios",
+                    meta: {
+                      label: "Usuarios",
+                      icon: <UserOutlined />,
+                      parent: "users",
                     },
                   },
                   {
@@ -76,6 +100,8 @@ function App() {
                     list: "/administrador/roles",
                     meta: {
                       label: "Roles y permisos",
+                      icon: <SafetyCertificateOutlined />,
+                      parent: "users",
                     },
                   },
                   {
@@ -85,6 +111,16 @@ function App() {
                     edit: "/administrador/edificios/edit/:id",
                     meta: {
                       label: "Edificios",
+                      icon: <ApartmentOutlined />,
+                    },
+                  },
+                  {
+                    name: "edificios-todos",
+                    list: "/administrador/edificios",
+                    meta: {
+                      label: "Edificios",
+                      icon: <ApartmentOutlined />,
+                      parent: "edificios",
                     },
                   },
                   {
@@ -94,6 +130,8 @@ function App() {
                     edit: "/administrador/comodidades/edit/:id",
                     meta: {
                       label: "Comodidades",
+                      icon: <StarOutlined />,
+                      parent: "edificios",
                     },
                   },
                   {
@@ -103,6 +141,17 @@ function App() {
                     edit: "/administrador/bloques/edit/:id",
                     meta: {
                       label: "Bloques",
+                      icon: <BlockOutlined />,
+                      parent: "edificios",
+                    },
+                  },
+                  {
+                    name: "bloques-todos",
+                    list: "/administrador/bloques",
+                    meta: {
+                      label: "Bloques",
+                      icon: <BlockOutlined />,
+                      parent: "bloques",
                     },
                   },
                   {
@@ -112,15 +161,8 @@ function App() {
                     edit: "/administrador/unidades/edit/:id",
                     meta: {
                       label: "Unidades",
-                    },
-                  },
-                  {
-                    name: "bancos",
-                    list: "/administrador/bancos",
-                    create: "/administrador/bancos/create",
-                    edit: "/administrador/bancos/edit/:id",
-                    meta: {
-                      label: "Bancos",
+                      icon: <HomeOutlined />,
+                      parent: "bloques",
                     },
                   },
                   {
@@ -130,6 +172,16 @@ function App() {
                     edit: "/administrador/proveedores/edit/:id",
                     meta: {
                       label: "Proveedores",
+                      icon: <ShopOutlined />,
+                    },
+                  },
+                  {
+                    name: "proveedores-todos",
+                    list: "/administrador/proveedores",
+                    meta: {
+                      label: "Proveedores",
+                      icon: <ShopOutlined />,
+                      parent: "proveedores",
                     },
                   },
                   {
@@ -139,6 +191,26 @@ function App() {
                     edit: "/administrador/rubros/edit/:id",
                     meta: {
                       label: "Rubros",
+                      icon: <TagsOutlined />,
+                      parent: "proveedores",
+                    },
+                  },
+                  {
+                    name: "catalogos",
+                    meta: {
+                      label: "Catálogos",
+                      icon: <DatabaseOutlined />,
+                    },
+                  },
+                  {
+                    name: "bancos",
+                    list: "/administrador/bancos",
+                    create: "/administrador/bancos/create",
+                    edit: "/administrador/bancos/edit/:id",
+                    meta: {
+                      label: "Bancos",
+                      icon: <BankOutlined />,
+                      parent: "catalogos",
                     },
                   },
                   {
@@ -148,6 +220,8 @@ function App() {
                     edit: "/administrador/tipos-documento/edit/:id",
                     meta: {
                       label: "Tipos de documento",
+                      icon: <IdcardOutlined />,
+                      parent: "catalogos",
                     },
                   },
                   {
@@ -157,6 +231,8 @@ function App() {
                     edit: "/administrador/tipos-relacion/edit/:id",
                     meta: {
                       label: "Tipos de relación",
+                      icon: <ShareAltOutlined />,
+                      parent: "catalogos",
                     },
                   },
                 ]}

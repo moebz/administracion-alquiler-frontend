@@ -110,10 +110,30 @@ const es = {
     },
     // Nombre singular de cada resource — lo usan los mensajes de
     // notificación (`{{resource}} creado con éxito`, etc.) vía la clave
-    // dinámica `${identifier}.${identifier}`; sin esto caerían al fallback
-    // en inglés ("user") en medio de una frase en español.
+    // dinámica `${identifier}.${identifier}`; sin esto caen al fallback de
+    // `pluralize.singular()` (inglés) en medio de una frase en español. No
+    // hace falta para los resources donde ese fallback da bien de casualidad
+    // (edificios, bloques, bancos, rubros) — pero no asumirlo en uno nuevo.
     users: {
       users: "usuario",
+    },
+    roles: {
+      roles: "rol",
+    },
+    comodidades: {
+      comodidades: "comodidad",
+    },
+    unidades: {
+      unidades: "unidad",
+    },
+    proveedores: {
+      proveedores: "proveedor",
+    },
+    "tipos-documento": {
+      "tipos-documento": "tipo de documento",
+    },
+    "tipos-relacion": {
+      "tipos-relacion": "tipo de relación",
     },
   },
 };
