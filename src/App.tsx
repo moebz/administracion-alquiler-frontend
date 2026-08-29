@@ -39,6 +39,14 @@ import { BloqueList, BloqueCreate, BloqueEdit } from "./pages/bloques";
 import { UnidadList, UnidadCreate, UnidadEdit } from "./pages/unidades";
 import { BancoList, BancoCreate, BancoEdit } from "./pages/bancos";
 import { ComodidadList, ComodidadCreate, ComodidadEdit } from "./pages/comodidades";
+import { ProveedorList, ProveedorCreate, ProveedorEdit } from "./pages/proveedores";
+import { RubroList, RubroCreate, RubroEdit } from "./pages/rubros";
+import {
+  TipoDocumentoList,
+  TipoDocumentoCreate,
+  TipoDocumentoEdit,
+} from "./pages/tipos-documento";
+import { TipoRelacionList, TipoRelacionCreate, TipoRelacionEdit } from "./pages/tipos-relacion";
 
 function App() {
   return (
@@ -113,6 +121,42 @@ function App() {
                     edit: "/administrador/bancos/edit/:id",
                     meta: {
                       label: "Bancos",
+                    },
+                  },
+                  {
+                    name: "proveedores",
+                    list: "/administrador/proveedores",
+                    create: "/administrador/proveedores/create",
+                    edit: "/administrador/proveedores/edit/:id",
+                    meta: {
+                      label: "Proveedores",
+                    },
+                  },
+                  {
+                    name: "rubros",
+                    list: "/administrador/rubros",
+                    create: "/administrador/rubros/create",
+                    edit: "/administrador/rubros/edit/:id",
+                    meta: {
+                      label: "Rubros",
+                    },
+                  },
+                  {
+                    name: "tipos-documento",
+                    list: "/administrador/tipos-documento",
+                    create: "/administrador/tipos-documento/create",
+                    edit: "/administrador/tipos-documento/edit/:id",
+                    meta: {
+                      label: "Tipos de documento",
+                    },
+                  },
+                  {
+                    name: "tipos-relacion",
+                    list: "/administrador/tipos-relacion",
+                    create: "/administrador/tipos-relacion/create",
+                    edit: "/administrador/tipos-relacion/edit/:id",
+                    meta: {
+                      label: "Tipos de relación",
                     },
                   },
                 ]}
@@ -313,6 +357,110 @@ function App() {
                         element={
                           <RoleRoute role="administrador">
                             <BancoEdit />
+                          </RoleRoute>
+                        }
+                      />
+                    </Route>
+                    <Route path="/administrador/proveedores">
+                      <Route
+                        index
+                        element={
+                          <RoleRoute role="administrador">
+                            <ProveedorList />
+                          </RoleRoute>
+                        }
+                      />
+                      <Route
+                        path="create"
+                        element={
+                          <RoleRoute role="administrador">
+                            <ProveedorCreate />
+                          </RoleRoute>
+                        }
+                      />
+                      <Route
+                        path="edit/:id"
+                        element={
+                          <RoleRoute role="administrador">
+                            <ProveedorEdit />
+                          </RoleRoute>
+                        }
+                      />
+                    </Route>
+                    <Route path="/administrador/rubros">
+                      <Route
+                        index
+                        element={
+                          <RoleRoute role="administrador">
+                            <RubroList />
+                          </RoleRoute>
+                        }
+                      />
+                      <Route
+                        path="create"
+                        element={
+                          <RoleRoute role="administrador">
+                            <RubroCreate />
+                          </RoleRoute>
+                        }
+                      />
+                      <Route
+                        path="edit/:id"
+                        element={
+                          <RoleRoute role="administrador">
+                            <RubroEdit />
+                          </RoleRoute>
+                        }
+                      />
+                    </Route>
+                    <Route path="/administrador/tipos-documento">
+                      <Route
+                        index
+                        element={
+                          <RoleRoute role="administrador">
+                            <TipoDocumentoList />
+                          </RoleRoute>
+                        }
+                      />
+                      <Route
+                        path="create"
+                        element={
+                          <RoleRoute role="administrador">
+                            <TipoDocumentoCreate />
+                          </RoleRoute>
+                        }
+                      />
+                      <Route
+                        path="edit/:id"
+                        element={
+                          <RoleRoute role="administrador">
+                            <TipoDocumentoEdit />
+                          </RoleRoute>
+                        }
+                      />
+                    </Route>
+                    <Route path="/administrador/tipos-relacion">
+                      <Route
+                        index
+                        element={
+                          <RoleRoute role="administrador">
+                            <TipoRelacionList />
+                          </RoleRoute>
+                        }
+                      />
+                      <Route
+                        path="create"
+                        element={
+                          <RoleRoute role="administrador">
+                            <TipoRelacionCreate />
+                          </RoleRoute>
+                        }
+                      />
+                      <Route
+                        path="edit/:id"
+                        element={
+                          <RoleRoute role="administrador">
+                            <TipoRelacionEdit />
                           </RoleRoute>
                         }
                       />
