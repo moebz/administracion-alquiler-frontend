@@ -35,8 +35,10 @@ import { ROLE_PRIORITY } from "./providers/roles";
 import { UserList, UserCreate, UserEdit } from "./pages/users";
 import { RoleList } from "./pages/roles";
 import { EdificioList, EdificioCreate, EdificioEdit } from "./pages/edificios";
+import { BloqueList, BloqueCreate, BloqueEdit } from "./pages/bloques";
 import { UnidadList, UnidadCreate, UnidadEdit } from "./pages/unidades";
 import { BancoList, BancoCreate, BancoEdit } from "./pages/bancos";
+import { ComodidadList, ComodidadCreate, ComodidadEdit } from "./pages/comodidades";
 
 function App() {
   return (
@@ -75,6 +77,24 @@ function App() {
                     edit: "/administrador/edificios/edit/:id",
                     meta: {
                       label: "Edificios",
+                    },
+                  },
+                  {
+                    name: "comodidades",
+                    list: "/administrador/comodidades",
+                    create: "/administrador/comodidades/create",
+                    edit: "/administrador/comodidades/edit/:id",
+                    meta: {
+                      label: "Comodidades",
+                    },
+                  },
+                  {
+                    name: "bloques",
+                    list: "/administrador/bloques",
+                    create: "/administrador/bloques/create",
+                    edit: "/administrador/bloques/edit/:id",
+                    meta: {
+                      label: "Bloques",
                     },
                   },
                   {
@@ -189,6 +209,58 @@ function App() {
                         element={
                           <RoleRoute role="administrador">
                             <EdificioEdit />
+                          </RoleRoute>
+                        }
+                      />
+                    </Route>
+                    <Route path="/administrador/comodidades">
+                      <Route
+                        index
+                        element={
+                          <RoleRoute role="administrador">
+                            <ComodidadList />
+                          </RoleRoute>
+                        }
+                      />
+                      <Route
+                        path="create"
+                        element={
+                          <RoleRoute role="administrador">
+                            <ComodidadCreate />
+                          </RoleRoute>
+                        }
+                      />
+                      <Route
+                        path="edit/:id"
+                        element={
+                          <RoleRoute role="administrador">
+                            <ComodidadEdit />
+                          </RoleRoute>
+                        }
+                      />
+                    </Route>
+                    <Route path="/administrador/bloques">
+                      <Route
+                        index
+                        element={
+                          <RoleRoute role="administrador">
+                            <BloqueList />
+                          </RoleRoute>
+                        }
+                      />
+                      <Route
+                        path="create"
+                        element={
+                          <RoleRoute role="administrador">
+                            <BloqueCreate />
+                          </RoleRoute>
+                        }
+                      />
+                      <Route
+                        path="edit/:id"
+                        element={
+                          <RoleRoute role="administrador">
+                            <BloqueEdit />
                           </RoleRoute>
                         }
                       />

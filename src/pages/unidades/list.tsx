@@ -15,8 +15,10 @@ export const UnidadList = () => {
   const { message } = App.useApp();
 
   const showInactive = !filters.some((filter) => "field" in filter && filter.field === "is_active");
-  const toggleShowInactive = (checked: boolean) =>
-    setFilters(checked ? [] : [{ field: "is_active", operator: "eq", value: true }], "replace");
+  const toggleShowInactive = (checked: boolean) => {
+    const otrosFiltros = filters.filter((filter) => !("field" in filter) || filter.field !== "is_active");
+    setFilters(checked ? otrosFiltros : [...otrosFiltros, { field: "is_active", operator: "eq", value: true }], "replace");
+  };
 
   const toggleActive = async (record: UnidadRow) => {
     const action = record.is_active ? "deactivate" : "activate";
@@ -42,8 +44,13 @@ export const UnidadList = () => {
         <Table.Column dataIndex="numero" title="Número" />
         <Table.Column
           title="Edificio"
-          dataIndex="edificio"
-          render={(edificio: UnidadRow["edificio"]) => edificio.nombre}
+          dataIndex="bloque"
+          render={(bloque: UnidadRow["bloque"]) => bloque.edificio.nombre}
+        />
+        <Table.Column
+          title="Bloque"
+          dataIndex="bloque"
+          render={(bloque: UnidadRow["bloque"]) => bloque.nombre}
         />
         <Table.Column
           title="Propietario"

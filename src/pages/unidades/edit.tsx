@@ -1,16 +1,37 @@
 import { Edit, useForm, useSelect } from "@refinedev/antd";
 import { Form, Input, InputNumber, Select } from "antd";
+import { useEffect, useState } from "react";
 import { UNIDAD_ESTADO_OPTIONS } from "./types";
 
 export const UnidadEdit = () => {
   const { formProps, saveButtonProps, formLoading } = useForm({});
+  const [edificioId, setEdificioId] = useState<number>();
+
+  const bloqueInicial = formProps.initialValues?.bloque;
+  useEffect(() => {
+    if (bloqueInicial?.edificio_id && edificioId === undefined) {
+      setEdificioId(bloqueInicial.edificio_id);
+    }
+  }, [bloqueInicial, edificioId]);
 
   const { selectProps: edificioSelectProps } = useSelect({
     resource: "edificios",
     optionLabel: "nombre",
     optionValue: "id",
     filters: [{ field: "is_active", operator: "eq", value: true }],
-    defaultValue: formProps.initialValues?.edificio_id,
+    defaultValue: bloqueInicial?.edificio_id,
+  });
+
+  const { selectProps: bloqueSelectProps } = useSelect({
+    resource: "bloques",
+    optionLabel: "nombre",
+    optionValue: "id",
+    filters: [
+      { field: "is_active", operator: "eq", value: true },
+      { field: "edificio_id", operator: "eq", value: edificioId },
+    ],
+    queryOptions: { enabled: !!edificioId },
+    defaultValue: formProps.initialValues?.bloque_id,
   });
 
   const { selectProps: propietarioSelectProps } = useSelect({
@@ -27,8 +48,23 @@ export const UnidadEdit = () => {
   return (
     <Edit saveButtonProps={saveButtonProps} isLoading={formLoading} title="Editar unidad">
       <Form {...formProps} layout="vertical">
-        <Form.Item label="Edificio" name="edificio_id" rules={[{ required: true }]}>
-          <Select {...edificioSelectProps} />
+        <Form.Item label="Edificio" required>
+          <Select
+            options={edificioSelectProps.options}
+            onSearch={edificioSelectProps.onSearch}
+            filterOption={edificioSelectProps.filterOption}
+            showSearch
+            value={edificioId}
+            onChange={(value) => setEdificioId(value)}
+            placeholder="Elegí un edificio para ver sus bloques"
+          />
+        </Form.Item>
+        <Form.Item label="Bloque" name="bloque_id" rules={[{ required: true }]}>
+          <Select
+            {...bloqueSelectProps}
+            disabled={!edificioId}
+            placeholder={edificioId ? "Elegí un bloque" : "Elegí un edificio primero"}
+          />
         </Form.Item>
         <Form.Item label="Propietario" name="propietario_id" rules={[{ required: true }]}>
           <Select {...propietarioSelectProps} />

@@ -20,8 +20,13 @@ export const UNIDAD_ESTADO_COLOR: Record<UnidadEstado, string> = {
 
 export type UnidadRow = {
   id: number;
-  edificio_id: number;
-  edificio: { id: number; nombre: string };
+  bloque_id: number;
+  bloque: {
+    id: number;
+    nombre: string;
+    edificio_id: number;
+    edificio: { id: number; nombre: string };
+  };
   propietario_id: number;
   propietario: { id: number; name: string; email: string };
   numero: string;
