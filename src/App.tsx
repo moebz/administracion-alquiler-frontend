@@ -47,7 +47,8 @@ import { RoleHome } from "./pages/role-home";
 import { RoleRoute } from "./components/role-route";
 import { RoleBasedIndex } from "./components/role-based-index";
 import { ROLE_PRIORITY } from "./providers/roles";
-import { UserList, UserCreate, UserEdit } from "./pages/users";
+import { UserCreate, UserEdit } from "./pages/users";
+import { PersonaList, PersonaCreate, PersonaEdit } from "./pages/personas";
 import { RoleList } from "./pages/roles";
 import { EdificioList, EdificioCreate, EdificioEdit } from "./pages/edificios";
 import { BloqueList, BloqueCreate, BloqueEdit } from "./pages/bloques";
@@ -83,22 +84,22 @@ function App() {
                 i18nProvider={i18nProvider}
                 resources={[
                   {
-                    name: "users",
-                    list: "/administrador/usuarios",
-                    create: "/administrador/usuarios/create",
-                    edit: "/administrador/usuarios/edit/:id",
+                    name: "personas",
+                    list: "/administrador/personas",
+                    create: "/administrador/personas/create",
+                    edit: "/administrador/personas/edit/:id",
                     meta: {
-                      label: "Usuarios",
+                      label: "Personas",
                       icon: <UserOutlined />,
                     },
                   },
                   {
-                    name: "users-todos",
-                    list: "/administrador/usuarios",
+                    name: "personas-todos",
+                    list: "/administrador/personas",
                     meta: {
-                      label: "Usuarios",
+                      label: "Personas",
                       icon: <UserOutlined />,
-                      parent: "users",
+                      parent: "personas",
                     },
                   },
                   {
@@ -107,7 +108,24 @@ function App() {
                     meta: {
                       label: "Roles y permisos",
                       icon: <SafetyCertificateOutlined />,
-                      parent: "users",
+                      parent: "personas",
+                    },
+                  },
+                  {
+                    // Sin `list`: el listado de usuarios se fusionó con el
+                    // de Personas. `list` apunta ahí para que el botón
+                    // "volver" de Create/Edit y el redirect post-guardado
+                    // caigan en /administrador/personas, y `meta.hide` para
+                    // que la cuenta no aparezca sola en el menú.
+                    name: "users",
+                    list: "/administrador/personas",
+                    create: "/administrador/usuarios/create",
+                    edit: "/administrador/usuarios/edit/:id",
+                    meta: {
+                      label: "Usuarios",
+                      icon: <UserOutlined />,
+                      hide: true,
+                      parent: "personas",
                     },
                   },
                   {
@@ -172,15 +190,6 @@ function App() {
                     },
                   },
                   {
-                    name: "unidades-todos",
-                    list: "/administrador/unidades",
-                    meta: {
-                      label: "Unidades",
-                      icon: <HomeOutlined />,
-                      parent: "unidades",
-                    },
-                  },
-                  {
                     name: "contratos-alquiler",
                     list: "/administrador/contratos-alquiler",
                     create: "/administrador/contratos-alquiler/create",
@@ -188,7 +197,7 @@ function App() {
                     meta: {
                       label: "Contratos de alquiler",
                       icon: <FileTextOutlined />,
-                      parent: "unidades",
+                      parent: "bloques",
                     },
                   },
                   {
@@ -299,15 +308,33 @@ function App() {
                         }
                       />
                     ))}
-                    <Route path="/administrador/usuarios">
+                    <Route path="/administrador/personas">
                       <Route
                         index
                         element={
                           <RoleRoute role="administrador">
-                            <UserList />
+                            <PersonaList />
                           </RoleRoute>
                         }
                       />
+                      <Route
+                        path="create"
+                        element={
+                          <RoleRoute role="administrador">
+                            <PersonaCreate />
+                          </RoleRoute>
+                        }
+                      />
+                      <Route
+                        path="edit/:id"
+                        element={
+                          <RoleRoute role="administrador">
+                            <PersonaEdit />
+                          </RoleRoute>
+                        }
+                      />
+                    </Route>
+                    <Route path="/administrador/usuarios">
                       <Route
                         path="create"
                         element={

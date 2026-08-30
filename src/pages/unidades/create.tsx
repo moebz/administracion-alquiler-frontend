@@ -25,10 +25,14 @@ export const UnidadCreate = () => {
     queryOptions: { enabled: !!edificioId },
   });
 
-  const { selectProps: propietarioSelectProps } = useSelect({
+  const { selectProps: propietarioSelectProps } = useSelect<{ id: number; nombre: string; documento: string }>({
     resource: "personas",
-    optionLabel: "nombre",
+    optionLabel: (persona) => `${persona.nombre} (${persona.documento})`,
     optionValue: "id",
+    filters: [
+      { field: "roles", operator: "in", value: ["propietario"] },
+      { field: "is_active", operator: "eq", value: true },
+    ],
   });
 
   return (
@@ -52,7 +56,12 @@ export const UnidadCreate = () => {
             placeholder={edificioId ? "Elegí un bloque" : "Elegí un edificio primero"}
           />
         </Form.Item>
-        <Form.Item label="Propietario" name="propietario_id" rules={[{ required: true }]}>
+        <Form.Item
+          label="Propietario"
+          name="propietario_id"
+          rules={[{ required: true }]}
+          extra="Solo se listan personas con el rol de propietario."
+        >
           <Select {...propietarioSelectProps} />
         </Form.Item>
         <Form.Item label="Número" name="numero" rules={[{ required: true }]}>

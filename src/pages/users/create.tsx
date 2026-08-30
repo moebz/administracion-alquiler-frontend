@@ -1,12 +1,26 @@
+import { useEffect } from "react";
 import { Create, useForm } from "@refinedev/antd";
-import { Form, Input, Select } from "antd";
-import { PersonaBuscador } from "../../components/persona-buscador";
-import { ROLE_OPTIONS } from "../../providers/roles";
+import { useOne } from "@refinedev/core";
+import { Descriptions, Form, Input } from "antd";
+import { useSearchParams } from "react-router";
+
+type Persona = {
+  id: number;
+  nombre: string;
+  documento: string;
+  tipo_documento: { nombre: string };
+  email_contacto: string | null;
+};
 
 // Sin campo de contraseña, a propósito: el admin nunca la escribe ni la
 // conoce (ver ARQUITECTURA.md, "Alta de usuarios") — se dispara una invitación
-// por mail al crear.
+// por mail al crear. Tampoco hay buscador/roles acá: la persona ya existe
+// (viene de "Crear cuenta" en el listado de Personas) y sus roles se editan
+// desde ahí, no desde acá.
 export const UserCreate = () => {
+  const [searchParams] = useSearchParams();
+  const personaId = searchParams.get("persona_id");
+
   const { formProps, saveButtonProps, form } = useForm({
     successNotification: () => ({
       type: "success",
@@ -15,19 +29,37 @@ export const UserCreate = () => {
     }),
   });
 
+  const { result: persona } = useOne<Persona>({
+    resource: "personas",
+    id: personaId ?? undefined,
+    queryOptions: { enabled: !!personaId },
+  });
+
+  useEffect(() => {
+    if (persona) {
+      form.setFieldsValue({
+        persona_id: persona.id,
+        email: persona.email_contacto ?? undefined,
+      });
+    }
+  }, [persona, form]);
+
   return (
-    <Create saveButtonProps={saveButtonProps}>
+    <Create saveButtonProps={saveButtonProps} title="Crear usuario">
+      {persona && (
+        <Descriptions column={1} size="small" style={{ marginBottom: 24 }} bordered>
+          <Descriptions.Item label="Persona">{persona.nombre}</Descriptions.Item>
+          <Descriptions.Item label="Documento">
+            {persona.tipo_documento.nombre} {persona.documento}
+          </Descriptions.Item>
+        </Descriptions>
+      )}
       <Form {...formProps} layout="vertical">
-        <PersonaBuscador
-          form={form}
-          conflictField="ya_es_usuario"
-          conflictMessage="Esta persona ya es usuario."
-        />
-        <Form.Item label="Email" name="email" rules={[{ required: true, type: "email" }]}>
+        <Form.Item name="persona_id" hidden rules={[{ required: true }]}>
           <Input />
         </Form.Item>
-        <Form.Item label="Roles" name="roles" rules={[{ required: true }]}>
-          <Select mode="multiple" options={ROLE_OPTIONS} />
+        <Form.Item label="Email" name="email" rules={[{ required: true, type: "email" }]}>
+          <Input />
         </Form.Item>
       </Form>
     </Create>

@@ -34,10 +34,17 @@ export const UnidadEdit = () => {
     defaultValue: formProps.initialValues?.bloque_id,
   });
 
-  const { selectProps: propietarioSelectProps } = useSelect({
+  const { selectProps: propietarioSelectProps } = useSelect<{ id: number; nombre: string; documento: string }>({
     resource: "personas",
-    optionLabel: "nombre",
+    optionLabel: (persona) => `${persona.nombre} (${persona.documento})`,
     optionValue: "id",
+    filters: [
+      { field: "roles", operator: "in", value: ["propietario"] },
+      { field: "is_active", operator: "eq", value: true },
+    ],
+    // Sin esto, si esta persona ya no entra en el filtro (rol sacado
+    // después, persona desactivada) el select aparece EN BLANCO aunque el
+    // dato esté (mismo gotcha documentado en CLAUDE.md).
     defaultValue: formProps.initialValues?.propietario_id,
   });
 
@@ -62,7 +69,12 @@ export const UnidadEdit = () => {
             placeholder={edificioId ? "Elegí un bloque" : "Elegí un edificio primero"}
           />
         </Form.Item>
-        <Form.Item label="Propietario" name="propietario_id" rules={[{ required: true }]}>
+        <Form.Item
+          label="Propietario"
+          name="propietario_id"
+          rules={[{ required: true }]}
+          extra="Solo se listan personas con el rol de propietario."
+        >
           <Select {...propietarioSelectProps} />
         </Form.Item>
         <Form.Item label="Número" name="numero" rules={[{ required: true }]}>

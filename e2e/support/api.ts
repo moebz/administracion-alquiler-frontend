@@ -15,11 +15,18 @@ export const SEED_ADMIN_EMAIL = "administrador@inmova.test";
 export const SEED_PROPIETARIO_EMAIL = "propietario@inmova.test";
 export const SEED_PASSWORD = process.env.SEED_PASSWORD ?? "password";
 
+export type ApiPersona = {
+  id: number;
+  nombre: string;
+  documento: string;
+  roles: string[];
+  is_active: boolean;
+};
+
 export type ApiUser = {
   id: number;
   name: string;
   email: string;
-  roles: string[];
   is_active: boolean;
   password_set_at: string | null;
 };
@@ -27,6 +34,9 @@ export type ApiUser = {
 /** Email único por corrida — evita colisiones entre tests o entre corridas sucesivas. */
 export const uniqueEmail = (label: string): string =>
   `e2e-${label}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@inmova.test`;
+
+/** Documento único por corrida — mismo criterio que uniqueEmail. */
+export const uniqueDocumento = (): string => `${Date.now()}${Math.floor(Math.random() * 1000)}`;
 
 const newApiContext = (extraHTTPHeaders?: Record<string, string>) =>
   request.newContext({ baseURL: API_URL, extraHTTPHeaders });
@@ -58,15 +68,66 @@ export const loginAsAdminApi = async (): Promise<APIRequestContext> => {
   return newApiContext({ Authorization: `Bearer ${token}` });
 };
 
+let cachedTipoDocumentoId: number | undefined;
+
+/** Cualquier tipo de documento seedeado sirve — se cachea para no repetir el GET. */
+const getTipoDocumentoId = async (admin: APIRequestContext): Promise<number> => {
+  if (cachedTipoDocumentoId !== undefined) {
+    return cachedTipoDocumentoId;
+  }
+
+  const response = await admin.get("tipos-documento");
+  if (!response.ok()) {
+    throw new Error(`No se pudo listar tipos de documento vía API: ${response.status()}`);
+  }
+
+  const tipos = (await response.json()) as { id: number }[];
+  if (tipos.length === 0) {
+    throw new Error("No hay tipos de documento seedeados — ¿corriste TipoDocumentoSeeder?");
+  }
+
+  cachedTipoDocumentoId = tipos[0].id;
+  return cachedTipoDocumentoId;
+};
+
+/**
+ * Crea una persona vía API, con rol asignado (el ABM de personas es donde
+ * ahora vive el rol — ver CHECKLIST-roles-personas.md).
+ */
+export const createPersonaViaApi = async (
+  admin: APIRequestContext,
+  overrides: Partial<{ nombre: string; documento: string; roles: string[] }> = {},
+): Promise<ApiPersona> => {
+  const response = await admin.post("personas", {
+    data: {
+      tipo_documento_id: await getTipoDocumentoId(admin),
+      documento: overrides.documento ?? uniqueDocumento(),
+      nombre: overrides.nombre ?? "Persona E2E",
+      roles: overrides.roles ?? ["propietario"],
+    },
+  });
+
+  if (!response.ok()) {
+    throw new Error(`No se pudo crear la persona de prueba vía API: ${response.status()}`);
+  }
+
+  return (await response.json()) as ApiPersona;
+};
+
+/**
+ * Crea una persona y le da de alta la cuenta (dos pasos, mismo contrato que
+ * la UI: la cuenta es un sub-recurso de una persona ya existente).
+ */
 export const createUserViaApi = async (
   admin: APIRequestContext,
   overrides: Partial<{ name: string; email: string; roles: string[] }> = {},
 ): Promise<ApiUser> => {
+  const persona = await createPersonaViaApi(admin, { nombre: overrides.name, roles: overrides.roles });
+
   const response = await admin.post("users", {
     data: {
-      name: overrides.name ?? "Usuario E2E",
+      persona_id: persona.id,
       email: overrides.email ?? uniqueEmail("user"),
-      roles: overrides.roles ?? ["propietario"],
     },
   });
 

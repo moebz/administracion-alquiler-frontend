@@ -10,20 +10,19 @@ type PersonaBuscadorResultado = {
   nombre?: string;
   telefono?: string | null;
   email_contacto?: string | null;
-  ya_es_usuario?: boolean;
   ya_es_proveedor?: boolean;
 };
 
 type Props = {
   form: FormInstance;
-  conflictField: "ya_es_usuario" | "ya_es_proveedor";
-  conflictMessage: string;
 };
 
-// Buscador de deduplicación: antes de crear un Usuario/Proveedor se busca si
-// la persona ya existe por tipo + número de documento, para reusarla en vez
-// de duplicarla (ver ARQUITECTURA.md, "Personas, usuarios y proveedores").
-export const PersonaBuscador = ({ form, conflictField, conflictMessage }: Props) => {
+// Buscador de deduplicación: antes de crear un Proveedor se busca si la
+// persona ya existe por tipo + número de documento, para reusarla en vez de
+// duplicarla (ver ARQUITECTURA.md, "Personas, usuarios y proveedores"). El
+// alta de Usuario ya no pasa por acá: usa una persona ya elegida desde el
+// listado de Personas (ver pages/users/create.tsx).
+export const PersonaBuscador = ({ form }: Props) => {
   const { selectProps: tipoDocumentoSelectProps } = useSelect({
     resource: "tipos-documento",
     optionLabel: "nombre",
@@ -68,7 +67,7 @@ export const PersonaBuscador = ({ form, conflictField, conflictMessage }: Props)
   };
 
   const personaEncontrada = resultado?.found ?? false;
-  const hayConflicto = personaEncontrada && resultado?.[conflictField];
+  const hayConflicto = personaEncontrada && resultado?.ya_es_proveedor;
 
   return (
     <>
@@ -103,7 +102,7 @@ export const PersonaBuscador = ({ form, conflictField, conflictMessage }: Props)
           style={{ marginBottom: 16 }}
           message={
             hayConflicto
-              ? conflictMessage
+              ? "Esta persona ya es proveedor."
               : personaEncontrada
                 ? "Persona encontrada, se reutilizarán sus datos."
                 : "No se encontró ninguna persona con ese documento, se creará una nueva."

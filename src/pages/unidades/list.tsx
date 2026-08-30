@@ -1,5 +1,6 @@
 import { EditButton, List, useTable } from "@refinedev/antd";
 import { App, Button, Space, Table, Tag } from "antd";
+import { useNavigate } from "react-router";
 import { ActiveFilterSwitch } from "../../components/active-filter-switch";
 import { kyInstance } from "../../providers/data";
 import { extractErrorMessage } from "../../providers/auth";
@@ -13,6 +14,7 @@ export const UnidadList = () => {
     },
   });
   const { message } = App.useApp();
+  const navigate = useNavigate();
 
   const showInactive = !filters.some((filter) => "field" in filter && filter.field === "is_active");
   const toggleShowInactive = (checked: boolean) => {
@@ -76,6 +78,12 @@ export const UnidadList = () => {
           render={(_, record: UnidadRow) => (
             <Space>
               <EditButton hideText size="small" recordItemId={record.id} />
+              <Button
+                size="small"
+                onClick={() => navigate(`/administrador/contratos-alquiler/create?unidad_id=${record.id}`)}
+              >
+                Crear contrato
+              </Button>
               <Button size="small" danger={record.is_active} onClick={() => toggleActive(record)}>
                 {record.is_active ? "Desactivar" : "Activar"}
               </Button>
