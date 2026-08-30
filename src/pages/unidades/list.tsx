@@ -1,5 +1,6 @@
 import { EditButton, List, useTable } from "@refinedev/antd";
 import { App, Button, Space, Table, Tag } from "antd";
+import dayjs from "dayjs";
 import { useNavigate } from "react-router";
 import { ActiveFilterSwitch } from "../../components/active-filter-switch";
 import { kyInstance } from "../../providers/data";
@@ -63,8 +64,12 @@ export const UnidadList = () => {
         <Table.Column
           title="Estado"
           dataIndex="estado"
-          render={(estado: UnidadRow["estado"]) => (
-            <Tag color={UNIDAD_ESTADO_COLOR[estado]}>{UNIDAD_ESTADO_LABEL[estado]}</Tag>
+          render={(estado: UnidadRow["estado"], record: UnidadRow) => (
+            <Tag color={UNIDAD_ESTADO_COLOR[estado]}>
+              {estado === "OCUPADA" && record.contrato_vigente_fecha_fin
+                ? `Ocupada hasta ${dayjs(record.contrato_vigente_fecha_fin).format("DD/MM/YYYY")}`
+                : UNIDAD_ESTADO_LABEL[estado]}
+            </Tag>
           )}
         />
         <Table.Column

@@ -12,6 +12,7 @@ import {
   BankOutlined,
   IdcardOutlined,
   ShareAltOutlined,
+  EnvironmentOutlined,
 } from "@ant-design/icons";
 import { Refine, Authenticated } from "@refinedev/core";
 import { DevtoolsPanel, DevtoolsProvider } from "@refinedev/devtools";
@@ -68,6 +69,7 @@ import {
   TipoDocumentoEdit,
 } from "./pages/tipos-documento";
 import { TipoRelacionList, TipoRelacionCreate, TipoRelacionEdit } from "./pages/tipos-relacion";
+import { CiudadList, CiudadCreate, CiudadEdit } from "./pages/ciudades";
 
 function App() {
   return (
@@ -267,6 +269,17 @@ function App() {
                     meta: {
                       label: "Tipos de relación",
                       icon: <ShareAltOutlined />,
+                      parent: "catalogos",
+                    },
+                  },
+                  {
+                    name: "ciudades",
+                    list: "/administrador/ciudades",
+                    create: "/administrador/ciudades/create",
+                    edit: "/administrador/ciudades/edit/:id",
+                    meta: {
+                      label: "Ciudades",
+                      icon: <EnvironmentOutlined />,
                       parent: "catalogos",
                     },
                   },
@@ -616,6 +629,32 @@ function App() {
                         element={
                           <RoleRoute role="administrador">
                             <TipoRelacionEdit />
+                          </RoleRoute>
+                        }
+                      />
+                    </Route>
+                    <Route path="/administrador/ciudades">
+                      <Route
+                        index
+                        element={
+                          <RoleRoute role="administrador">
+                            <CiudadList />
+                          </RoleRoute>
+                        }
+                      />
+                      <Route
+                        path="create"
+                        element={
+                          <RoleRoute role="administrador">
+                            <CiudadCreate />
+                          </RoleRoute>
+                        }
+                      />
+                      <Route
+                        path="edit/:id"
+                        element={
+                          <RoleRoute role="administrador">
+                            <CiudadEdit />
                           </RoleRoute>
                         }
                       />

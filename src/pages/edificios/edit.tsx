@@ -4,6 +4,14 @@ import { Form, Input, InputNumber, Select, Switch } from "antd";
 export const EdificioEdit = () => {
   const { formProps, saveButtonProps, formLoading } = useForm({});
 
+  const { selectProps: ciudadSelectProps } = useSelect({
+    resource: "ciudades",
+    optionLabel: "nombre",
+    optionValue: "id",
+    filters: [{ field: "is_active", operator: "eq", value: true }],
+    defaultValue: formProps.initialValues?.ciudad_id,
+  });
+
   const { selectProps: comodidadesSelectProps } = useSelect({
     resource: "comodidades",
     optionLabel: "nombre",
@@ -26,6 +34,9 @@ export const EdificioEdit = () => {
       >
         <Form.Item label="Nombre" name="nombre" rules={[{ required: true }]}>
           <Input />
+        </Form.Item>
+        <Form.Item label="Ciudad" name="ciudad_id" rules={[{ required: true }]}>
+          <Select {...ciudadSelectProps} />
         </Form.Item>
         <Form.Item label="Dirección" name="direccion" rules={[{ required: true }]}>
           <Input />

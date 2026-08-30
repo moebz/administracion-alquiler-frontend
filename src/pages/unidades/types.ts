@@ -34,6 +34,7 @@ export type UnidadRow = {
   superficie_m2: number | null;
   cantidad_ambientes: number | null;
   estado: UnidadEstado;
+  contrato_vigente_fecha_fin: string | null;
   is_active: boolean;
   fecha_baja: string | null;
 };

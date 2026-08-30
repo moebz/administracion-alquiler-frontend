@@ -1,6 +1,8 @@
 export type EdificioRow = {
   id: number;
   nombre: string;
+  ciudad_id: number;
+  ciudad: { id: number; nombre: string };
   direccion: string;
   superficie_m2: number | null;
   tiene_estacionamiento: boolean;

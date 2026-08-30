@@ -1,19 +1,52 @@
+import { useState } from "react";
 import { EditButton, List, useTable } from "@refinedev/antd";
-import { App, Button, Popconfirm, Space, Table, Tag } from "antd";
+import type { CrudFilter } from "@refinedev/core";
+import { App, Button, DatePicker, Popconfirm, Select, Space, Table, Tag } from "antd";
+import type { Dayjs } from "dayjs";
 import { kyInstance } from "../../providers/data";
 import { extractErrorMessage } from "../../providers/auth";
 import {
   CONTRATO_ALQUILER_ESTADO_COLOR,
   CONTRATO_ALQUILER_ESTADO_LABEL,
+  CONTRATO_ALQUILER_ESTADO_OPTIONS,
+  type ContratoAlquilerEstado,
   type ContratoAlquilerRow,
 } from "./types";
 
+const { RangePicker } = DatePicker;
+
+type RangoFechas = [Dayjs, Dayjs] | null;
+
 export const ContratoAlquilerList = () => {
-  const { tableProps, tableQuery } = useTable<ContratoAlquilerRow>({
+  const { tableProps, tableQuery, setFilters } = useTable<ContratoAlquilerRow>({
     syncWithLocation: true,
     sorters: { initial: [{ field: "fecha_inicio", order: "desc" }] },
   });
   const { message } = App.useApp();
+
+  const [estado, setEstado] = useState<ContratoAlquilerEstado>();
+  const [venceEntre, setVenceEntre] = useState<RangoFechas>(null);
+
+  // Mismo criterio que pages/personas/list.tsx: recalcula el array completo de filtros en cada cambio.
+  const applyFilters = (overrides: { estado?: ContratoAlquilerEstado; venceEntre?: RangoFechas }) => {
+    const nextEstado = "estado" in overrides ? overrides.estado : estado;
+    const nextVenceEntre = "venceEntre" in overrides ? overrides.venceEntre : venceEntre;
+
+    setEstado(nextEstado);
+    setVenceEntre(nextVenceEntre ?? null);
+
+    const filters: CrudFilter[] = [];
+    if (nextEstado) {
+      filters.push({ field: "estado", operator: "eq", value: nextEstado });
+    }
+    if (nextVenceEntre?.[0]) {
+      filters.push({ field: "fecha_fin", operator: "gte", value: nextVenceEntre[0].format("YYYY-MM-DD") });
+    }
+    if (nextVenceEntre?.[1]) {
+      filters.push({ field: "fecha_fin", operator: "lte", value: nextVenceEntre[1].format("YYYY-MM-DD") });
+    }
+    setFilters(filters, "replace");
+  };
 
   const rescindir = async (record: ContratoAlquilerRow) => {
     const response = await kyInstance.patch(`contratos-alquiler/${record.id}/rescindir`);
@@ -27,6 +60,27 @@ export const ContratoAlquilerList = () => {
 
   return (
     <List>
+      <Space wrap style={{ marginBottom: 16 }}>
+        <Space>
+          <span>Estado</span>
+          <Select
+            style={{ minWidth: 160 }}
+            allowClear
+            placeholder="Todos"
+            options={CONTRATO_ALQUILER_ESTADO_OPTIONS}
+            value={estado}
+            onChange={(value) => applyFilters({ estado: value })}
+          />
+        </Space>
+        <Space>
+          <span>Vence entre</span>
+          <RangePicker
+            format="DD/MM/YYYY"
+            value={venceEntre}
+            onChange={(value) => applyFilters({ venceEntre: value as RangoFechas })}
+          />
+        </Space>
+      </Space>
       <Table {...tableProps} rowKey="id">
         <Table.Column
           title="Unidad"
@@ -61,8 +115,10 @@ export const ContratoAlquilerList = () => {
         <Table.Column
           title="Estado"
           dataIndex="estado"
-          render={(estado: ContratoAlquilerRow["estado"]) => (
-            <Tag color={CONTRATO_ALQUILER_ESTADO_COLOR[estado]}>{CONTRATO_ALQUILER_ESTADO_LABEL[estado]}</Tag>
+          render={(estadoContrato: ContratoAlquilerRow["estado"]) => (
+            <Tag color={CONTRATO_ALQUILER_ESTADO_COLOR[estadoContrato]}>
+              {CONTRATO_ALQUILER_ESTADO_LABEL[estadoContrato]}
+            </Tag>
           )}
         />
         <Table.Column

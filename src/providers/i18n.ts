@@ -138,6 +138,9 @@ const es = {
     "tipos-relacion": {
       "tipos-relacion": "tipo de relación",
     },
+    ciudades: {
+      ciudades: "ciudad",
+    },
   },
 };
 
