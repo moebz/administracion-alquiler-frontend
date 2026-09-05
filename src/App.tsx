@@ -161,6 +161,11 @@ function App() {
                     },
                   },
                   {
+                    // Sin entrada propia en el menú: solo se accede
+                    // navegando Edificios -> "Ver bloques" (pages/edificios/list.tsx).
+                    // meta.hide en el padre también saca del menú a sus
+                    // hijos (unidades, que lo tiene como parent) — ver
+                    // useMenu en @refinedev/core. Las rutas siguen activas.
                     name: "bloques",
                     list: "/administrador/bloques",
                     create: "/administrador/bloques/create",
@@ -169,18 +174,12 @@ function App() {
                       label: "Bloques",
                       icon: <BlockOutlined />,
                       parent: "edificios",
+                      hide: true,
                     },
                   },
                   {
-                    name: "bloques-todos",
-                    list: "/administrador/bloques",
-                    meta: {
-                      label: "Bloques",
-                      icon: <BlockOutlined />,
-                      parent: "bloques",
-                    },
-                  },
-                  {
+                    // Sin entrada propia en el menú: solo se accede
+                    // navegando Edificios/Bloques -> "Ver unidades".
                     name: "unidades",
                     list: "/administrador/unidades",
                     create: "/administrador/unidades/create",
@@ -189,9 +188,13 @@ function App() {
                       label: "Unidades",
                       icon: <HomeOutlined />,
                       parent: "bloques",
+                      hide: true,
                     },
                   },
                   {
+                    // A diferencia de bloques/unidades, este sí queda visible en
+                    // el menú (bajo Edificios): tiene filtros propios (estado,
+                    // vencimiento) útiles para consultarlo sin pasar por una unidad.
                     name: "contratos-alquiler",
                     list: "/administrador/contratos-alquiler",
                     create: "/administrador/contratos-alquiler/create",
@@ -199,7 +202,7 @@ function App() {
                     meta: {
                       label: "Contratos de alquiler",
                       icon: <FileTextOutlined />,
-                      parent: "bloques",
+                      parent: "edificios",
                     },
                   },
                   {
@@ -270,6 +273,8 @@ function App() {
                       label: "Tipos de relación",
                       icon: <ShareAltOutlined />,
                       parent: "catalogos",
+                      // Oculto del menú: no está en uso todavía en el front.
+                      hide: true,
                     },
                   },
                   {

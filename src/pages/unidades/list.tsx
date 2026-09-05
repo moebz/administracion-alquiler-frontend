@@ -83,12 +83,14 @@ export const UnidadList = () => {
           render={(_, record: UnidadRow) => (
             <Space>
               <EditButton hideText size="small" recordItemId={record.id} />
-              <Button
-                size="small"
-                onClick={() => navigate(`/administrador/contratos-alquiler/create?unidad_id=${record.id}`)}
-              >
-                Crear contrato
-              </Button>
+              {!record.contrato_vigente_fecha_fin && (
+                <Button
+                  size="small"
+                  onClick={() => navigate(`/administrador/contratos-alquiler/create?unidad_id=${record.id}`)}
+                >
+                  Crear contrato
+                </Button>
+              )}
               <Button size="small" danger={record.is_active} onClick={() => toggleActive(record)}>
                 {record.is_active ? "Desactivar" : "Activar"}
               </Button>

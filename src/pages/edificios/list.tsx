@@ -1,4 +1,5 @@
 import { EditButton, List, useTable } from "@refinedev/antd";
+import { useGo } from "@refinedev/core";
 import { App, Button, Space, Table, Tag } from "antd";
 import { ActiveFilterSwitch } from "../../components/active-filter-switch";
 import { kyInstance } from "../../providers/data";
@@ -13,6 +14,29 @@ export const EdificioList = () => {
     },
   });
   const { message } = App.useApp();
+  const go = useGo();
+
+  const verBloques = (record: EdificioRow) =>
+    go({
+      to: { resource: "bloques", action: "list" },
+      query: {
+        filters: [
+          { field: "edificio_id", operator: "eq", value: record.id },
+          { field: "is_active", operator: "eq", value: true },
+        ],
+      },
+    });
+
+  const verUnidades = (record: EdificioRow) =>
+    go({
+      to: { resource: "unidades", action: "list" },
+      query: {
+        filters: [
+          { field: "edificio_id", operator: "eq", value: record.id },
+          { field: "is_active", operator: "eq", value: true },
+        ],
+      },
+    });
 
   const showInactive = !filters.some((filter) => "field" in filter && filter.field === "is_active");
   const toggleShowInactive = (checked: boolean) =>
@@ -61,6 +85,12 @@ export const EdificioList = () => {
           dataIndex="actions"
           render={(_, record: EdificioRow) => (
             <Space>
+              <Button size="small" onClick={() => verBloques(record)}>
+                Ver bloques
+              </Button>
+              <Button size="small" onClick={() => verUnidades(record)}>
+                Ver unidades
+              </Button>
               <EditButton hideText size="small" recordItemId={record.id} />
               <Button size="small" danger={record.is_active} onClick={() => toggleActive(record)}>
                 {record.is_active ? "Desactivar" : "Activar"}

@@ -63,9 +63,6 @@ export const ContratoAlquilerEdit = () => {
         <Form.Item label="Monto de alquiler mensual" name="monto_alquiler" rules={[{ required: true }]}>
           <InputNumber min={0} style={{ width: "100%" }} />
         </Form.Item>
-        <Form.Item label="Depósito" name="deposito">
-          <InputNumber min={0} style={{ width: "100%" }} />
-        </Form.Item>
         <Form.Item label="Día de vencimiento" name="dia_vencimiento" rules={[{ required: true }]}>
           <InputNumber min={1} max={31} style={{ width: "100%" }} />
         </Form.Item>

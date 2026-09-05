@@ -59,7 +59,13 @@ export const ContratoAlquilerList = () => {
   };
 
   return (
-    <List>
+    // Sin botón "Crear": los contratos se crean desde la unidad
+    // (pages/unidades/list.tsx, "Crear contrato"), que precarga unidad_id.
+    // title explícito: sin esto, Refine arma el título default con
+    // pluralize.plural() sobre el label del resource, y esa librería no
+    // entiende español — "Contratos de alquiler" queda "Contratos de
+    // alquilers" (mismo motivo por el que Create/Edit ya lo hacen).
+    <List headerButtons={() => null} title="Contratos de alquiler">
       <Space wrap style={{ marginBottom: 16 }}>
         <Space>
           <span>Estado</span>
