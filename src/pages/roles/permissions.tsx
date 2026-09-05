@@ -1,14 +1,19 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { List } from "@refinedev/antd";
-import { App, Button, Checkbox, Table, Tag } from "antd";
+import { App, Button, Checkbox, Input, Select, Space, Table, Tag } from "antd";
+import { SearchOutlined } from "@ant-design/icons";
 import { kyInstance } from "../../providers/data";
 import { extractErrorMessage } from "../../providers/auth";
 import {
-  buildPermissionRows,
+  buildMatrixRows,
+  filterPermissions,
+  filterRoles,
+  groupCheckboxState,
   isPermissionLocked,
   permissionsChanged,
+  toggleGroupPermissions,
+  type MatrixRow,
   type Permission,
-  type PermissionRow,
   type RoleWithPermissions,
 } from "../../providers/permissions";
 import { capitalize } from "../../utils/strings";
@@ -18,6 +23,8 @@ export const RolePermissions = () => {
   const [roles, setRoles] = useState<RoleWithPermissions[]>([]);
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [selected, setSelected] = useState<Record<number, string[]>>({});
+  const [search, setSearch] = useState("");
+  const [visibleRoleIds, setVisibleRoleIds] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -47,6 +54,13 @@ export const RolePermissions = () => {
     });
   };
 
+  const toggleGroup = (role: RoleWithPermissions, togglableNames: string[], checked: boolean) => {
+    setSelected((prev) => ({
+      ...prev,
+      [role.id]: toggleGroupPermissions(prev[role.id] ?? [], togglableNames, checked),
+    }));
+  };
+
   const changedRoles = roles.filter((role) =>
     permissionsChanged(selected[role.id] ?? [], role.permissions),
   );
@@ -71,20 +85,35 @@ export const RolePermissions = () => {
     setSaving(false);
   };
 
-  const rows = buildPermissionRows(permissions);
+  const rows = useMemo(
+    () => buildMatrixRows(filterPermissions(permissions, search)),
+    [permissions, search],
+  );
+
+  const visibleRoles = useMemo(
+    () => filterRoles(roles, visibleRoleIds),
+    [roles, visibleRoleIds],
+  );
 
   const columns = [
     {
       title: "Recurso",
-      dataIndex: "group",
-      onCell: (record: PermissionRow) => ({ rowSpan: record.isFirstInGroup ? record.groupSize : 0 }),
-      render: capitalize,
+      key: "group",
+      onCell: (record: MatrixRow) => ({ rowSpan: record.isFirstInGroup ? record.groupSize : 0 }),
+      render: (_: unknown, record: MatrixRow) =>
+        record.rowType === "group" ? <b>{record.groupLabel}</b> : null,
     },
     {
       title: "Permiso",
-      dataIndex: "label",
+      key: "label",
+      render: (_: unknown, record: MatrixRow) =>
+        record.rowType === "group" ? (
+          <span style={{ color: "rgba(0, 0, 0, 0.45)", fontStyle: "italic" }}>Todos</span>
+        ) : (
+          record.label
+        ),
     },
-    ...roles.map((role) => ({
+    ...visibleRoles.map((role) => ({
       title: (
         <>
           {capitalize(role.name)} {role.es_sistema && <Tag color="blue">Sistema</Tag>}
@@ -92,7 +121,18 @@ export const RolePermissions = () => {
       ),
       key: role.id,
       align: "center" as const,
-      render: (_: unknown, record: PermissionRow) => {
+      render: (_: unknown, record: MatrixRow) => {
+        if (record.rowType === "group") {
+          const state = groupCheckboxState(role, record.names, selected[role.id] ?? []);
+          return (
+            <Checkbox
+              checked={state.checked}
+              indeterminate={state.indeterminate}
+              disabled={state.disabled}
+              onChange={(e) => toggleGroup(role, state.togglableNames, e.target.checked)}
+            />
+          );
+        }
         const locked = isPermissionLocked(role, record.name);
         return (
           <Checkbox
@@ -114,13 +154,36 @@ export const RolePermissions = () => {
         </Button>
       }
     >
+      <Space style={{ marginBottom: 16 }}>
+        <Input
+          allowClear
+          placeholder="Buscar recurso o permiso..."
+          prefix={<SearchOutlined />}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          style={{ width: 320 }}
+        />
+        <Select
+          mode="multiple"
+          allowClear
+          showSearch
+          optionFilterProp="label"
+          placeholder="Mostrar todos los roles"
+          value={visibleRoleIds}
+          onChange={setVisibleRoleIds}
+          options={roles.map((role) => ({ value: role.id, label: capitalize(role.name) }))}
+          style={{ minWidth: 260 }}
+        />
+      </Space>
       <Table
-        rowKey="name"
+        rowKey="key"
         loading={loading}
         dataSource={rows}
         columns={columns}
         pagination={false}
         bordered
+        sticky
+        scroll={{ x: "max-content" }}
       />
     </List>
   );
