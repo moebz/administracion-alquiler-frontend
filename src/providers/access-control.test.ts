@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { requiredPermission } from "./access-control";
+import { canAccessResource, requiredPermission } from "./access-control";
 
 describe("requiredPermission", () => {
   it("resuelve list/show a .ver, create a .crear, edit a .editar y delete a .gestionar_estado", () => {
@@ -34,5 +34,23 @@ describe("requiredPermission", () => {
 
   it("devuelve null para resources desconocidos", () => {
     expect(requiredPermission("algo-inventado", "list")).toBeNull();
+  });
+});
+
+describe("canAccessResource", () => {
+  it("deniega un recurso con su permiso propio si falta el acceso a la seccion", () => {
+    expect(canAccessResource(["edificios.ver"], "edificios", "list")).toBe(false);
+  });
+
+  it("permite un recurso con su permiso propio y el acceso a la seccion", () => {
+    expect(canAccessResource(["edificios.ver", "acceso.administrador"], "edificios", "list")).toBe(true);
+  });
+
+  it("deniega si tiene el acceso a la seccion pero no el permiso del recurso", () => {
+    expect(canAccessResource(["acceso.administrador"], "edificios", "list")).toBe(false);
+  });
+
+  it("permite sin chequear nada para resources agrupadores", () => {
+    expect(canAccessResource([], "catalogos", "list")).toBe(true);
   });
 });

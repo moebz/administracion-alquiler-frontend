@@ -1,5 +1,6 @@
 import type { AccessControlProvider } from "@refinedev/core";
 import { authProvider } from "./auth";
+import { accessPermission } from "./sections";
 
 // Resources cuyo nombre de permiso no matchea 1 a 1 con el nombre del resource.
 const RESOURCE_ALIAS: Record<string, string> = {
@@ -63,14 +64,25 @@ export const requiredPermission = (resource: string, action: string): string | n
   return (RESOURCE_ALIAS[resource] ?? resource) + suffix;
 };
 
+// Todo resource con permiso propio vive hoy bajo /administrador — sin esto,
+// un rol con ej. `edificios.ver` pero sin `acceso.administrador` ve el link
+// en el menú aunque SectionRoute lo rebote al entrar.
+export const canAccessResource = (permissions: string[], resource: string, action: string): boolean => {
+  const permission = requiredPermission(resource, action);
+  if (!permission) {
+    return true;
+  }
+
+  return permissions.includes(permission) && permissions.includes(accessPermission("administrador"));
+};
+
 export const accessControlProvider: AccessControlProvider = {
   can: async ({ resource, action }) => {
-    const permission = resource ? requiredPermission(resource, action) : null;
-    if (!permission) {
+    if (!resource) {
       return { can: true };
     }
 
     const permissions = ((await authProvider.getPermissions?.()) ?? []) as string[];
-    return { can: permissions.includes(permission) };
+    return { can: canAccessResource(permissions, resource, action) };
   },
 };

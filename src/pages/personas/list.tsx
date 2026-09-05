@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { EditButton, List, useSelect, useTable } from "@refinedev/antd";
 import type { CrudFilter } from "@refinedev/core";
-import { App, Button, Popconfirm, Select, Space, Table, Tag } from "antd";
+import { App, Button, Input, Popconfirm, Select, Space, Table, Tag } from "antd";
 import { useNavigate } from "react-router";
 import { ActiveFilterSwitch } from "../../components/active-filter-switch";
 import { kyInstance } from "../../providers/data";
@@ -26,28 +26,35 @@ export const PersonaList = () => {
     optionValue: "name",
   });
 
+  const [search, setSearch] = useState<string>();
   const [roles, setRoles] = useState<string[]>([]);
   const [estadoCuenta, setEstadoCuenta] = useState<string>();
   const [showInactive, setShowInactive] = useState(false);
 
-  // Los 3 filtros del header son independientes entre sí — se recalcula el
+  // Los filtros del header son independientes entre sí — se recalcula el
   // array completo de CrudFilters cada vez que cambia uno, en vez de tratar
   // de mergear contra `filters` de useTable (más simple que parsear su forma
   // de vuelta).
   const applyFilters = (overrides: {
+    search?: string;
     roles?: string[];
     estadoCuenta?: string;
     showInactive?: boolean;
   }) => {
+    const nextSearch = "search" in overrides ? overrides.search : search;
     const nextRoles = overrides.roles ?? roles;
     const nextEstadoCuenta = "estadoCuenta" in overrides ? overrides.estadoCuenta : estadoCuenta;
     const nextShowInactive = overrides.showInactive ?? showInactive;
 
+    setSearch(nextSearch);
     setRoles(nextRoles);
     setEstadoCuenta(nextEstadoCuenta);
     setShowInactive(nextShowInactive);
 
     const filters: CrudFilter[] = [];
+    if (nextSearch) {
+      filters.push({ field: "search", operator: "eq", value: nextSearch });
+    }
     if (nextRoles.length > 0) {
       filters.push({ field: "roles", operator: "in", value: nextRoles });
     }
@@ -98,6 +105,13 @@ export const PersonaList = () => {
   return (
     <List title="Personas">
       <Space wrap style={{ marginBottom: 16 }}>
+        <Input.Search
+          allowClear
+          placeholder="Buscar por nombre, documento o email"
+          style={{ width: 280 }}
+          defaultValue={search}
+          onSearch={(value) => applyFilters({ search: value || undefined })}
+        />
         <Space>
           <span>Roles</span>
           <Select
