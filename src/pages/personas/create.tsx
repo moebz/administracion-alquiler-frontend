@@ -1,6 +1,6 @@
 import { Create, useForm, useSelect } from "@refinedev/antd";
 import { Form, Input, Select } from "antd";
-import { ROLE_OPTIONS } from "../../providers/roles";
+import { capitalize } from "../../utils/strings";
 
 export const PersonaCreate = () => {
   const { formProps, saveButtonProps } = useForm({});
@@ -9,6 +9,12 @@ export const PersonaCreate = () => {
     resource: "tipos-documento",
     optionLabel: "nombre",
     optionValue: "id",
+  });
+
+  const { selectProps: roleSelectProps } = useSelect({
+    resource: "roles",
+    optionLabel: (role: { name: string }) => capitalize(role.name),
+    optionValue: "name",
   });
 
   return (
@@ -30,7 +36,7 @@ export const PersonaCreate = () => {
           <Input />
         </Form.Item>
         <Form.Item label="Roles" name="roles">
-          <Select mode="multiple" options={ROLE_OPTIONS} placeholder="Sin rol" />
+          <Select mode="multiple" {...roleSelectProps} placeholder="Sin rol" />
         </Form.Item>
       </Form>
     </Create>

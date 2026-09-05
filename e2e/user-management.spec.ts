@@ -27,8 +27,7 @@ test.describe("ABM de personas y cuentas (admin)", () => {
 
     await page.goto("/administrador/personas");
 
-    // RoleRoute lo manda a su propio home, nunca le muestra la pantalla
-    // (ver ARQUITECTURA.md, "Rol activo: se resuelve por la URL").
+    // SectionRoute lo manda a su propia sección, nunca le muestra la pantalla.
     await expect(page).toHaveURL(/\/propietario\/home/);
   });
 

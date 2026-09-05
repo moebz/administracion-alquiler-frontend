@@ -1,12 +1,11 @@
 import { useState } from "react";
-import { EditButton, List, useTable } from "@refinedev/antd";
+import { EditButton, List, useSelect, useTable } from "@refinedev/antd";
 import type { CrudFilter } from "@refinedev/core";
 import { App, Button, Popconfirm, Select, Space, Table, Tag } from "antd";
 import { useNavigate } from "react-router";
 import { ActiveFilterSwitch } from "../../components/active-filter-switch";
 import { kyInstance } from "../../providers/data";
 import { extractErrorMessage } from "../../providers/auth";
-import { ROLE_OPTIONS } from "../../providers/roles";
 import { capitalize } from "../../utils/strings";
 import { ACCOUNT_STATUS_COLOR, ACCOUNT_STATUS_LABEL, ACCOUNT_STATUS_OPTIONS, getAccountStatus } from "./account-status";
 import type { PersonaRow } from "./types";
@@ -20,6 +19,12 @@ export const PersonaList = () => {
   });
   const { message } = App.useApp();
   const navigate = useNavigate();
+
+  const { selectProps: roleSelectProps } = useSelect({
+    resource: "roles",
+    optionLabel: (role: { name: string }) => capitalize(role.name),
+    optionValue: "name",
+  });
 
   const [roles, setRoles] = useState<string[]>([]);
   const [estadoCuenta, setEstadoCuenta] = useState<string>();
@@ -100,7 +105,7 @@ export const PersonaList = () => {
             style={{ minWidth: 220 }}
             allowClear
             placeholder="Todos"
-            options={ROLE_OPTIONS}
+            options={roleSelectProps.options}
             value={roles}
             onChange={(value) => applyFilters({ roles: value })}
           />

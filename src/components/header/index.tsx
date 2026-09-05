@@ -2,7 +2,7 @@ import type { RefineThemedLayoutHeaderProps } from "@refinedev/antd";
 import { useGetIdentity } from "@refinedev/core";
 import { Avatar, Layout as AntdLayout, Space, theme, Typography } from "antd";
 import React from "react";
-import { RoleSwitcher } from "../role-switcher";
+import { SectionSwitcher } from "../section-switcher";
 
 const { Text } = Typography;
 const { useToken } = theme;
@@ -37,7 +37,7 @@ export const Header: React.FC<RefineThemedLayoutHeaderProps> = ({
   return (
     <AntdLayout.Header style={headerStyles}>
       <Space>
-        <RoleSwitcher />
+        <SectionSwitcher />
         <Space style={{ marginLeft: "8px" }} size="middle">
           {user?.name && <Text strong>{user.name}</Text>}
           {user?.avatar && <Avatar src={user?.avatar} alt={user?.name} />}

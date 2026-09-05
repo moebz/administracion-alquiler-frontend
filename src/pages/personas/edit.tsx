@@ -1,6 +1,6 @@
 import { Edit, useForm, useSelect } from "@refinedev/antd";
 import { Form, Input, Select } from "antd";
-import { ROLE_OPTIONS } from "../../providers/roles";
+import { capitalize } from "../../utils/strings";
 
 // A diferencia de UserEdit/ProveedorEdit, acá documento/tipo de documento SÍ
 // se editan: este es el ABM canónico de la persona.
@@ -12,6 +12,13 @@ export const PersonaEdit = () => {
     optionLabel: "nombre",
     optionValue: "id",
     defaultValue: formProps.initialValues?.tipo_documento_id,
+  });
+
+  const { selectProps: roleSelectProps } = useSelect({
+    resource: "roles",
+    optionLabel: (role: { name: string }) => capitalize(role.name),
+    optionValue: "name",
+    defaultValue: formProps.initialValues?.roles,
   });
 
   return (
@@ -36,7 +43,7 @@ export const PersonaEdit = () => {
             (no [{id, nombre}]) — a diferencia de comodidades/rubros, acá no
             hace falta mapear initialValues a ids (ver CLAUDE.md). */}
         <Form.Item label="Roles" name="roles">
-          <Select mode="multiple" options={ROLE_OPTIONS} placeholder="Sin rol" />
+          <Select mode="multiple" {...roleSelectProps} placeholder="Sin rol" />
         </Form.Item>
       </Form>
     </Edit>

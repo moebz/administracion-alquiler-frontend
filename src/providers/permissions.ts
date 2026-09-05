@@ -8,7 +8,14 @@ export type RoleWithPermissions = {
   id: number;
   name: string;
   permissions: string[];
+  es_sistema: boolean;
+  permisos_obligatorios: string[];
+  personas_count: number;
 };
+
+/** Un permiso obligatorio de un rol de sistema no se puede destildar en la matriz. */
+export const isPermissionLocked = (role: RoleWithPermissions, permission: string): boolean =>
+  role.permisos_obligatorios.includes(permission);
 
 export type PermissionRow = Permission & {
   isFirstInGroup: boolean;

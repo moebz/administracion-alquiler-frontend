@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { buildPermissionRows, groupPermissions, permissionsChanged, type Permission } from "./permissions";
+import {
+  buildPermissionRows,
+  groupPermissions,
+  isPermissionLocked,
+  permissionsChanged,
+  type Permission,
+  type RoleWithPermissions,
+} from "./permissions";
 
 const PERMISSIONS: Permission[] = [
   { name: "usuarios.ver", label: "Ver usuarios", group: "usuarios" },
@@ -62,5 +69,37 @@ describe("permissionsChanged", () => {
 
   it("devuelve false para dos listas vacias", () => {
     expect(permissionsChanged([], [])).toBe(false);
+  });
+});
+
+describe("isPermissionLocked", () => {
+  const administrador: RoleWithPermissions = {
+    id: 1,
+    name: "administrador",
+    permissions: ["roles.administrar", "acceso.administrador"],
+    es_sistema: true,
+    permisos_obligatorios: ["acceso.administrador", "roles.administrar"],
+    personas_count: 1,
+  };
+
+  it("devuelve true si el permiso es obligatorio para ese rol", () => {
+    expect(isPermissionLocked(administrador, "roles.administrar")).toBe(true);
+  });
+
+  it("devuelve false si el permiso no es obligatorio para ese rol", () => {
+    expect(isPermissionLocked(administrador, "usuarios.ver")).toBe(false);
+  });
+
+  it("devuelve false para un rol custom, que no tiene permisos obligatorios", () => {
+    const custom: RoleWithPermissions = {
+      id: 2,
+      name: "contador",
+      permissions: [],
+      es_sistema: false,
+      permisos_obligatorios: [],
+      personas_count: 0,
+    };
+
+    expect(isPermissionLocked(custom, "roles.administrar")).toBe(false);
   });
 });

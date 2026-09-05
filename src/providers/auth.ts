@@ -2,7 +2,7 @@ import type { AuthProvider } from "@refinedev/core";
 import type { KyResponse } from "ky";
 import { TOKEN_KEY } from "./constants";
 import { kyInstance } from "./data";
-import { getPriorityRole, roleHomePath } from "./roles";
+import { getPrioritySection, sectionHomePath } from "./sections";
 
 type LoginResponse = {
   token: string;
@@ -14,6 +14,7 @@ type UserResponse = {
   name: string;
   email: string;
   roles: string[];
+  permissions: string[];
 };
 
 /**
@@ -56,10 +57,10 @@ export const authProvider: AuthProvider = {
       const { token, user } = await response.json<LoginResponse>();
       localStorage.setItem(TOKEN_KEY, token);
 
-      const priorityRole = getPriorityRole(user.roles);
+      const prioritySection = getPrioritySection(user.permissions);
       return {
         success: true,
-        redirectTo: priorityRole ? roleHomePath(priorityRole) : "/",
+        redirectTo: prioritySection ? sectionHomePath(prioritySection) : "/",
       };
     }
 
@@ -108,7 +109,19 @@ export const authProvider: AuthProvider = {
       redirectTo: "/login",
     };
   },
-  getPermissions: async () => null,
+  getPermissions: async () => {
+    if (!localStorage.getItem(TOKEN_KEY)) {
+      return null;
+    }
+
+    const response = await kyInstance.get("user");
+    if (!response.ok) {
+      return null;
+    }
+
+    const user = await response.json<UserResponse>();
+    return user.permissions;
+  },
   // "Olvidé mi contraseña" self-service — reusa la pantalla /forgot-password
   // ya scaffoldeada por Refine, solo hacía falta conectar el provider.
   forgotPassword: async ({ email }) => {
@@ -183,6 +196,7 @@ export const authProvider: AuthProvider = {
       name: user.name,
       email: user.email,
       roles: user.roles,
+      permissions: user.permissions,
     };
   },
   onError: async (error) => {

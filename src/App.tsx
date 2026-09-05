@@ -14,7 +14,7 @@ import {
   ShareAltOutlined,
   EnvironmentOutlined,
 } from "@ant-design/icons";
-import { Refine, Authenticated } from "@refinedev/core";
+import { Refine, Authenticated, CanAccess } from "@refinedev/core";
 import { DevtoolsPanel, DevtoolsProvider } from "@refinedev/devtools";
 import { RefineKbar, RefineKbarProvider } from "@refinedev/kbar";
 
@@ -43,14 +43,15 @@ import { Login } from "./pages/login";
 import { ForgotPassword } from "./pages/forgotPassword";
 import { UpdatePassword } from "./pages/updatePassword";
 import { authProvider } from "./providers/auth";
+import { accessControlProvider } from "./providers/access-control";
 import { i18nProvider } from "./providers/i18n";
 import { RoleHome } from "./pages/role-home";
-import { RoleRoute } from "./components/role-route";
+import { SectionRoute } from "./components/section-route";
 import { RoleBasedIndex } from "./components/role-based-index";
-import { ROLE_PRIORITY } from "./providers/roles";
+import { SECTIONS } from "./providers/sections";
 import { UserCreate, UserEdit } from "./pages/users";
 import { PersonaList, PersonaCreate, PersonaEdit } from "./pages/personas";
-import { RoleList } from "./pages/roles";
+import { RoleList, RoleCreate, RoleEdit, RolePermissions } from "./pages/roles";
 import { EdificioList, EdificioCreate, EdificioEdit } from "./pages/edificios";
 import { BloqueList, BloqueCreate, BloqueEdit } from "./pages/bloques";
 import { UnidadList, UnidadCreate, UnidadEdit } from "./pages/unidades";
@@ -83,6 +84,7 @@ function App() {
                 notificationProvider={useNotificationProvider}
                 routerProvider={routerProvider}
                 authProvider={authProvider}
+                accessControlProvider={accessControlProvider}
                 i18nProvider={i18nProvider}
                 resources={[
                   {
@@ -107,8 +109,20 @@ function App() {
                   {
                     name: "roles",
                     list: "/administrador/roles",
+                    create: "/administrador/roles/create",
+                    edit: "/administrador/roles/edit/:id",
                     meta: {
-                      label: "Roles y permisos",
+                      label: "Roles",
+                      icon: <SafetyCertificateOutlined />,
+                      parent: "personas",
+                    },
+                  },
+                  {
+                    // Sin endpoint propio: la página es la matriz de permisos por rol.
+                    name: "permisos",
+                    list: "/administrador/roles/permisos",
+                    meta: {
+                      label: "Permisos por rol",
                       icon: <SafetyCertificateOutlined />,
                       parent: "personas",
                     },
@@ -315,354 +329,97 @@ function App() {
                     }
                   >
                     <Route index element={<RoleBasedIndex />} />
-                    {ROLE_PRIORITY.map((role) => (
+                    {SECTIONS.map((section) => (
                       <Route
-                        key={role}
-                        path={`/${role}/home`}
+                        key={section}
+                        path={`/${section}/home`}
                         element={
-                          <RoleRoute role={role}>
-                            <RoleHome role={role} />
-                          </RoleRoute>
+                          <SectionRoute section={section}>
+                            <RoleHome section={section} />
+                          </SectionRoute>
                         }
                       />
                     ))}
-                    <Route path="/administrador/personas">
-                      <Route
-                        index
-                        element={
-                          <RoleRoute role="administrador">
-                            <PersonaList />
-                          </RoleRoute>
-                        }
-                      />
-                      <Route
-                        path="create"
-                        element={
-                          <RoleRoute role="administrador">
-                            <PersonaCreate />
-                          </RoleRoute>
-                        }
-                      />
-                      <Route
-                        path="edit/:id"
-                        element={
-                          <RoleRoute role="administrador">
-                            <PersonaEdit />
-                          </RoleRoute>
-                        }
-                      />
-                    </Route>
-                    <Route path="/administrador/usuarios">
-                      <Route
-                        path="create"
-                        element={
-                          <RoleRoute role="administrador">
-                            <UserCreate />
-                          </RoleRoute>
-                        }
-                      />
-                      <Route
-                        path="edit/:id"
-                        element={
-                          <RoleRoute role="administrador">
-                            <UserEdit />
-                          </RoleRoute>
-                        }
-                      />
-                    </Route>
                     <Route
-                      path="/administrador/roles"
+                      path="/administrador"
                       element={
-                        <RoleRoute role="administrador">
-                          <RoleList />
-                        </RoleRoute>
+                        <SectionRoute section="administrador">
+                          <CanAccess fallback={<ErrorComponent />}>
+                            <Outlet />
+                          </CanAccess>
+                        </SectionRoute>
                       }
-                    />
-                    <Route path="/administrador/edificios">
-                      <Route
-                        index
-                        element={
-                          <RoleRoute role="administrador">
-                            <EdificioList />
-                          </RoleRoute>
-                        }
-                      />
-                      <Route
-                        path="create"
-                        element={
-                          <RoleRoute role="administrador">
-                            <EdificioCreate />
-                          </RoleRoute>
-                        }
-                      />
-                      <Route
-                        path="edit/:id"
-                        element={
-                          <RoleRoute role="administrador">
-                            <EdificioEdit />
-                          </RoleRoute>
-                        }
-                      />
-                    </Route>
-                    <Route path="/administrador/comodidades">
-                      <Route
-                        index
-                        element={
-                          <RoleRoute role="administrador">
-                            <ComodidadList />
-                          </RoleRoute>
-                        }
-                      />
-                      <Route
-                        path="create"
-                        element={
-                          <RoleRoute role="administrador">
-                            <ComodidadCreate />
-                          </RoleRoute>
-                        }
-                      />
-                      <Route
-                        path="edit/:id"
-                        element={
-                          <RoleRoute role="administrador">
-                            <ComodidadEdit />
-                          </RoleRoute>
-                        }
-                      />
-                    </Route>
-                    <Route path="/administrador/bloques">
-                      <Route
-                        index
-                        element={
-                          <RoleRoute role="administrador">
-                            <BloqueList />
-                          </RoleRoute>
-                        }
-                      />
-                      <Route
-                        path="create"
-                        element={
-                          <RoleRoute role="administrador">
-                            <BloqueCreate />
-                          </RoleRoute>
-                        }
-                      />
-                      <Route
-                        path="edit/:id"
-                        element={
-                          <RoleRoute role="administrador">
-                            <BloqueEdit />
-                          </RoleRoute>
-                        }
-                      />
-                    </Route>
-                    <Route path="/administrador/unidades">
-                      <Route
-                        index
-                        element={
-                          <RoleRoute role="administrador">
-                            <UnidadList />
-                          </RoleRoute>
-                        }
-                      />
-                      <Route
-                        path="create"
-                        element={
-                          <RoleRoute role="administrador">
-                            <UnidadCreate />
-                          </RoleRoute>
-                        }
-                      />
-                      <Route
-                        path="edit/:id"
-                        element={
-                          <RoleRoute role="administrador">
-                            <UnidadEdit />
-                          </RoleRoute>
-                        }
-                      />
-                    </Route>
-                    <Route path="/administrador/contratos-alquiler">
-                      <Route
-                        index
-                        element={
-                          <RoleRoute role="administrador">
-                            <ContratoAlquilerList />
-                          </RoleRoute>
-                        }
-                      />
-                      <Route
-                        path="create"
-                        element={
-                          <RoleRoute role="administrador">
-                            <ContratoAlquilerCreate />
-                          </RoleRoute>
-                        }
-                      />
-                      <Route
-                        path="edit/:id"
-                        element={
-                          <RoleRoute role="administrador">
-                            <ContratoAlquilerEdit />
-                          </RoleRoute>
-                        }
-                      />
-                    </Route>
-                    <Route path="/administrador/bancos">
-                      <Route
-                        index
-                        element={
-                          <RoleRoute role="administrador">
-                            <BancoList />
-                          </RoleRoute>
-                        }
-                      />
-                      <Route
-                        path="create"
-                        element={
-                          <RoleRoute role="administrador">
-                            <BancoCreate />
-                          </RoleRoute>
-                        }
-                      />
-                      <Route
-                        path="edit/:id"
-                        element={
-                          <RoleRoute role="administrador">
-                            <BancoEdit />
-                          </RoleRoute>
-                        }
-                      />
-                    </Route>
-                    <Route path="/administrador/proveedores">
-                      <Route
-                        index
-                        element={
-                          <RoleRoute role="administrador">
-                            <ProveedorList />
-                          </RoleRoute>
-                        }
-                      />
-                      <Route
-                        path="create"
-                        element={
-                          <RoleRoute role="administrador">
-                            <ProveedorCreate />
-                          </RoleRoute>
-                        }
-                      />
-                      <Route
-                        path="edit/:id"
-                        element={
-                          <RoleRoute role="administrador">
-                            <ProveedorEdit />
-                          </RoleRoute>
-                        }
-                      />
-                    </Route>
-                    <Route path="/administrador/rubros">
-                      <Route
-                        index
-                        element={
-                          <RoleRoute role="administrador">
-                            <RubroList />
-                          </RoleRoute>
-                        }
-                      />
-                      <Route
-                        path="create"
-                        element={
-                          <RoleRoute role="administrador">
-                            <RubroCreate />
-                          </RoleRoute>
-                        }
-                      />
-                      <Route
-                        path="edit/:id"
-                        element={
-                          <RoleRoute role="administrador">
-                            <RubroEdit />
-                          </RoleRoute>
-                        }
-                      />
-                    </Route>
-                    <Route path="/administrador/tipos-documento">
-                      <Route
-                        index
-                        element={
-                          <RoleRoute role="administrador">
-                            <TipoDocumentoList />
-                          </RoleRoute>
-                        }
-                      />
-                      <Route
-                        path="create"
-                        element={
-                          <RoleRoute role="administrador">
-                            <TipoDocumentoCreate />
-                          </RoleRoute>
-                        }
-                      />
-                      <Route
-                        path="edit/:id"
-                        element={
-                          <RoleRoute role="administrador">
-                            <TipoDocumentoEdit />
-                          </RoleRoute>
-                        }
-                      />
-                    </Route>
-                    <Route path="/administrador/tipos-relacion">
-                      <Route
-                        index
-                        element={
-                          <RoleRoute role="administrador">
-                            <TipoRelacionList />
-                          </RoleRoute>
-                        }
-                      />
-                      <Route
-                        path="create"
-                        element={
-                          <RoleRoute role="administrador">
-                            <TipoRelacionCreate />
-                          </RoleRoute>
-                        }
-                      />
-                      <Route
-                        path="edit/:id"
-                        element={
-                          <RoleRoute role="administrador">
-                            <TipoRelacionEdit />
-                          </RoleRoute>
-                        }
-                      />
-                    </Route>
-                    <Route path="/administrador/ciudades">
-                      <Route
-                        index
-                        element={
-                          <RoleRoute role="administrador">
-                            <CiudadList />
-                          </RoleRoute>
-                        }
-                      />
-                      <Route
-                        path="create"
-                        element={
-                          <RoleRoute role="administrador">
-                            <CiudadCreate />
-                          </RoleRoute>
-                        }
-                      />
-                      <Route
-                        path="edit/:id"
-                        element={
-                          <RoleRoute role="administrador">
-                            <CiudadEdit />
-                          </RoleRoute>
-                        }
-                      />
+                    >
+                      <Route path="personas">
+                        <Route index element={<PersonaList />} />
+                        <Route path="create" element={<PersonaCreate />} />
+                        <Route path="edit/:id" element={<PersonaEdit />} />
+                      </Route>
+                      <Route path="usuarios">
+                        <Route path="create" element={<UserCreate />} />
+                        <Route path="edit/:id" element={<UserEdit />} />
+                      </Route>
+                      <Route path="roles">
+                        <Route index element={<RoleList />} />
+                        <Route path="create" element={<RoleCreate />} />
+                        <Route path="edit/:id" element={<RoleEdit />} />
+                        <Route path="permisos" element={<RolePermissions />} />
+                      </Route>
+                      <Route path="edificios">
+                        <Route index element={<EdificioList />} />
+                        <Route path="create" element={<EdificioCreate />} />
+                        <Route path="edit/:id" element={<EdificioEdit />} />
+                      </Route>
+                      <Route path="comodidades">
+                        <Route index element={<ComodidadList />} />
+                        <Route path="create" element={<ComodidadCreate />} />
+                        <Route path="edit/:id" element={<ComodidadEdit />} />
+                      </Route>
+                      <Route path="bloques">
+                        <Route index element={<BloqueList />} />
+                        <Route path="create" element={<BloqueCreate />} />
+                        <Route path="edit/:id" element={<BloqueEdit />} />
+                      </Route>
+                      <Route path="unidades">
+                        <Route index element={<UnidadList />} />
+                        <Route path="create" element={<UnidadCreate />} />
+                        <Route path="edit/:id" element={<UnidadEdit />} />
+                      </Route>
+                      <Route path="contratos-alquiler">
+                        <Route index element={<ContratoAlquilerList />} />
+                        <Route path="create" element={<ContratoAlquilerCreate />} />
+                        <Route path="edit/:id" element={<ContratoAlquilerEdit />} />
+                      </Route>
+                      <Route path="bancos">
+                        <Route index element={<BancoList />} />
+                        <Route path="create" element={<BancoCreate />} />
+                        <Route path="edit/:id" element={<BancoEdit />} />
+                      </Route>
+                      <Route path="proveedores">
+                        <Route index element={<ProveedorList />} />
+                        <Route path="create" element={<ProveedorCreate />} />
+                        <Route path="edit/:id" element={<ProveedorEdit />} />
+                      </Route>
+                      <Route path="rubros">
+                        <Route index element={<RubroList />} />
+                        <Route path="create" element={<RubroCreate />} />
+                        <Route path="edit/:id" element={<RubroEdit />} />
+                      </Route>
+                      <Route path="tipos-documento">
+                        <Route index element={<TipoDocumentoList />} />
+                        <Route path="create" element={<TipoDocumentoCreate />} />
+                        <Route path="edit/:id" element={<TipoDocumentoEdit />} />
+                      </Route>
+                      <Route path="tipos-relacion">
+                        <Route index element={<TipoRelacionList />} />
+                        <Route path="create" element={<TipoRelacionCreate />} />
+                        <Route path="edit/:id" element={<TipoRelacionEdit />} />
+                      </Route>
+                      <Route path="ciudades">
+                        <Route index element={<CiudadList />} />
+                        <Route path="create" element={<CiudadCreate />} />
+                        <Route path="edit/:id" element={<CiudadEdit />} />
+                      </Route>
                     </Route>
                     <Route path="*" element={<ErrorComponent />} />
                   </Route>

@@ -46,8 +46,8 @@ npx playwright show-report  # ver el último reporte HTML
 
 - `login.spec.ts`: login correcto, password incorrecta, cuenta nunca
   activada, cuenta desactivada — los 4 casos de `AuthController::login`.
-- `user-management.spec.ts`: guard de rol (`RoleRoute`), alta de usuario vía
-  UI, activar/desactivar desde el listado.
+- `user-management.spec.ts`: guard de sección (`SectionRoute`), alta de
+  usuario vía UI, activar/desactivar desde el listado.
 - `set-password.spec.ts`: invitación completa (admin crea → usuario activa →
   login), recuperación self-service ("olvidé mi contraseña"), link inválido.
 
