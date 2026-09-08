@@ -4,7 +4,7 @@ import { createAndActivateUser, loginViaUi } from "./support/flows";
 import { getLatestUpdatePasswordLink } from "./support/mail-log";
 
 // Flujo de punta a punta descripto en ARQUITECTURA.md ("Flujo compartido de
-// invitación y recuperación de contraseña"): misma pantalla /update-password
+// invitación y recuperación"): misma pantalla /update-password
 // y mismo endpoint /set-password para los dos casos.
 test.describe("invitacion y recuperacion de contrasena", () => {
   let admin: APIRequestContext;

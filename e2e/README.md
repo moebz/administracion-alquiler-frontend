@@ -1,8 +1,8 @@
 # E2E (Playwright)
 
 Tests de punta a punta contra la app real (frontend + backend + DB) — no
-contra mocks. **Nunca se corrieron todavía** (ver ARQUITECTURA.md, "Testing de
-frontend con Playwright"): quedaron escritos y listos, pero hace falta
+contra mocks. **Nunca se corrieron todavía** (ver ARQUITECTURA.md,
+"Testing"): quedaron escritos y listos, pero hace falta
 correrlos manualmente al menos una vez para confirmar que los selectores
 (labels/textos de botones, inferidos leyendo el código de `@refinedev/antd`,
 no viéndolos renderizados) matchean pixel a pixel.

@@ -23,7 +23,7 @@ const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://app.inmova.test:25173
 // request no manda `Accept: application/json`, Laravel la renderiza como
 // redirect (302) en vez de 422; Playwright sigue ese redirect y termina
 // reportando un 500 de DB que no tiene nada que ver con la password real
-// (ver ARQUITECTURA.md, "E2E: falla masiva por SEED_PASSWORD"). Se lee acá,
+// (ver ARQUITECTURA.md, "Testing"). Se lee acá,
 // una sola vez, para no tener que pasarla a mano en cada corrida — un
 // `SEED_PASSWORD=...` explícito en el entorno sigue pisando esto.
 if (!process.env.SEED_PASSWORD) {

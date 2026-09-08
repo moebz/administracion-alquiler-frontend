@@ -13,7 +13,7 @@ export const loginViaUi = async (page: Page, email: string, password: string): P
 /**
  * Completa el paso final de "elegir contraseña" a través de la UI real —
  * misma pantalla para invitación y recuperación (ver ARQUITECTURA.md, "Flujo
- * compartido de invitación y recuperación de contraseña").
+ * compartido de invitación y recuperación").
  */
 export const setPasswordViaUi = async (page: Page, link: string, password: string): Promise<void> => {
   await page.goto(link);
