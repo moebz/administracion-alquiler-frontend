@@ -107,13 +107,15 @@ export const ContratoAlquilerList = () => {
         />
         <Table.Column
           title="Monto"
-          dataIndex="monto_alquiler"
-          render={(monto: number) => monto.toLocaleString("es-UY", { style: "currency", currency: "UYU" })}
+          dataIndex="monto_alquiler_vigente"
+          render={(monto: number | null) =>
+            monto === null ? "—" : monto.toLocaleString("es-PY", { style: "currency", currency: "PYG" })
+          }
         />
         <Table.Column title="Día venc." dataIndex="dia_vencimiento" />
         <Table.Column
           title="Mora diaria"
-          dataIndex="porcentaje_mora_diario"
+          dataIndex="mora_pct_diario"
           render={(porcentaje: number) => `${porcentaje}%`}
         />
         <Table.Column dataIndex="fecha_inicio" title="Inicio" />

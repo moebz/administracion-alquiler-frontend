@@ -65,6 +65,11 @@ export const EdificioList = () => {
       <Table {...tableProps} rowKey="id">
         <Table.Column dataIndex="nombre" title="Nombre" />
         <Table.Column dataIndex={["ciudad", "nombre"]} title="Ciudad" />
+        <Table.Column
+          title="Administración"
+          dataIndex="administracion"
+          render={(administracion: EdificioRow["administracion"]) => administracion?.nombre ?? "—"}
+        />
         <Table.Column dataIndex="direccion" title="Dirección" />
         <Table.Column dataIndex="superficie_m2" title="Superficie (m²)" />
         <Table.Column

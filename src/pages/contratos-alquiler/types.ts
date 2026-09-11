@@ -1,20 +1,20 @@
-export type ContratoAlquilerEstado = "VIGENTE" | "VENCIDO" | "RESCINDIDO";
+export type ContratoAlquilerEstado = "VIGENTE" | "FINALIZADO" | "RESCINDIDO";
 
 export const CONTRATO_ALQUILER_ESTADO_OPTIONS: { label: string; value: ContratoAlquilerEstado }[] = [
   { label: "Vigente", value: "VIGENTE" },
-  { label: "Vencido", value: "VENCIDO" },
+  { label: "Finalizado", value: "FINALIZADO" },
   { label: "Rescindido", value: "RESCINDIDO" },
 ];
 
 export const CONTRATO_ALQUILER_ESTADO_LABEL: Record<ContratoAlquilerEstado, string> = {
   VIGENTE: "Vigente",
-  VENCIDO: "Vencido",
+  FINALIZADO: "Finalizado",
   RESCINDIDO: "Rescindido",
 };
 
 export const CONTRATO_ALQUILER_ESTADO_COLOR: Record<ContratoAlquilerEstado, string> = {
   VIGENTE: "green",
-  VENCIDO: "gold",
+  FINALIZADO: "gold",
   RESCINDIDO: "red",
 };
 
@@ -47,12 +47,18 @@ export type ContratoAlquilerRow = {
   inquilino: { id: number; nombre: string };
   fecha_inicio: string;
   fecha_fin: string;
-  monto_alquiler: number;
-  deposito: number | null;
-  porcentaje_comision: number;
-  porcentaje_mora_diario: number;
+  // Calculado (App\Models\ContratoAlquiler::montoAlquilerVigente()): el
+  // monto vive en contrato_reajustes, no en el contrato — se cambia
+  // creando un reajuste, no editando el contrato.
+  monto_alquiler_vigente: number | null;
+  deposito_garantia: { monto: number; estado: "RECIBIDO" | "DEVUELTO" | "RETENIDO" } | null;
+  comision_pct: number;
+  mora_pct_diario: number;
+  mora_tope_pct: number | null;
   dia_vencimiento: number;
-  expensas_a_cargo: ExpensasACargo;
+  dias_gracia: number;
+  expensas_a_cargo_de: ExpensasACargo;
   estado: ContratoAlquilerEstado;
   fecha_rescision: string | null;
+  motivo_rescision: string | null;
 };

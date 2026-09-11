@@ -3,10 +3,10 @@ import { App, Button, Space, Table, Tag } from "antd";
 import { ActiveFilterSwitch } from "../../components/active-filter-switch";
 import { kyInstance } from "../../providers/data";
 import { extractErrorMessage } from "../../providers/auth";
-import type { TipoDocumentoRow } from "./types";
+import type { TipoIdentificacionRow } from "./types";
 
-export const TipoDocumentoList = () => {
-  const { tableProps, tableQuery, filters, setFilters } = useTable<TipoDocumentoRow>({
+export const TipoIdentificacionList = () => {
+  const { tableProps, tableQuery, filters, setFilters } = useTable<TipoIdentificacionRow>({
     syncWithLocation: true,
     filters: {
       initial: [{ field: "is_active", operator: "eq", value: true }],
@@ -18,11 +18,11 @@ export const TipoDocumentoList = () => {
   const toggleShowInactive = (checked: boolean) =>
     setFilters(checked ? [] : [{ field: "is_active", operator: "eq", value: true }], "replace");
 
-  const toggleActive = async (record: TipoDocumentoRow) => {
+  const toggleActive = async (record: TipoIdentificacionRow) => {
     const action = record.is_active ? "deactivate" : "activate";
-    const response = await kyInstance.patch(`tipos-documento/${record.id}/${action}`);
+    const response = await kyInstance.patch(`tipos-identificacion/${record.id}/${action}`);
     if (response.ok) {
-      message.success(record.is_active ? "Tipo de documento desactivado." : "Tipo de documento activado.");
+      message.success(record.is_active ? "Tipo de identificación desactivado." : "Tipo de identificación activado.");
       tableQuery.refetch();
     } else {
       message.error(await extractErrorMessage(response, "No se pudo actualizar el estado."));
@@ -31,7 +31,7 @@ export const TipoDocumentoList = () => {
 
   return (
     <List
-      title="Tipos de documento"
+      title="Tipos de identificación"
       headerButtons={({ defaultButtons }) => (
         <>
           <ActiveFilterSwitch checked={showInactive} onChange={toggleShowInactive} />
@@ -40,6 +40,7 @@ export const TipoDocumentoList = () => {
       )}
     >
       <Table {...tableProps} rowKey="id">
+        <Table.Column dataIndex="codigo" title="Código" />
         <Table.Column dataIndex="nombre" title="Nombre" />
         <Table.Column
           title="Estado"
@@ -51,7 +52,7 @@ export const TipoDocumentoList = () => {
         <Table.Column
           title="Acciones"
           dataIndex="actions"
-          render={(_, record: TipoDocumentoRow) => (
+          render={(_, record: TipoIdentificacionRow) => (
             <Space>
               <EditButton hideText size="small" recordItemId={record.id} />
               <Button size="small" danger={record.is_active} onClick={() => toggleActive(record)}>

@@ -15,7 +15,7 @@ describe("requiredPermission", () => {
     expect(requiredPermission("personas", "create")).toBe("personas.crear");
     expect(requiredPermission("users", "edit")).toBe("usuarios.editar");
     expect(requiredPermission("contratos-alquiler", "list")).toBe("contratos_alquiler.ver");
-    expect(requiredPermission("tipos-documento", "list")).toBe("tipos_documento.ver");
+    expect(requiredPermission("tipos-identificacion", "list")).toBe("tipos_identificacion.ver");
     expect(requiredPermission("tipos-relacion", "list")).toBe("tipos_relacion.ver");
     expect(requiredPermission("edificios-todos", "list")).toBe("edificios.ver");
     expect(requiredPermission("proveedores-todos", "list")).toBe("proveedores.ver");
@@ -26,6 +26,12 @@ describe("requiredPermission", () => {
     expect(requiredPermission("roles", "create")).toBe("roles.administrar");
     expect(requiredPermission("roles", "delete")).toBe("roles.administrar");
     expect(requiredPermission("permisos", "list")).toBe("roles.administrar");
+  });
+
+  it("resuelve gastos a un unico permiso (solicitar) para crear y editar", () => {
+    expect(requiredPermission("gastos", "list")).toBe("gastos.ver");
+    expect(requiredPermission("gastos", "create")).toBe("gastos.solicitar");
+    expect(requiredPermission("gastos", "edit")).toBe("gastos.solicitar");
   });
 
   it("devuelve null para resources agrupadores sin permisos propios", () => {

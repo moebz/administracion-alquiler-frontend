@@ -13,6 +13,7 @@ import {
   IdcardOutlined,
   ShareAltOutlined,
   EnvironmentOutlined,
+  DollarOutlined,
 } from "@ant-design/icons";
 import { Refine, Authenticated, CanAccess } from "@refinedev/core";
 import { DevtoolsPanel, DevtoolsProvider } from "@refinedev/devtools";
@@ -60,15 +61,16 @@ import {
   ContratoAlquilerCreate,
   ContratoAlquilerEdit,
 } from "./pages/contratos-alquiler";
+import { GastoList, GastoCreate, GastoEdit } from "./pages/gastos";
 import { BancoList, BancoCreate, BancoEdit } from "./pages/bancos";
 import { ComodidadList, ComodidadCreate, ComodidadEdit } from "./pages/comodidades";
 import { ProveedorList, ProveedorCreate, ProveedorEdit } from "./pages/proveedores";
 import { RubroList, RubroCreate, RubroEdit } from "./pages/rubros";
 import {
-  TipoDocumentoList,
-  TipoDocumentoCreate,
-  TipoDocumentoEdit,
-} from "./pages/tipos-documento";
+  TipoIdentificacionList,
+  TipoIdentificacionCreate,
+  TipoIdentificacionEdit,
+} from "./pages/tipos-identificacion";
 import { TipoRelacionList, TipoRelacionCreate, TipoRelacionEdit } from "./pages/tipos-relacion";
 import { CiudadList, CiudadCreate, CiudadEdit } from "./pages/ciudades";
 
@@ -220,6 +222,17 @@ function App() {
                     },
                   },
                   {
+                    name: "gastos",
+                    list: "/administrador/gastos",
+                    create: "/administrador/gastos/create",
+                    edit: "/administrador/gastos/edit/:id",
+                    meta: {
+                      label: "Gastos",
+                      icon: <DollarOutlined />,
+                      parent: "edificios",
+                    },
+                  },
+                  {
                     name: "proveedores",
                     list: "/administrador/proveedores",
                     create: "/administrador/proveedores/create",
@@ -268,12 +281,12 @@ function App() {
                     },
                   },
                   {
-                    name: "tipos-documento",
-                    list: "/administrador/tipos-documento",
-                    create: "/administrador/tipos-documento/create",
-                    edit: "/administrador/tipos-documento/edit/:id",
+                    name: "tipos-identificacion",
+                    list: "/administrador/tipos-identificacion",
+                    create: "/administrador/tipos-identificacion/create",
+                    edit: "/administrador/tipos-identificacion/edit/:id",
                     meta: {
-                      label: "Tipos de documento",
+                      label: "Tipos de identificación",
                       icon: <IdcardOutlined />,
                       parent: "catalogos",
                     },
@@ -390,6 +403,11 @@ function App() {
                         <Route path="create" element={<ContratoAlquilerCreate />} />
                         <Route path="edit/:id" element={<ContratoAlquilerEdit />} />
                       </Route>
+                      <Route path="gastos">
+                        <Route index element={<GastoList />} />
+                        <Route path="create" element={<GastoCreate />} />
+                        <Route path="edit/:id" element={<GastoEdit />} />
+                      </Route>
                       <Route path="bancos">
                         <Route index element={<BancoList />} />
                         <Route path="create" element={<BancoCreate />} />
@@ -405,10 +423,10 @@ function App() {
                         <Route path="create" element={<RubroCreate />} />
                         <Route path="edit/:id" element={<RubroEdit />} />
                       </Route>
-                      <Route path="tipos-documento">
-                        <Route index element={<TipoDocumentoList />} />
-                        <Route path="create" element={<TipoDocumentoCreate />} />
-                        <Route path="edit/:id" element={<TipoDocumentoEdit />} />
+                      <Route path="tipos-identificacion">
+                        <Route index element={<TipoIdentificacionList />} />
+                        <Route path="create" element={<TipoIdentificacionCreate />} />
+                        <Route path="edit/:id" element={<TipoIdentificacionEdit />} />
                       </Route>
                       <Route path="tipos-relacion">
                         <Route index element={<TipoRelacionList />} />

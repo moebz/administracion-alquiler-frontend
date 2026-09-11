@@ -68,26 +68,26 @@ export const loginAsAdminApi = async (): Promise<APIRequestContext> => {
   return newApiContext({ Authorization: `Bearer ${token}` });
 };
 
-let cachedTipoDocumentoId: number | undefined;
+let cachedTipoIdentificacionId: number | undefined;
 
-/** Cualquier tipo de documento seedeado sirve — se cachea para no repetir el GET. */
-const getTipoDocumentoId = async (admin: APIRequestContext): Promise<number> => {
-  if (cachedTipoDocumentoId !== undefined) {
-    return cachedTipoDocumentoId;
+/** Cualquier tipo de identificación seedeado sirve — se cachea para no repetir el GET. */
+const getTipoIdentificacionId = async (admin: APIRequestContext): Promise<number> => {
+  if (cachedTipoIdentificacionId !== undefined) {
+    return cachedTipoIdentificacionId;
   }
 
-  const response = await admin.get("tipos-documento");
+  const response = await admin.get("tipos-identificacion");
   if (!response.ok()) {
-    throw new Error(`No se pudo listar tipos de documento vía API: ${response.status()}`);
+    throw new Error(`No se pudo listar tipos de identificación vía API: ${response.status()}`);
   }
 
   const tipos = (await response.json()) as { id: number }[];
   if (tipos.length === 0) {
-    throw new Error("No hay tipos de documento seedeados — ¿corriste TipoDocumentoSeeder?");
+    throw new Error("No hay tipos de identificación seedeados — ¿corriste TipoIdentificacionSeeder?");
   }
 
-  cachedTipoDocumentoId = tipos[0].id;
-  return cachedTipoDocumentoId;
+  cachedTipoIdentificacionId = tipos[0].id;
+  return cachedTipoIdentificacionId;
 };
 
 /**
@@ -100,8 +100,9 @@ export const createPersonaViaApi = async (
 ): Promise<ApiPersona> => {
   const response = await admin.post("personas", {
     data: {
-      tipo_documento_id: await getTipoDocumentoId(admin),
+      tipo_identificacion_id: await getTipoIdentificacionId(admin),
       documento: overrides.documento ?? uniqueDocumento(),
+      tipo_persona: "FISICA",
       nombre: overrides.nombre ?? "Persona E2E",
       roles: overrides.roles ?? ["propietario"],
     },

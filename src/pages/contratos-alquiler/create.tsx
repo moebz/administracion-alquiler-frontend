@@ -41,8 +41,9 @@ export const ContratoAlquilerCreate = () => {
         initialValues={{
           unidad_id: unidadId,
           estado: "VIGENTE",
-          expensas_a_cargo: "INQUILINO",
-          porcentaje_mora_diario: 0,
+          expensas_a_cargo_de: "INQUILINO",
+          mora_pct_diario: 0,
+          dias_gracia: 0,
         }}
       >
         <Form.Item label="Unidad" name="unidad_id" rules={[{ required: true }]}>
@@ -77,16 +78,25 @@ export const ContratoAlquilerCreate = () => {
         <Form.Item label="Monto de alquiler mensual" name="monto_alquiler" rules={[{ required: true }]}>
           <InputNumber min={0} style={{ width: "100%" }} />
         </Form.Item>
+        <Form.Item label="Depósito de garantía" name="deposito">
+          <InputNumber min={0} style={{ width: "100%" }} />
+        </Form.Item>
         <Form.Item label="Día de vencimiento" name="dia_vencimiento" rules={[{ required: true }]}>
           <InputNumber min={1} max={31} style={{ width: "100%" }} />
         </Form.Item>
-        <Form.Item label="Porcentaje de mora diario" name="porcentaje_mora_diario" rules={[{ required: true }]}>
+        <Form.Item label="Días de gracia" name="dias_gracia" rules={[{ required: true }]}>
+          <InputNumber min={0} style={{ width: "100%" }} />
+        </Form.Item>
+        <Form.Item label="Porcentaje de mora diario" name="mora_pct_diario" rules={[{ required: true }]}>
           <InputNumber min={0} max={100} style={{ width: "100%" }} addonAfter="%" />
         </Form.Item>
-        <Form.Item label="Porcentaje de comisión" name="porcentaje_comision" rules={[{ required: true }]}>
+        <Form.Item label="Tope de mora (% del alquiler)" name="mora_tope_pct">
           <InputNumber min={0} max={100} style={{ width: "100%" }} addonAfter="%" />
         </Form.Item>
-        <Form.Item label="Expensas a cargo de" name="expensas_a_cargo" rules={[{ required: true }]}>
+        <Form.Item label="Porcentaje de comisión" name="comision_pct" rules={[{ required: true }]}>
+          <InputNumber min={0} max={100} style={{ width: "100%" }} addonAfter="%" />
+        </Form.Item>
+        <Form.Item label="Expensas a cargo de" name="expensas_a_cargo_de" rules={[{ required: true }]}>
           <Select options={EXPENSAS_A_CARGO_OPTIONS} />
         </Form.Item>
         <Form.Item label="Estado" name="estado" rules={[{ required: true }]}>

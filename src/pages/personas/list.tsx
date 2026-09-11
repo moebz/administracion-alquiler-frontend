@@ -145,7 +145,7 @@ export const PersonaList = () => {
         <Table.Column
           title="Documento"
           dataIndex="documento"
-          render={(documento: string, record: PersonaRow) => `${record.tipo_documento.nombre} ${documento}`}
+          render={(documento: string, record: PersonaRow) => `${record.tipo_identificacion.nombre} ${documento}`}
         />
         <Table.Column
           dataIndex="roles"

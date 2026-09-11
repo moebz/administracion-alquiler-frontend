@@ -64,13 +64,13 @@ export const UnidadList = () => {
         <Table.Column
           title="Estado"
           dataIndex="estado"
-          render={(estado: UnidadRow["estado"], record: UnidadRow) => (
-            <Tag color={UNIDAD_ESTADO_COLOR[estado]}>
-              {estado === "OCUPADA" && record.contrato_vigente_fecha_fin
-                ? `Ocupada hasta ${dayjs(record.contrato_vigente_fecha_fin).format("DD/MM/YYYY")}`
-                : UNIDAD_ESTADO_LABEL[estado]}
-            </Tag>
-          )}
+          render={(estado: UnidadRow["estado"], record: UnidadRow) =>
+            record.contrato_vigente_fecha_fin ? (
+              <Tag color="blue">{`Ocupada hasta ${dayjs(record.contrato_vigente_fecha_fin).format("DD/MM/YYYY")}`}</Tag>
+            ) : (
+              <Tag color={UNIDAD_ESTADO_COLOR[estado]}>{UNIDAD_ESTADO_LABEL[estado]}</Tag>
+            )
+          }
         />
         <Table.Column
           title="Activa"

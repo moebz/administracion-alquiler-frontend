@@ -132,8 +132,8 @@ const es = {
     "contratos-alquiler": {
       "contratos-alquiler": "contrato de alquiler",
     },
-    "tipos-documento": {
-      "tipos-documento": "tipo de documento",
+    "tipos-identificacion": {
+      "tipos-identificacion": "tipo de identificación",
     },
     "tipos-relacion": {
       "tipos-relacion": "tipo de relación",

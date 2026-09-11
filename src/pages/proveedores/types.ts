@@ -3,7 +3,7 @@ export type ProveedorRow = {
   nombre: string;
   persona: {
     id: number;
-    tipo_documento_id: number;
+    tipo_identificacion_id: number;
     documento: string;
     nombre: string;
     telefono: string | null;

@@ -23,8 +23,8 @@ type Props = {
 // alta de Usuario ya no pasa por acá: usa una persona ya elegida desde el
 // listado de Personas (ver pages/users/create.tsx).
 export const PersonaBuscador = ({ form }: Props) => {
-  const { selectProps: tipoDocumentoSelectProps } = useSelect({
-    resource: "tipos-documento",
+  const { selectProps: tipoIdentificacionSelectProps } = useSelect({
+    resource: "tipos-identificacion",
     optionLabel: "nombre",
     optionValue: "id",
   });
@@ -33,23 +33,23 @@ export const PersonaBuscador = ({ form }: Props) => {
   const [resultado, setResultado] = useState<PersonaBuscadorResultado | null>(null);
 
   const buscar = async () => {
-    const tipoDocumentoId = form.getFieldValue(["persona", "tipo_documento_id"]);
+    const tipoIdentificacionId = form.getFieldValue(["persona", "tipo_identificacion_id"]);
     const documento = form.getFieldValue(["persona", "documento"]);
-    if (!tipoDocumentoId || !documento) {
+    if (!tipoIdentificacionId || !documento) {
       return;
     }
 
     setBuscando(true);
     try {
       const data = await kyInstance
-        .get("personas/buscar", { searchParams: { tipo_documento_id: tipoDocumentoId, documento } })
+        .get("personas/buscar", { searchParams: { tipo_identificacion_id: tipoIdentificacionId, documento } })
         .json<PersonaBuscadorResultado>();
 
       setResultado(data);
       form.setFieldsValue({
         persona_id: data.found ? data.id : undefined,
         persona: {
-          tipo_documento_id: tipoDocumentoId,
+          tipo_identificacion_id: tipoIdentificacionId,
           documento,
           nombre: data.found ? data.nombre : undefined,
           telefono: data.found ? (data.telefono ?? undefined) : undefined,
@@ -76,11 +76,11 @@ export const PersonaBuscador = ({ form }: Props) => {
       </Form.Item>
       <Space align="start" wrap>
         <Form.Item
-          label="Tipo de documento"
-          name={["persona", "tipo_documento_id"]}
+          label="Tipo de identificación"
+          name={["persona", "tipo_identificacion_id"]}
           rules={[{ required: true }]}
         >
-          <Select {...tipoDocumentoSelectProps} style={{ width: 160 }} disabled={personaEncontrada} />
+          <Select {...tipoIdentificacionSelectProps} style={{ width: 160 }} disabled={personaEncontrada} />
         </Form.Item>
         <Form.Item label="Documento" name={["persona", "documento"]} rules={[{ required: true }]}>
           <Input style={{ width: 160 }} disabled={personaEncontrada} />

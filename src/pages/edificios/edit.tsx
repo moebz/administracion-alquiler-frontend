@@ -22,6 +22,14 @@ export const EdificioEdit = () => {
     ),
   });
 
+  const { selectProps: administracionSelectProps } = useSelect<{ id: number; nombre: string }>({
+    resource: "personas",
+    optionLabel: "nombre",
+    optionValue: "id",
+    filters: [{ field: "is_active", operator: "eq", value: true }],
+    defaultValue: formProps.initialValues?.administracion_id,
+  });
+
   return (
     <Edit saveButtonProps={saveButtonProps} isLoading={formLoading}>
       <Form
@@ -40,6 +48,9 @@ export const EdificioEdit = () => {
         </Form.Item>
         <Form.Item label="Dirección" name="direccion" rules={[{ required: true }]}>
           <Input />
+        </Form.Item>
+        <Form.Item label="Administración" name="administracion_id">
+          <Select {...administracionSelectProps} allowClear placeholder="Sin administración asignada" />
         </Form.Item>
         <Form.Item label="Superficie (m²)" name="superficie_m2">
           <InputNumber min={0} style={{ width: "100%" }} />

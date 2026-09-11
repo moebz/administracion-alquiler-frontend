@@ -8,7 +8,7 @@ type Persona = {
   id: number;
   nombre: string;
   documento: string;
-  tipo_documento: { nombre: string };
+  tipo_identificacion: { nombre: string };
   email_contacto: string | null;
 };
 
@@ -50,7 +50,7 @@ export const UserCreate = () => {
         <Descriptions column={1} size="small" style={{ marginBottom: 24 }} bordered>
           <Descriptions.Item label="Persona">{persona.nombre}</Descriptions.Item>
           <Descriptions.Item label="Documento">
-            {persona.tipo_documento.nombre} {persona.documento}
+            {persona.tipo_identificacion.nombre} {persona.documento}
           </Descriptions.Item>
         </Descriptions>
       )}

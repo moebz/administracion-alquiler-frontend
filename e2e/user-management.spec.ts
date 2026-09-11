@@ -40,9 +40,11 @@ test.describe("ABM de personas y cuentas (admin)", () => {
     await expect(page).toHaveURL(/\/administrador\/home/);
     await page.goto("/administrador/personas/create");
 
-    await page.getByLabel("Tipo de documento").click();
+    await page.getByLabel("Tipo de identificación").click();
     await page.getByRole("option").first().click();
     await page.getByLabel("Documento").fill(documento);
+    await page.getByLabel("Tipo de persona").click();
+    await page.getByTitle("Física", { exact: true }).click();
     await page.getByLabel("Nombre").fill("Creado desde Playwright");
     // Select multiple de antd: click abre el dropdown, se elige la opción por texto.
     await page.getByLabel("Roles").click();

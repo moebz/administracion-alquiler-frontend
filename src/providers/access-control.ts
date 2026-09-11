@@ -7,7 +7,7 @@ const RESOURCE_ALIAS: Record<string, string> = {
   "personas-todos": "personas",
   users: "usuarios",
   "contratos-alquiler": "contratos_alquiler",
-  "tipos-documento": "tipos_documento",
+  "tipos-identificacion": "tipos_identificacion",
   "tipos-relacion": "tipos_relacion",
   "edificios-todos": "edificios",
   "proveedores-todos": "proveedores",
@@ -27,6 +27,13 @@ const ACTION_SUFFIX: Record<string, string> = {
   delete: ".gestionar_estado",
 };
 
+// gastos no sigue el patrón crear/editar/gestionar_estado: un único permiso
+// (`gastos.solicitar`) gatea tanto el alta como la edición, y aprobar/rechazar
+// son acciones propias (botones del listado, no pasan por este mecanismo).
+const RESOURCE_ACTION_SUFFIX: Record<string, Record<string, string>> = {
+  gastos: { create: ".solicitar", edit: ".solicitar" },
+};
+
 const RESOURCES_WITH_PERMISSIONS = new Set([
   "personas",
   "personas-todos",
@@ -41,9 +48,10 @@ const RESOURCES_WITH_PERMISSIONS = new Set([
   "proveedores-todos",
   "rubros",
   "contratos-alquiler",
-  "tipos-documento",
+  "tipos-identificacion",
   "tipos-relacion",
   "ciudades",
+  "gastos",
 ]);
 
 /** null = acceso permitido sin chequeo (resources agrupadores como "catalogos", o desconocidos). */
@@ -56,7 +64,7 @@ export const requiredPermission = (resource: string, action: string): string | n
     return null;
   }
 
-  const suffix = ACTION_SUFFIX[action];
+  const suffix = RESOURCE_ACTION_SUFFIX[resource]?.[action] ?? ACTION_SUFFIX[action];
   if (!suffix) {
     return null;
   }
