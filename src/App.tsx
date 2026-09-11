@@ -55,7 +55,7 @@ import { PersonaList, PersonaCreate, PersonaEdit } from "./pages/personas";
 import { RoleList, RoleCreate, RoleEdit, RolePermissions } from "./pages/roles";
 import { EdificioList, EdificioCreate, EdificioEdit } from "./pages/edificios";
 import { BloqueList, BloqueCreate, BloqueEdit } from "./pages/bloques";
-import { UnidadList, UnidadCreate, UnidadEdit } from "./pages/unidades";
+import { UnidadList, UnidadCreate, UnidadEdit, UnidadShow } from "./pages/unidades";
 import {
   ContratoAlquilerList,
   ContratoAlquilerCreate,
@@ -200,6 +200,7 @@ function App() {
                     list: "/administrador/unidades",
                     create: "/administrador/unidades/create",
                     edit: "/administrador/unidades/edit/:id",
+                    show: "/administrador/unidades/show/:id",
                     meta: {
                       label: "Unidades",
                       icon: <HomeOutlined />,
@@ -397,6 +398,7 @@ function App() {
                         <Route index element={<UnidadList />} />
                         <Route path="create" element={<UnidadCreate />} />
                         <Route path="edit/:id" element={<UnidadEdit />} />
+                        <Route path="show/:id" element={<UnidadShow />} />
                       </Route>
                       <Route path="contratos-alquiler">
                         <Route index element={<ContratoAlquilerList />} />

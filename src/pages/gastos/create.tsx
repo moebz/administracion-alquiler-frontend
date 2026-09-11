@@ -7,7 +7,8 @@ import { A_CARGO_DE_OPTIONS, GASTO_TIPO_OPTIONS } from "./types";
 export const GastoCreate = () => {
   const { formProps, saveButtonProps } = useForm({});
 
-  // Prellenado desde el botón "Registrar gasto" del listado/detalle de Unidades.
+  // Prellenado desde el botón "Registrar gasto" del detalle de Unidades
+  // (frontend/src/pages/unidades/show.tsx).
   const [searchParams] = useSearchParams();
   const unidadIdParam = searchParams.get("unidad_id");
   const unidadId = unidadIdParam ? Number(unidadIdParam) : undefined;

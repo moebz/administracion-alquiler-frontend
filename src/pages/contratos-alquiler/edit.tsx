@@ -1,11 +1,14 @@
 import { Edit, useForm, useSelect } from "@refinedev/antd";
-import { DatePicker, Descriptions, Form, InputNumber, Select } from "antd";
+import { DatePicker, Form, InputNumber, Select } from "antd";
 import dayjs from "dayjs";
 import { CONTRATO_ALQUILER_ESTADO_OPTIONS, EXPENSAS_A_CARGO_OPTIONS } from "./types";
 
-// Sin `monto_alquiler`/`deposito` editables a propósito: el alquiler se
-// cambia creando un reajuste (App\Models\ContratoReajuste), no editando el
-// contrato, y el depósito no se edita desde acá — ver ARQUITECTURA.md.
+// Sin `monto_alquiler` editable a propósito: el alquiler se cambia creando
+// un reajuste (App\Models\ContratoReajuste), no editando el contrato — el
+// monto vigente ya se ve en el detalle de la unidad (pages/unidades/show.tsx)
+// antes de entrar acá, así que no hace falta repetirlo en este form.
+// Sin nada de depósito de garantía acá: se saca del front hasta que se pida
+// explícitamente retomar ese desarrollo — ver ARQUITECTURA.md.
 export const ContratoAlquilerEdit = () => {
   const { formProps, saveButtonProps, formLoading } = useForm({});
 
@@ -33,14 +36,6 @@ export const ContratoAlquilerEdit = () => {
 
   return (
     <Edit saveButtonProps={saveButtonProps} isLoading={formLoading} title="Editar contrato de alquiler">
-      <Descriptions column={1} size="small" style={{ marginBottom: 24 }} bordered>
-        <Descriptions.Item label="Alquiler vigente">
-          {formProps.initialValues?.monto_alquiler_vigente ?? "—"}
-        </Descriptions.Item>
-        <Descriptions.Item label="Depósito de garantía">
-          {formProps.initialValues?.deposito_garantia?.monto ?? "Sin depósito registrado"}
-        </Descriptions.Item>
-      </Descriptions>
       <Form {...formProps} layout="vertical">
         <Form.Item label="Unidad" name="unidad_id" rules={[{ required: true }]}>
           <Select {...unidadSelectProps} placeholder="Elegí una unidad" />

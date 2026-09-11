@@ -1,7 +1,6 @@
-import { EditButton, List, useTable } from "@refinedev/antd";
+import { EditButton, List, ShowButton, useTable } from "@refinedev/antd";
 import { App, Button, Space, Table, Tag } from "antd";
 import dayjs from "dayjs";
-import { useNavigate } from "react-router";
 import { ActiveFilterSwitch } from "../../components/active-filter-switch";
 import { kyInstance } from "../../providers/data";
 import { extractErrorMessage } from "../../providers/auth";
@@ -15,7 +14,6 @@ export const UnidadList = () => {
     },
   });
   const { message } = App.useApp();
-  const navigate = useNavigate();
 
   const showInactive = !filters.some((filter) => "field" in filter && filter.field === "is_active");
   const toggleShowInactive = (checked: boolean) => {
@@ -82,15 +80,11 @@ export const UnidadList = () => {
           dataIndex="actions"
           render={(_, record: UnidadRow) => (
             <Space>
+              {/* Ver detalle es la puerta de entrada a contrato y gastos de
+                  la unidad (pages/unidades/show.tsx) — de ahí que ya no haya
+                  botones de "Crear contrato" / "Registrar gasto" acá. */}
+              <ShowButton hideText size="small" recordItemId={record.id} />
               <EditButton hideText size="small" recordItemId={record.id} />
-              {!record.contrato_vigente_fecha_fin && (
-                <Button
-                  size="small"
-                  onClick={() => navigate(`/administrador/contratos-alquiler/create?unidad_id=${record.id}`)}
-                >
-                  Crear contrato
-                </Button>
-              )}
               <Button size="small" danger={record.is_active} onClick={() => toggleActive(record)}>
                 {record.is_active ? "Desactivar" : "Activar"}
               </Button>

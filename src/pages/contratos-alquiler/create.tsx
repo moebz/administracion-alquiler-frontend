@@ -7,8 +7,8 @@ import { CONTRATO_ALQUILER_ESTADO_OPTIONS, EXPENSAS_A_CARGO_OPTIONS } from "./ty
 export const ContratoAlquilerCreate = () => {
   const { formProps, saveButtonProps } = useForm({});
 
-  // Prellenado desde el botón "Crear contrato" del listado de Unidades
-  // (frontend/src/pages/unidades/list.tsx).
+  // Prellenado desde el botón "Crear contrato" del detalle de Unidades
+  // (frontend/src/pages/unidades/show.tsx).
   const [searchParams] = useSearchParams();
   const unidadIdParam = searchParams.get("unidad_id");
   const unidadId = unidadIdParam ? Number(unidadIdParam) : undefined;
@@ -78,9 +78,9 @@ export const ContratoAlquilerCreate = () => {
         <Form.Item label="Monto de alquiler mensual" name="monto_alquiler" rules={[{ required: true }]}>
           <InputNumber min={0} style={{ width: "100%" }} />
         </Form.Item>
-        <Form.Item label="Depósito de garantía" name="deposito">
-          <InputNumber min={0} style={{ width: "100%" }} />
-        </Form.Item>
+        {/* Sin campo de depósito de garantía: se saca del front hasta que se
+            pida explícitamente retomar ese desarrollo — ver ARQUITECTURA.md.
+            El modelo/endpoint lo siguen soportando (`deposito`, nullable). */}
         <Form.Item label="Día de vencimiento" name="dia_vencimiento" rules={[{ required: true }]}>
           <InputNumber min={1} max={31} style={{ width: "100%" }} />
         </Form.Item>

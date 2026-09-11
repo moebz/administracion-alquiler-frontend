@@ -51,7 +51,10 @@ export type ContratoAlquilerRow = {
   // monto vive en contrato_reajustes, no en el contrato — se cambia
   // creando un reajuste, no editando el contrato.
   monto_alquiler_vigente: number | null;
-  deposito_garantia: { monto: number; estado: "RECIBIDO" | "DEVUELTO" | "RETENIDO" } | null;
+  // Sin `deposito_garantia` acá a propósito: el depósito de garantía se saca
+  // del front hasta que se pida explícitamente retomar ese desarrollo — ver
+  // ARQUITECTURA.md. El backend lo sigue devolviendo; este tipo simplemente
+  // no lo declara.
   comision_pct: number;
   mora_pct_diario: number;
   mora_tope_pct: number | null;

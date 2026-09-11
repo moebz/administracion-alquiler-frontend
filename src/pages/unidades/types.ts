@@ -37,6 +37,9 @@ export type UnidadRow = {
   cantidad_ambientes: number | null;
   estado: UnidadEstado;
   contrato_vigente_fecha_fin: string | null;
+  // Id del contrato VIGENTE, si existe (ver pages/unidades/show.tsx, que lo usa
+  // para pedir el contrato completo a contratos-alquiler/:id).
+  contrato_vigente_id: number | null;
   is_active: boolean;
   fecha_baja: string | null;
 };

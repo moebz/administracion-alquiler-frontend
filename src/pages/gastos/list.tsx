@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CreateButton, EditButton, List, useTable } from "@refinedev/antd";
+import { EditButton, List, useTable } from "@refinedev/antd";
 import type { CrudFilter } from "@refinedev/core";
 import { App, Button, Form, Input, Modal, Popconfirm, Select, Space, Table, Tag } from "antd";
 import { kyInstance } from "../../providers/data";
@@ -62,7 +62,7 @@ export const GastoList = () => {
   };
 
   return (
-    <List title="Gastos" headerButtons={() => <CreateButton />}>
+    <List title="Gastos" headerButtons={() => null}>
       <Space wrap style={{ marginBottom: 16 }}>
         <Space>
           <span>Estado</span>
