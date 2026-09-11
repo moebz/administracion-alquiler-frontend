@@ -1,6 +1,6 @@
 import type { AccessControlProvider } from "@refinedev/core";
 import { authProvider } from "./auth";
-import { accessPermission } from "./sections";
+import { accessPermission, type Section } from "./sections";
 
 // Resources cuyo nombre de permiso no matchea 1 a 1 con el nombre del resource.
 const RESOURCE_ALIAS: Record<string, string> = {
@@ -13,10 +13,26 @@ const RESOURCE_ALIAS: Record<string, string> = {
   "proveedores-todos": "proveedores",
 };
 
-// roles/permisos se gatean con un único permiso sin importar la acción.
+// roles/permisos y las pantallas propias de la sección propietario se gatean
+// con un único permiso sin importar la acción. `catalogos` es un resource
+// agrupador puro (sin list/create/edit propio, ver App.tsx): todos sus hijos
+// ya piden acceso.administrador indirectamente (bancos.ver, etc. exigen
+// también acceso.administrador vía RESOURCE_SECTION), pero el nodo padre en
+// sí no tenía ningún permiso asociado — quedaba visible en el menú para
+// cualquier sección (ver "resources agrupadores" más abajo). Se lo ata acá
+// explícitamente para que no aparezca fuera de /administrador.
 const FIXED_PERMISSION: Record<string, string> = {
   roles: "roles.administrar",
   permisos: "roles.administrar",
+  catalogos: "acceso.administrador",
+  "propietario/gastos": "gastos.aprobar_propio",
+};
+
+// Sección a la que pertenece cada resource, para el chequeo de acceso.accion
+// de abajo. Default "administrador": hoy todo resource con permiso propio
+// vive ahí, salvo el que se declare acá explícitamente.
+const RESOURCE_SECTION: Record<string, Section> = {
+  "propietario/gastos": "propietario",
 };
 
 const ACTION_SUFFIX: Record<string, string> = {
@@ -54,7 +70,7 @@ const RESOURCES_WITH_PERMISSIONS = new Set([
   "gastos",
 ]);
 
-/** null = acceso permitido sin chequeo (resources agrupadores como "catalogos", o desconocidos). */
+/** null = acceso permitido sin chequeo (resources desconocidos, o agrupadores sin entrada en FIXED_PERMISSION). */
 export const requiredPermission = (resource: string, action: string): string | null => {
   if (FIXED_PERMISSION[resource]) {
     return FIXED_PERMISSION[resource];
@@ -72,16 +88,18 @@ export const requiredPermission = (resource: string, action: string): string | n
   return (RESOURCE_ALIAS[resource] ?? resource) + suffix;
 };
 
-// Todo resource con permiso propio vive hoy bajo /administrador — sin esto,
-// un rol con ej. `edificios.ver` pero sin `acceso.administrador` ve el link
-// en el menú aunque SectionRoute lo rebote al entrar.
+// Un resource con permiso propio además necesita el acceso de la sección
+// donde vive (RESOURCE_SECTION, default "administrador") — sin esto, un rol
+// con ej. `edificios.ver` pero sin `acceso.administrador` vería el link en
+// el menú aunque SectionRoute lo rebote al entrar.
 export const canAccessResource = (permissions: string[], resource: string, action: string): boolean => {
   const permission = requiredPermission(resource, action);
   if (!permission) {
     return true;
   }
 
-  return permissions.includes(permission) && permissions.includes(accessPermission("administrador"));
+  const section = RESOURCE_SECTION[resource] ?? "administrador";
+  return permissions.includes(permission) && permissions.includes(accessPermission(section));
 };
 
 export const accessControlProvider: AccessControlProvider = {

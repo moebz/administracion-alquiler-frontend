@@ -34,12 +34,21 @@ describe("requiredPermission", () => {
     expect(requiredPermission("gastos", "edit")).toBe("gastos.solicitar");
   });
 
-  it("devuelve null para resources agrupadores sin permisos propios", () => {
-    expect(requiredPermission("catalogos", "list")).toBeNull();
+  it("resuelve catalogos (agrupador sin permiso propio) a acceso.administrador", () => {
+    expect(requiredPermission("catalogos", "list")).toBe("acceso.administrador");
+  });
+
+  it("devuelve null para resources agrupadores sin entrada en FIXED_PERMISSION", () => {
+    expect(requiredPermission("algo-agrupador-sin-declarar", "list")).toBeNull();
   });
 
   it("devuelve null para resources desconocidos", () => {
     expect(requiredPermission("algo-inventado", "list")).toBeNull();
+  });
+
+  it("resuelve las pantallas de propietario a un unico permiso sin importar la accion", () => {
+    expect(requiredPermission("propietario/gastos", "list")).toBe("gastos.aprobar_propio");
+    expect(requiredPermission("propietario/gastos", "edit")).toBe("gastos.aprobar_propio");
   });
 });
 
@@ -56,7 +65,26 @@ describe("canAccessResource", () => {
     expect(canAccessResource(["acceso.administrador"], "edificios", "list")).toBe(false);
   });
 
-  it("permite sin chequear nada para resources agrupadores", () => {
-    expect(canAccessResource([], "catalogos", "list")).toBe(true);
+  it("permite sin chequear nada para un resource agrupador sin entrada en FIXED_PERMISSION", () => {
+    expect(canAccessResource([], "algo-agrupador-sin-declarar", "list")).toBe(true);
+  });
+
+  it("deniega catalogos (agrupador admin-only) a quien no tiene acceso.administrador", () => {
+    expect(canAccessResource(["acceso.propietario"], "catalogos", "list")).toBe(false);
+    expect(canAccessResource([], "catalogos", "list")).toBe(false);
+  });
+
+  it("permite catalogos a quien tiene acceso.administrador", () => {
+    expect(canAccessResource(["acceso.administrador"], "catalogos", "list")).toBe(true);
+  });
+
+  it("un resource de la seccion propietario pide el acceso de esa seccion, no el de administrador", () => {
+    expect(canAccessResource(["gastos.aprobar_propio", "acceso.propietario"], "propietario/gastos", "list")).toBe(
+      true,
+    );
+    expect(canAccessResource(["gastos.aprobar_propio", "acceso.administrador"], "propietario/gastos", "list")).toBe(
+      false,
+    );
+    expect(canAccessResource(["acceso.propietario"], "propietario/gastos", "list")).toBe(false);
   });
 });

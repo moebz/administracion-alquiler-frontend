@@ -1,8 +1,12 @@
+import { useEffect } from "react";
 import { Create, useForm, useSelect } from "@refinedev/antd";
+import { useOne } from "@refinedev/core";
 import { DatePicker, Form, Input, InputNumber, Select, Switch } from "antd";
 import dayjs from "dayjs";
 import { useSearchParams } from "react-router";
-import { A_CARGO_DE_OPTIONS, GASTO_TIPO_OPTIONS } from "./types";
+import type { ContratoAlquilerRow } from "../contratos-alquiler/types";
+import type { UnidadRow } from "../unidades/types";
+import { A_CARGO_DE_LABEL, A_CARGO_DE_OPTIONS, type ACargoDe, GASTO_TIPO_OPTIONS } from "./types";
 
 export const GastoCreate = () => {
   const { formProps, saveButtonProps } = useForm({});
@@ -29,6 +33,44 @@ export const GastoCreate = () => {
   });
 
   const tipo = Form.useWatch("tipo", formProps.form);
+  const unidadSeleccionadaId = Form.useWatch("unidad_id", formProps.form);
+  const esExpensa = tipo === "EXPENSA";
+
+  // Sugerencia de "a cargo de" para expensas: MODELO_DATOS.md ("Gastos") la
+  // ata a contratos_alquiler.expensas_a_cargo_de del contrato vigente de la
+  // unidad, o PROPIETARIO si no hay contrato — misma regla que
+  // GastoService::registrarExpensa() en el backend, acá solo como sugerencia
+  // editable (no se fuerza el valor).
+  const { result: unidadSeleccionada, query: unidadQuery } = useOne<UnidadRow>({
+    resource: "unidades",
+    id: unidadSeleccionadaId ?? "",
+    queryOptions: { enabled: esExpensa && !!unidadSeleccionadaId },
+  });
+  const contratoVigenteId = unidadSeleccionada?.contrato_vigente_id ?? null;
+
+  const { result: contratoVigente, query: contratoQuery } = useOne<ContratoAlquilerRow>({
+    resource: "contratos-alquiler",
+    id: contratoVigenteId ?? "",
+    queryOptions: { enabled: esExpensa && !!contratoVigenteId },
+  });
+
+  // Mientras la unidad todavía no cargó, `contratoVigenteId` es null igual
+  // que "sin contrato" — sin este chequeo se sugeriría PROPIETARIO de
+  // entrada y después "saltaría" a INQUILINO cuando llegue el dato real.
+  const cargandoSugerencia = unidadQuery.isFetching || contratoQuery.isFetching;
+  const aCargoDeSugerido: ACargoDe | undefined = !esExpensa || !unidadSeleccionadaId || cargandoSugerencia
+    ? undefined
+    : contratoVigenteId
+      ? contratoVigente?.expensas_a_cargo_de
+      : "PROPIETARIO";
+
+  useEffect(() => {
+    if (!aCargoDeSugerido) return;
+    // Solo mientras el campo no fue tocado a mano: es una sugerencia inicial,
+    // no se le pisa una elección explícita del usuario.
+    if (formProps.form?.isFieldsTouched(["a_cargo_de"])) return;
+    formProps.form?.setFieldValue("a_cargo_de", aCargoDeSugerido);
+  }, [aCargoDeSugerido, formProps.form]);
 
   return (
     <Create saveButtonProps={saveButtonProps} title="Registrar gasto">
@@ -70,7 +112,16 @@ export const GastoCreate = () => {
         <Form.Item label="Proveedor" name="proveedor_id" rules={[{ required: true }]}>
           <Select {...proveedorSelectProps} placeholder="Elegí un proveedor" />
         </Form.Item>
-        <Form.Item label="A cargo de" name="a_cargo_de" rules={[{ required: true }]}>
+        <Form.Item
+          label="A cargo de"
+          name="a_cargo_de"
+          rules={[{ required: true }]}
+          extra={
+            aCargoDeSugerido
+              ? `Sugerido por el contrato vigente de la unidad: ${A_CARGO_DE_LABEL[aCargoDeSugerido]}. Podés cambiarlo.`
+              : undefined
+          }
+        >
           <Select options={A_CARGO_DE_OPTIONS} />
         </Form.Item>
         <Form.Item label="Requiere aprobación" name="requiere_aprobacion" valuePropName="checked">

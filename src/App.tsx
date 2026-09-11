@@ -73,6 +73,7 @@ import {
 } from "./pages/tipos-identificacion";
 import { TipoRelacionList, TipoRelacionCreate, TipoRelacionEdit } from "./pages/tipos-relacion";
 import { CiudadList, CiudadCreate, CiudadEdit } from "./pages/ciudades";
+import { GastoAprobacionList } from "./pages/propietario-gastos";
 
 function App() {
   return (
@@ -271,6 +272,19 @@ function App() {
                     },
                   },
                   {
+                    // Nombre = path del endpoint (/api/propietario/gastos):
+                    // el data provider usa `resource` tal cual como URL, ver
+                    // providers/data.ts. Solo lista + aprobar/rechazar, sin
+                    // create/edit — esas acciones son botones del listado
+                    // (pages/propietario-gastos/list.tsx), no un form aparte.
+                    name: "propietario/gastos",
+                    list: "/propietario/gastos",
+                    meta: {
+                      label: "Gastos",
+                      icon: <DollarOutlined />,
+                    },
+                  },
+                  {
                     name: "bancos",
                     list: "/administrador/bancos",
                     create: "/administrador/bancos/create",
@@ -440,6 +454,18 @@ function App() {
                         <Route path="create" element={<CiudadCreate />} />
                         <Route path="edit/:id" element={<CiudadEdit />} />
                       </Route>
+                    </Route>
+                    <Route
+                      path="/propietario"
+                      element={
+                        <SectionRoute section="propietario">
+                          <CanAccess fallback={<ErrorComponent />}>
+                            <Outlet />
+                          </CanAccess>
+                        </SectionRoute>
+                      }
+                    >
+                      <Route path="gastos" element={<GastoAprobacionList />} />
                     </Route>
                     <Route path="*" element={<ErrorComponent />} />
                   </Route>
