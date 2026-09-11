@@ -13,17 +13,16 @@ const RESOURCE_ALIAS: Record<string, string> = {
   "proveedores-todos": "proveedores",
 };
 
-// roles/permisos y las pantallas propias de la sección propietario se gatean
-// con un único permiso sin importar la acción. `catalogos` es un resource
-// agrupador puro (sin list/create/edit propio, ver App.tsx): todos sus hijos
-// ya piden acceso.administrador indirectamente (bancos.ver, etc. exigen
-// también acceso.administrador vía RESOURCE_SECTION), pero el nodo padre en
-// sí no tenía ningún permiso asociado — quedaba visible en el menú para
-// cualquier sección (ver "resources agrupadores" más abajo). Se lo ata acá
+// roles y las pantallas propias de la sección propietario se gatean con un
+// único permiso sin importar la acción. `catalogos` es un resource agrupador
+// puro (sin list/create/edit propio, ver App.tsx): todos sus hijos ya piden
+// acceso.administrador indirectamente (bancos.ver, etc. exigen también
+// acceso.administrador vía RESOURCE_SECTION), pero el nodo padre en sí no
+// tenía ningún permiso asociado — quedaba visible en el menú para cualquier
+// sección (ver "resources agrupadores" más abajo). Se lo ata acá
 // explícitamente para que no aparezca fuera de /administrador.
 const FIXED_PERMISSION: Record<string, string> = {
   roles: "roles.administrar",
-  permisos: "roles.administrar",
   catalogos: "acceso.administrador",
   "propietario/gastos": "gastos.aprobar_propio",
 };

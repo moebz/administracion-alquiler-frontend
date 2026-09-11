@@ -1,27 +1,40 @@
 import { describe, expect, it } from "vitest";
 import {
-  buildMatrixRows,
-  buildPermissionRows,
   filterPermissions,
-  filterRoles,
+  filterRolesByName,
   groupCheckboxState,
   groupPermissions,
   isPermissionLocked,
   permissionsChanged,
+  permissionsSummary,
+  splitRolesByType,
   toggleGroupPermissions,
   type Permission,
   type RoleWithPermissions,
 } from "./permissions";
 
 const PERMISSIONS: Permission[] = [
-  { name: "usuarios.ver", label: "Ver usuarios", group: "usuarios", group_label: "Usuarios" },
+  {
+    name: "usuarios.ver",
+    label: "Ver usuarios",
+    short_label: "Ver",
+    group: "usuarios",
+    group_label: "Usuarios",
+  },
   {
     name: "roles.administrar",
     label: "Administrar permisos de los roles",
+    short_label: "Administrar permisos",
     group: "roles",
     group_label: "Roles",
   },
-  { name: "usuarios.crear", label: "Crear usuarios", group: "usuarios", group_label: "Usuarios" },
+  {
+    name: "usuarios.crear",
+    label: "Crear usuarios",
+    short_label: "Crear",
+    group: "usuarios",
+    group_label: "Usuarios",
+  },
 ];
 
 describe("groupPermissions", () => {
@@ -31,117 +44,9 @@ describe("groupPermissions", () => {
 
   it("agrupa los permisos por su campo group, preservando el orden de aparicion", () => {
     expect(groupPermissions(PERMISSIONS)).toEqual({
-      usuarios: [
-        { name: "usuarios.ver", label: "Ver usuarios", group: "usuarios", group_label: "Usuarios" },
-        { name: "usuarios.crear", label: "Crear usuarios", group: "usuarios", group_label: "Usuarios" },
-      ],
-      roles: [
-        {
-          name: "roles.administrar",
-          label: "Administrar permisos de los roles",
-          group: "roles",
-          group_label: "Roles",
-        },
-      ],
+      usuarios: [PERMISSIONS[0], PERMISSIONS[2]],
+      roles: [PERMISSIONS[1]],
     });
-  });
-});
-
-describe("buildPermissionRows", () => {
-  it("devuelve una lista vacia si no hay permisos", () => {
-    expect(buildPermissionRows([])).toEqual([]);
-  });
-
-  it("marca la primera fila de cada grupo y cuantas filas ocupa", () => {
-    const rows = buildPermissionRows(PERMISSIONS);
-
-    expect(rows).toEqual([
-      {
-        name: "usuarios.ver",
-        label: "Ver usuarios",
-        group: "usuarios",
-        group_label: "Usuarios",
-        isFirstInGroup: true,
-        groupSize: 2,
-      },
-      {
-        name: "usuarios.crear",
-        label: "Crear usuarios",
-        group: "usuarios",
-        group_label: "Usuarios",
-        isFirstInGroup: false,
-        groupSize: 2,
-      },
-      {
-        name: "roles.administrar",
-        label: "Administrar permisos de los roles",
-        group: "roles",
-        group_label: "Roles",
-        isFirstInGroup: true,
-        groupSize: 1,
-      },
-    ]);
-  });
-});
-
-describe("buildMatrixRows", () => {
-  it("devuelve una lista vacia si no hay permisos", () => {
-    expect(buildMatrixRows([])).toEqual([]);
-  });
-
-  it("antepone una fila header por grupo, con groupSize contando esa fila", () => {
-    const rows = buildMatrixRows(PERMISSIONS);
-
-    expect(rows).toEqual([
-      {
-        rowType: "group",
-        key: "group:usuarios",
-        group: "usuarios",
-        groupLabel: "Usuarios",
-        names: ["usuarios.ver", "usuarios.crear"],
-        isFirstInGroup: true,
-        groupSize: 3,
-      },
-      {
-        rowType: "permission",
-        key: "usuarios.ver",
-        name: "usuarios.ver",
-        label: "Ver usuarios",
-        group: "usuarios",
-        group_label: "Usuarios",
-        isFirstInGroup: false,
-        groupSize: 3,
-      },
-      {
-        rowType: "permission",
-        key: "usuarios.crear",
-        name: "usuarios.crear",
-        label: "Crear usuarios",
-        group: "usuarios",
-        group_label: "Usuarios",
-        isFirstInGroup: false,
-        groupSize: 3,
-      },
-      {
-        rowType: "group",
-        key: "group:roles",
-        group: "roles",
-        groupLabel: "Roles",
-        names: ["roles.administrar"],
-        isFirstInGroup: true,
-        groupSize: 2,
-      },
-      {
-        rowType: "permission",
-        key: "roles.administrar",
-        name: "roles.administrar",
-        label: "Administrar permisos de los roles",
-        group: "roles",
-        group_label: "Roles",
-        isFirstInGroup: false,
-        groupSize: 2,
-      },
-    ]);
   });
 });
 
@@ -234,6 +139,8 @@ describe("groupCheckboxState", () => {
       indeterminate: false,
       disabled: true,
       togglableNames: [],
+      activeCount: 2,
+      total: 2,
     });
   });
 
@@ -243,6 +150,8 @@ describe("groupCheckboxState", () => {
       indeterminate: false,
       disabled: false,
       togglableNames: ["usuarios.ver", "usuarios.crear"],
+      activeCount: 0,
+      total: 2,
     });
   });
 
@@ -252,6 +161,8 @@ describe("groupCheckboxState", () => {
       indeterminate: true,
       disabled: false,
       togglableNames: ["usuarios.ver", "usuarios.crear"],
+      activeCount: 1,
+      total: 2,
     });
   });
 
@@ -263,11 +174,28 @@ describe("groupCheckboxState", () => {
       indeterminate: false,
       disabled: false,
       togglableNames: ["usuarios.ver", "usuarios.crear"],
+      activeCount: 2,
+      total: 2,
     });
   });
 });
 
-describe("filterRoles", () => {
+describe("toggleGroupPermissions", () => {
+  it("agrega los nombres togglables sin duplicar los que ya estaban", () => {
+    expect(toggleGroupPermissions(["usuarios.ver"], ["usuarios.ver", "usuarios.crear"], true)).toEqual([
+      "usuarios.ver",
+      "usuarios.crear",
+    ]);
+  });
+
+  it("quita los nombres togglables, dejando el resto intacto", () => {
+    expect(
+      toggleGroupPermissions(["usuarios.ver", "usuarios.crear", "roles.administrar"], ["usuarios.ver", "usuarios.crear"], false),
+    ).toEqual(["roles.administrar"]);
+  });
+});
+
+describe("filterRolesByName", () => {
   const administrador: RoleWithPermissions = {
     id: 1,
     name: "administrador",
@@ -286,26 +214,64 @@ describe("filterRoles", () => {
     personas_count: 0,
   };
 
-  it("devuelve todos los roles si no hay ninguno seleccionado", () => {
-    expect(filterRoles([administrador, contador], [])).toEqual([administrador, contador]);
+  it("devuelve todos los roles si el termino esta vacio", () => {
+    expect(filterRolesByName([administrador, contador], "  ")).toEqual([administrador, contador]);
   });
 
-  it("devuelve solo los roles cuyo id esta en la seleccion", () => {
-    expect(filterRoles([administrador, contador], [2])).toEqual([contador]);
+  it("filtra por nombre, sin importar mayusculas", () => {
+    expect(filterRolesByName([administrador, contador], "CONTA")).toEqual([contador]);
   });
 });
 
-describe("toggleGroupPermissions", () => {
-  it("agrega los nombres togglables sin duplicar los que ya estaban", () => {
-    expect(toggleGroupPermissions(["usuarios.ver"], ["usuarios.ver", "usuarios.crear"], true)).toEqual([
-      "usuarios.ver",
-      "usuarios.crear",
-    ]);
+describe("splitRolesByType", () => {
+  it("separa los roles de sistema de los personalizados, preservando el orden", () => {
+    const administrador: RoleWithPermissions = {
+      id: 1,
+      name: "administrador",
+      permissions: [],
+      es_sistema: true,
+      permisos_obligatorios: [],
+      personas_count: 1,
+    };
+    const contador: RoleWithPermissions = {
+      id: 2,
+      name: "contador",
+      permissions: [],
+      es_sistema: false,
+      permisos_obligatorios: [],
+      personas_count: 0,
+    };
+    const cobrador: RoleWithPermissions = {
+      id: 3,
+      name: "cobrador",
+      permissions: [],
+      es_sistema: false,
+      permisos_obligatorios: [],
+      personas_count: 0,
+    };
+
+    expect(splitRolesByType([administrador, contador, cobrador])).toEqual({
+      sistema: [administrador],
+      personalizados: [contador, cobrador],
+    });
+  });
+});
+
+describe("permissionsSummary", () => {
+  it("cuenta los nombres seleccionados contra el total del catalogo", () => {
+    expect(permissionsSummary(["usuarios.ver", "usuarios.crear"], PERMISSIONS)).toEqual({
+      count: 2,
+      total: 3,
+    });
   });
 
-  it("quita los nombres togglables, dejando el resto intacto", () => {
+  it("devuelve 0 de N sin seleccion", () => {
+    expect(permissionsSummary([], PERMISSIONS)).toEqual({ count: 0, total: 3 });
+  });
+
+  it("no cuenta permisos que el rol tiene pero ya no estan en el catalogo asignable (ej. administrador con tipos_relacion)", () => {
     expect(
-      toggleGroupPermissions(["usuarios.ver", "usuarios.crear", "roles.administrar"], ["usuarios.ver", "usuarios.crear"], false),
-    ).toEqual(["roles.administrar"]);
+      permissionsSummary(["usuarios.ver", "usuarios.crear", "tipos_relacion.ver"], PERMISSIONS),
+    ).toEqual({ count: 2, total: 3 });
   });
 });

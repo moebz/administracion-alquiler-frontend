@@ -21,11 +21,10 @@ describe("requiredPermission", () => {
     expect(requiredPermission("proveedores-todos", "list")).toBe("proveedores.ver");
   });
 
-  it("resuelve roles y permisos a roles.administrar sin importar la accion", () => {
+  it("resuelve roles a roles.administrar sin importar la accion", () => {
     expect(requiredPermission("roles", "list")).toBe("roles.administrar");
     expect(requiredPermission("roles", "create")).toBe("roles.administrar");
     expect(requiredPermission("roles", "delete")).toBe("roles.administrar");
-    expect(requiredPermission("permisos", "list")).toBe("roles.administrar");
   });
 
   it("resuelve gastos a un unico permiso (solicitar) para crear y editar", () => {

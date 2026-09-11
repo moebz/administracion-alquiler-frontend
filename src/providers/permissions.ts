@@ -1,6 +1,7 @@
 export type Permission = {
   name: string;
   label: string;
+  short_label: string;
   group: string;
   group_label: string;
 };
@@ -14,14 +15,9 @@ export type RoleWithPermissions = {
   personas_count: number;
 };
 
-/** Un permiso obligatorio de un rol de sistema no se puede destildar en la matriz. */
+/** Un permiso obligatorio de un rol de sistema no se puede destildar en el panel. */
 export const isPermissionLocked = (role: RoleWithPermissions, permission: string): boolean =>
   role.permisos_obligatorios.includes(permission);
-
-export type PermissionRow = Permission & {
-  isFirstInGroup: boolean;
-  groupSize: number;
-};
 
 /** Agrupa el catálogo plano que devuelve GET /permissions por su campo `group`. */
 export const groupPermissions = (permissions: Permission[]): Record<string, Permission[]> =>
@@ -29,68 +25,6 @@ export const groupPermissions = (permissions: Permission[]): Record<string, Perm
     (groups[permission.group] ??= []).push(permission);
     return groups;
   }, {});
-
-/**
- * Aplana el catálogo agrupado en filas para la tabla-matriz (permiso ×
- * rol), marcando la primera fila de cada grupo y cuántas filas ocupa —
- * para el `rowSpan` de la columna "Recurso".
- */
-export const buildPermissionRows = (permissions: Permission[]): PermissionRow[] =>
-  Object.values(groupPermissions(permissions)).flatMap((items) =>
-    items.map((permission, index) => ({
-      ...permission,
-      isFirstInGroup: index === 0,
-      groupSize: items.length,
-    })),
-  );
-
-/** Fila "header" de un grupo: el toggle que tilda/destilda todo el recurso de un saque. */
-export type MatrixGroupRow = {
-  rowType: "group";
-  key: string;
-  group: string;
-  groupLabel: string;
-  names: string[];
-  isFirstInGroup: true;
-  groupSize: number;
-};
-
-export type MatrixPermissionRow = Permission & {
-  rowType: "permission";
-  key: string;
-  isFirstInGroup: false;
-  groupSize: number;
-};
-
-export type MatrixRow = MatrixGroupRow | MatrixPermissionRow;
-
-/**
- * Arma las filas de la matriz permiso × rol: una fila "header" por grupo
- * (para el toggle de "todo el recurso") seguida de sus filas de permiso. El
- * `groupSize` de la fila header cuenta también su propia fila, para el
- * `rowSpan` de la columna "Recurso" (que arranca en el header y cubre sus
- * filas de permiso).
- */
-export const buildMatrixRows = (permissions: Permission[]): MatrixRow[] =>
-  Object.entries(groupPermissions(permissions)).flatMap(([group, items]) => {
-    const header: MatrixGroupRow = {
-      rowType: "group",
-      key: `group:${group}`,
-      group,
-      groupLabel: items[0]?.group_label ?? group,
-      names: items.map((item) => item.name),
-      isFirstInGroup: true,
-      groupSize: items.length + 1,
-    };
-    const rows: MatrixPermissionRow[] = items.map((item) => ({
-      ...item,
-      rowType: "permission",
-      key: item.name,
-      isFirstInGroup: false,
-      groupSize: items.length + 1,
-    }));
-    return [header, ...rows];
-  });
 
 /** Filtra el catálogo por texto libre, contra la etiqueta del grupo y la del permiso. */
 export const filterPermissions = (permissions: Permission[], search: string): Permission[] => {
@@ -108,14 +42,16 @@ export type GroupCheckboxState = {
   indeterminate: boolean;
   disabled: boolean;
   togglableNames: string[];
+  /** Cuántas de las acciones del grupo están activas (tildadas o bloqueadas), para el contador "2/4". */
+  activeCount: number;
+  total: number;
 };
 
 /**
- * Estado del checkbox "todo el recurso" de una fila header, para un rol
- * dado: tildado si las N acciones del grupo están todas activas (tildadas o
- * bloqueadas por ser obligatorias), indeterminado si solo algunas, y
- * deshabilitado si el grupo entero es obligatorio para ese rol (nada para
- * tildar/destildar).
+ * Estado del checkbox "Todos" de un recurso, para el rol elegido: tildado si
+ * las N acciones del recurso están todas activas (tildadas o bloqueadas por
+ * ser obligatorias), indeterminado si solo algunas, y deshabilitado si el
+ * recurso entero es obligatorio para ese rol (nada para tildar/destildar).
  */
 export const groupCheckboxState = (
   role: RoleWithPermissions,
@@ -131,6 +67,8 @@ export const groupCheckboxState = (
     indeterminate: activeCount > 0 && activeCount < names.length,
     disabled: togglableNames.length === 0,
     togglableNames,
+    activeCount,
+    total: names.length,
   };
 };
 
@@ -144,13 +82,6 @@ export const toggleGroupPermissions = (
     ? Array.from(new Set([...current, ...togglableNames]))
     : current.filter((name) => !togglableNames.includes(name));
 
-/** Filtra qué columnas de rol se muestran en la matriz; sin selección, se muestran todas. */
-export const filterRoles = (
-  roles: RoleWithPermissions[],
-  selectedIds: number[],
-): RoleWithPermissions[] =>
-  selectedIds.length === 0 ? roles : roles.filter((role) => selectedIds.includes(role.id));
-
 /** Compara dos listas de permisos sin importar el orden. */
 export const permissionsChanged = (current: string[], original: string[]): boolean => {
   if (current.length !== original.length) {
@@ -159,4 +90,47 @@ export const permissionsChanged = (current: string[], original: string[]): boole
   const sortedCurrent = [...current].sort();
   const sortedOriginal = [...original].sort();
   return sortedCurrent.some((name, index) => name !== sortedOriginal[index]);
+};
+
+/** Filtra roles por nombre, para el buscador del panel de roles. */
+export const filterRolesByName = (
+  roles: RoleWithPermissions[],
+  search: string,
+): RoleWithPermissions[] => {
+  const term = search.trim().toLowerCase();
+  if (!term) {
+    return roles;
+  }
+  return roles.filter((role) => role.name.toLowerCase().includes(term));
+};
+
+/** Separa los roles de sistema (fijos) de los personalizados, para las dos secciones del panel. */
+export const splitRolesByType = (
+  roles: RoleWithPermissions[],
+): { sistema: RoleWithPermissions[]; personalizados: RoleWithPermissions[] } => ({
+  sistema: roles.filter((role) => role.es_sistema),
+  personalizados: roles.filter((role) => !role.es_sistema),
+});
+
+/**
+ * "N de M permisos" para el resumen del panel — cuenta contra el catálogo
+ * completo asignable. Toma la lista de nombres seleccionados (no el rol
+ * entero) para que sirva tanto con los permisos guardados como con el draft
+ * en edición.
+ *
+ * `selectedNames` puede traer permisos que ya no están en `allPermissions`
+ * (ej. de un grupo que se sacó de `Permissions::asignable()`, como
+ * `tipos_relacion` — administrador los tiene todos vía `Roles::seedSistema`,
+ * ver ARQUITECTURA.md): se ignoran para el conteo, si no `count` termina
+ * mayor que `total`.
+ */
+export const permissionsSummary = (
+  selectedNames: string[],
+  allPermissions: Permission[],
+): { count: number; total: number } => {
+  const assignableNames = new Set(allPermissions.map((permission) => permission.name));
+  return {
+    count: selectedNames.filter((name) => assignableNames.has(name)).length,
+    total: allPermissions.length,
+  };
 };

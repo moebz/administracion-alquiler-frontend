@@ -52,7 +52,7 @@ import { RoleBasedIndex } from "./components/role-based-index";
 import { SECTIONS } from "./providers/sections";
 import { UserCreate, UserEdit } from "./pages/users";
 import { PersonaList, PersonaCreate, PersonaEdit } from "./pages/personas";
-import { RoleList, RoleCreate, RoleEdit, RolePermissions } from "./pages/roles";
+import { RoleList } from "./pages/roles";
 import { EdificioList, EdificioCreate, EdificioEdit } from "./pages/edificios";
 import { BloqueList, BloqueCreate, BloqueEdit } from "./pages/bloques";
 import { UnidadList, UnidadCreate, UnidadEdit, UnidadShow } from "./pages/unidades";
@@ -110,22 +110,14 @@ function App() {
                     },
                   },
                   {
+                    // Sin `create`/`edit`: alta y renombrado de rol se hacen
+                    // con un modal desde la propia lista (ver pages/roles),
+                    // que también tiene los permisos del rol elegido — ya no
+                    // hay una pantalla de "Permisos por rol" aparte.
                     name: "roles",
                     list: "/administrador/roles",
-                    create: "/administrador/roles/create",
-                    edit: "/administrador/roles/edit/:id",
                     meta: {
                       label: "Roles",
-                      icon: <SafetyCertificateOutlined />,
-                      parent: "personas",
-                    },
-                  },
-                  {
-                    // Sin endpoint propio: la página es la matriz de permisos por rol.
-                    name: "permisos",
-                    list: "/administrador/roles/permisos",
-                    meta: {
-                      label: "Permisos por rol",
                       icon: <SafetyCertificateOutlined />,
                       parent: "personas",
                     },
@@ -389,9 +381,6 @@ function App() {
                       </Route>
                       <Route path="roles">
                         <Route index element={<RoleList />} />
-                        <Route path="create" element={<RoleCreate />} />
-                        <Route path="edit/:id" element={<RoleEdit />} />
-                        <Route path="permisos" element={<RolePermissions />} />
                       </Route>
                       <Route path="edificios">
                         <Route index element={<EdificioList />} />

@@ -150,7 +150,17 @@ export const PersonaList = () => {
         <Table.Column
           dataIndex="roles"
           title="Roles"
-          render={(personaRoles: string[]) => (personaRoles.length ? personaRoles.map(capitalize).join(", ") : "—")}
+          render={(personaRoles: string[]) =>
+            personaRoles.length ? (
+              <Space size={[4, 4]} wrap>
+                {personaRoles.map((role) => (
+                  <Tag key={role}>{capitalize(role)}</Tag>
+                ))}
+              </Space>
+            ) : (
+              "—"
+            )
+          }
         />
         <Table.Column
           title="Email de cuenta"
