@@ -21,8 +21,8 @@ export const SectionDivider = ({
   // acciones/links que sí usan colorPrimary. La línea va un escalón más
   // clara todavía que el ícono/texto, para que no sea lo más marcado del
   // Divider.
-  const color = token.colorPrimaryBorderHover;
-  const lineColor = token.colorPrimaryBorder;
+  const color = token.colorPrimaryTextHover;
+  const lineColor = token.colorPrimaryBgHover;
   return (
     <ConfigProvider theme={{ components: { Divider: { colorSplit: lineColor } } }}>
       <Divider orientation="left" orientationMargin={0} style={style}>
