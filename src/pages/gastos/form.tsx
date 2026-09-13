@@ -181,7 +181,7 @@ export const GastoForm = ({ formProps, mostrarRequiereAprobacion }: GastoFormPro
       </Divider>
       <Row gutter={16}>
         <Col xs={24} md={8}>
-          <Form.Item label="Rubro" extra="Solo para buscar proveedores. No se guarda en el gasto.">
+          <Form.Item label="Filtrar proveedores por Rubro">
             <Select
               options={rubroSelectProps.options}
               onSearch={rubroSelectProps.onSearch}
