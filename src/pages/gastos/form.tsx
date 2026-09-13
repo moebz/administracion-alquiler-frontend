@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSelect } from "@refinedev/antd";
 import { useOne } from "@refinedev/core";
+import { FileTextOutlined, HomeOutlined, SafetyCertificateOutlined, ShopOutlined } from "@ant-design/icons";
 import { Col, DatePicker, Divider, Form, Input, InputNumber, Row, Select, Switch } from "antd";
 import type { FormProps } from "antd";
 import dayjs from "dayjs";
@@ -121,14 +122,15 @@ export const GastoForm = ({ formProps, mostrarRequiereAprobacion }: GastoFormPro
       // columna que las contiene (una de dos, una de tres, ancho completo).
       labelCol={{ xs: { span: 24 }, sm: { flex: "160px" } }}
       wrapperCol={{ xs: { span: 24 }, sm: { flex: 1 } }}
-      labelAlign="right"
+      labelAlign="left"
       labelWrap
       style={{ maxWidth: 960 }}
     >
       <Divider orientation="left" orientationMargin={0} style={{ marginTop: 0 }}>
+        <HomeOutlined style={{ marginRight: 8 }} />
         Unidad y tipo
       </Divider>
-      <Row gutter={16}>
+      <Row gutter={64} style={{ paddingLeft: 24 }}>
         <Col xs={24} md={12}>
           <Form.Item label="Unidad" name="unidad_id" rules={[{ required: true }]}>
             <Select {...unidadSelectProps} placeholder="Elegí una unidad" />
@@ -142,9 +144,10 @@ export const GastoForm = ({ formProps, mostrarRequiereAprobacion }: GastoFormPro
       </Row>
 
       <Divider orientation="left" orientationMargin={0}>
+        <FileTextOutlined style={{ marginRight: 8 }} />
         Detalle
       </Divider>
-      <Row gutter={16}>
+      <Row gutter={64} style={{ paddingLeft: 24 }}>
         <Col xs={24}>
           <Form.Item label="Descripción" name="descripcion" rules={[{ required: true }]}>
             <Input placeholder="Ej.: Reparación de cañería en baño" maxLength={255} showCount />
@@ -188,9 +191,10 @@ export const GastoForm = ({ formProps, mostrarRequiereAprobacion }: GastoFormPro
       </Row>
 
       <Divider orientation="left" orientationMargin={0}>
+        <ShopOutlined style={{ marginRight: 8 }} />
         Proveedor
       </Divider>
-      <Row gutter={16}>
+      <Row gutter={64} style={{ paddingLeft: 24 }}>
         <Col xs={24} md={12}>
           <Form.Item label="Filtrar por Rubro">
             <Select
@@ -218,9 +222,10 @@ export const GastoForm = ({ formProps, mostrarRequiereAprobacion }: GastoFormPro
       </Row>
 
       <Divider orientation="left" orientationMargin={0}>
+        <SafetyCertificateOutlined style={{ marginRight: 8 }} />
         Responsabilidad{mostrarRequiereAprobacion && esACargoDePropietario ? " y aprobación" : ""}
       </Divider>
-      <Row gutter={16}>
+      <Row gutter={64} style={{ paddingLeft: 24 }}>
         <Col xs={24} md={12}>
           <Form.Item
             label="A cargo de"
