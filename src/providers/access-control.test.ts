@@ -10,6 +10,13 @@ describe("requiredPermission", () => {
     expect(requiredPermission("bancos", "delete")).toBe("bancos.gestionar_estado");
   });
 
+  it("resuelve fondos igual que bancos (mismo patron crear/editar/gestionar_estado)", () => {
+    expect(requiredPermission("fondos", "list")).toBe("fondos.ver");
+    expect(requiredPermission("fondos", "create")).toBe("fondos.crear");
+    expect(requiredPermission("fondos", "edit")).toBe("fondos.editar");
+    expect(requiredPermission("fondos", "delete")).toBe("fondos.gestionar_estado");
+  });
+
   it("resuelve cada alias de resource a su grupo de permisos real", () => {
     expect(requiredPermission("personas-todos", "list")).toBe("personas.ver");
     expect(requiredPermission("personas", "create")).toBe("personas.crear");
@@ -64,17 +71,27 @@ describe("canAccessResource", () => {
     expect(canAccessResource(["acceso.administrador"], "edificios", "list")).toBe(false);
   });
 
+  it("deniega fondos a quien no tiene fondos.ver (regresion: faltaba en RESOURCES_WITH_PERMISSIONS)", () => {
+    expect(canAccessResource(["acceso.administrador", "edificios.ver"], "fondos", "list")).toBe(false);
+    expect(canAccessResource(["acceso.administrador", "fondos.ver"], "fondos", "list")).toBe(true);
+  });
+
   it("permite sin chequear nada para un resource agrupador sin entrada en FIXED_PERMISSION", () => {
     expect(canAccessResource([], "algo-agrupador-sin-declarar", "list")).toBe(true);
   });
 
   it("deniega catalogos (agrupador admin-only) a quien no tiene acceso.administrador", () => {
-    expect(canAccessResource(["acceso.propietario"], "catalogos", "list")).toBe(false);
+    expect(canAccessResource(["acceso.propietario", "bancos.ver"], "catalogos", "list")).toBe(false);
     expect(canAccessResource([], "catalogos", "list")).toBe(false);
   });
 
-  it("permite catalogos a quien tiene acceso.administrador", () => {
-    expect(canAccessResource(["acceso.administrador"], "catalogos", "list")).toBe(true);
+  it("deniega catalogos a quien tiene acceso.administrador pero ningun permiso de catalogo (regresion: submenu vacio)", () => {
+    expect(canAccessResource(["acceso.administrador", "edificios.ver"], "catalogos", "list")).toBe(false);
+  });
+
+  it("permite catalogos a quien tiene acceso.administrador y al menos un permiso de catalogo hijo", () => {
+    expect(canAccessResource(["acceso.administrador", "bancos.ver"], "catalogos", "list")).toBe(true);
+    expect(canAccessResource(["acceso.administrador", "fondos.ver"], "catalogos", "list")).toBe(true);
   });
 
   it("un resource de la seccion propietario pide el acceso de esa seccion, no el de administrador", () => {

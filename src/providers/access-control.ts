@@ -27,6 +27,14 @@ const FIXED_PERMISSION: Record<string, string> = {
   "propietario/gastos": "gastos.aprobar_propio",
 };
 
+// Resources con `meta.parent: "catalogos"` en App.tsx. ThemedSider (ver
+// @refinedev/antd) solo chequea el permiso del propio nodo padre al decidir
+// si renderiza el SubMenu — no mira si algún hijo es visible — así que sin
+// este chequeo extra un rol con acceso.administrador pero sin ningún permiso
+// de catálogo (ej. bancos.ver, fondos.ver) ve "Catálogos" en el menú con el
+// submenú vacío al desplegarlo.
+const CATALOGOS_CHILDREN = ["bancos", "fondos", "tipos-identificacion", "tipos-relacion", "ciudades"];
+
 // Sección a la que pertenece cada resource, para el chequeo de acceso.accion
 // de abajo. Default "administrador": hoy todo resource con permiso propio
 // vive ahí, salvo el que se declare acá explícitamente.
@@ -58,6 +66,7 @@ const RESOURCES_WITH_PERMISSIONS = new Set([
   "bloques",
   "unidades",
   "bancos",
+  "fondos",
   "comodidades",
   "proveedores",
   "proveedores-todos",
@@ -92,6 +101,15 @@ export const requiredPermission = (resource: string, action: string): string | n
 // con ej. `edificios.ver` pero sin `acceso.administrador` vería el link en
 // el menú aunque SectionRoute lo rebote al entrar.
 export const canAccessResource = (permissions: string[], resource: string, action: string): boolean => {
+  // Ver comentario de CATALOGOS_CHILDREN: además del permiso fijo del nodo
+  // padre, exigimos que al menos un catálogo hijo sea accesible.
+  if (resource === "catalogos") {
+    return (
+      permissions.includes(accessPermission("administrador")) &&
+      CATALOGOS_CHILDREN.some((child) => canAccessResource(permissions, child, "list"))
+    );
+  }
+
   const permission = requiredPermission(resource, action);
   if (!permission) {
     return true;
