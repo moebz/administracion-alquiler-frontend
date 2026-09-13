@@ -2,9 +2,11 @@ import { useEffect, useState } from "react";
 import { useSelect } from "@refinedev/antd";
 import { useOne } from "@refinedev/core";
 import { FileTextOutlined, HomeOutlined, SafetyCertificateOutlined, ShopOutlined } from "@ant-design/icons";
-import { Col, DatePicker, Divider, Form, Input, InputNumber, Row, Select, Switch } from "antd";
+import { Col, DatePicker, Form, Input, InputNumber, Select, Switch } from "antd";
 import type { FormProps } from "antd";
 import dayjs from "dayjs";
+import { SectionDivider } from "../../components/section-divider";
+import { SectionRow } from "../../components/section-row";
 import type { ContratoAlquilerRow } from "../contratos-alquiler/types";
 import type { UnidadRow } from "../unidades/types";
 import { A_CARGO_DE_LABEL, A_CARGO_DE_OPTIONS, type ACargoDe, GASTO_TIPO_OPTIONS } from "./types";
@@ -16,6 +18,13 @@ type GastoFormProps = {
   // ningún efecto, así que el campo no se muestra en Editar.
   mostrarRequiereAprobacion: boolean;
 };
+
+// Ancho de label fijo (no en `span`/porcentaje): así todas las etiquetas del
+// form miden lo mismo sin importar cuán ancha sea la columna que las
+// contiene (una de dos, una de tres, ancho completo).
+const FORM_MAX_WIDTH = 960;
+const LABEL_COL = { xs: { span: 24 }, sm: { flex: "160px" } };
+const WRAPPER_COL = { xs: { span: 24 }, sm: { flex: 1 } };
 
 // Form compartido entre Crear y Editar (pages/gastos/create.tsx y edit.tsx):
 // mismos campos, misma sugerencia de "a cargo de". Lo que difiere entre
@@ -117,20 +126,16 @@ export const GastoForm = ({ formProps, mostrarRequiereAprobacion }: GastoFormPro
     <Form
       {...formProps}
       layout="horizontal"
-      // Ancho de label fijo (no en `span`/porcentaje): así todas las
-      // etiquetas del form miden lo mismo sin importar cuán ancha sea la
-      // columna que las contiene (una de dos, una de tres, ancho completo).
-      labelCol={{ xs: { span: 24 }, sm: { flex: "160px" } }}
-      wrapperCol={{ xs: { span: 24 }, sm: { flex: 1 } }}
+      labelCol={LABEL_COL}
+      wrapperCol={WRAPPER_COL}
       labelAlign="left"
       labelWrap
-      style={{ maxWidth: 960 }}
+      style={{ maxWidth: FORM_MAX_WIDTH }}
     >
-      <Divider orientation="left" orientationMargin={0} style={{ marginTop: 0 }}>
-        <HomeOutlined style={{ marginRight: 8 }} />
+      <SectionDivider icon={<HomeOutlined />} style={{ marginTop: 0 }}>
         Unidad y tipo
-      </Divider>
-      <Row gutter={64} style={{ paddingLeft: 24 }}>
+      </SectionDivider>
+      <SectionRow>
         <Col xs={24} md={12}>
           <Form.Item label="Unidad" name="unidad_id" rules={[{ required: true }]}>
             <Select {...unidadSelectProps} placeholder="Elegí una unidad" />
@@ -141,13 +146,10 @@ export const GastoForm = ({ formProps, mostrarRequiereAprobacion }: GastoFormPro
             <Select options={GASTO_TIPO_OPTIONS} />
           </Form.Item>
         </Col>
-      </Row>
+      </SectionRow>
 
-      <Divider orientation="left" orientationMargin={0}>
-        <FileTextOutlined style={{ marginRight: 8 }} />
-        Detalle
-      </Divider>
-      <Row gutter={64} style={{ paddingLeft: 24 }}>
+      <SectionDivider icon={<FileTextOutlined />}>Detalle</SectionDivider>
+      <SectionRow>
         <Col xs={24}>
           <Form.Item label="Descripción" name="descripcion" rules={[{ required: true }]}>
             <Input placeholder="Ej.: Reparación de cañería en baño" maxLength={255} showCount />
@@ -188,13 +190,10 @@ export const GastoForm = ({ formProps, mostrarRequiereAprobacion }: GastoFormPro
             />
           </Form.Item>
         </Col>
-      </Row>
+      </SectionRow>
 
-      <Divider orientation="left" orientationMargin={0}>
-        <ShopOutlined style={{ marginRight: 8 }} />
-        Proveedor
-      </Divider>
-      <Row gutter={64} style={{ paddingLeft: 24 }}>
+      <SectionDivider icon={<ShopOutlined />}>Proveedor</SectionDivider>
+      <SectionRow>
         <Col xs={24} md={12}>
           <Form.Item label="Filtrar por Rubro">
             <Select
@@ -219,13 +218,12 @@ export const GastoForm = ({ formProps, mostrarRequiereAprobacion }: GastoFormPro
             />
           </Form.Item>
         </Col>
-      </Row>
+      </SectionRow>
 
-      <Divider orientation="left" orientationMargin={0}>
-        <SafetyCertificateOutlined style={{ marginRight: 8 }} />
+      <SectionDivider icon={<SafetyCertificateOutlined />}>
         Responsabilidad{mostrarRequiereAprobacion && esACargoDePropietario ? " y aprobación" : ""}
-      </Divider>
-      <Row gutter={64} style={{ paddingLeft: 24 }}>
+      </SectionDivider>
+      <SectionRow>
         <Col xs={24} md={12}>
           <Form.Item
             label="A cargo de"
@@ -259,7 +257,7 @@ export const GastoForm = ({ formProps, mostrarRequiereAprobacion }: GastoFormPro
             </Form.Item>
           </Col>
         )}
-      </Row>
+      </SectionRow>
     </Form>
   );
 };

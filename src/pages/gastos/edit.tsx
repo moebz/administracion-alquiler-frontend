@@ -1,5 +1,7 @@
 import { Edit, useForm } from "@refinedev/antd";
+import { DollarOutlined } from "@ant-design/icons";
 import { Alert, Descriptions, Tag } from "antd";
+import { PageTitle } from "../../components/page-title";
 import { GASTO_ESTADO_COLOR, GASTO_ESTADO_LABEL, type GastoEstado } from "./types";
 import { GastoForm } from "./form";
 
@@ -20,7 +22,7 @@ export const GastoEdit = () => {
     <Edit
       saveButtonProps={editable ? saveButtonProps : { ...saveButtonProps, disabled: true }}
       isLoading={formLoading}
-      title="Editar gasto"
+      title={<PageTitle icon={<DollarOutlined />}>Editar gasto</PageTitle>}
     >
       {estado && (
         <Descriptions column={1} size="small" style={{ marginBottom: 24 }} bordered>

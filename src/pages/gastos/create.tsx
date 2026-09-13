@@ -1,5 +1,7 @@
 import { Create, useForm } from "@refinedev/antd";
+import { DollarOutlined } from "@ant-design/icons";
 import { useSearchParams } from "react-router";
+import { PageTitle } from "../../components/page-title";
 import { GastoForm } from "./form";
 
 export const GastoCreate = () => {
@@ -12,7 +14,10 @@ export const GastoCreate = () => {
   const unidadId = unidadIdParam ? Number(unidadIdParam) : undefined;
 
   return (
-    <Create saveButtonProps={saveButtonProps} title="Registrar gasto">
+    <Create
+      saveButtonProps={saveButtonProps}
+      title={<PageTitle icon={<DollarOutlined />}>Registrar gasto</PageTitle>}
+    >
       <GastoForm
         formProps={{
           ...formProps,
