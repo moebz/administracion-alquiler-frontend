@@ -1,7 +1,10 @@
 import { useSelect } from "@refinedev/antd";
-import { Col, DatePicker, Divider, Form, InputNumber, Row, Select } from "antd";
+import { CalendarOutlined, ClockCircleOutlined, DollarOutlined, HomeOutlined } from "@ant-design/icons";
+import { Col, DatePicker, Form, InputNumber, Select } from "antd";
 import type { FormProps } from "antd";
 import dayjs from "dayjs";
+import { SectionDivider } from "../../components/section-divider";
+import { SectionRow } from "../../components/section-row";
 import { CONTRATO_ALQUILER_ESTADO_OPTIONS, EXPENSAS_A_CARGO_OPTIONS } from "./types";
 
 type ContratoAlquilerFormProps = {
@@ -45,10 +48,10 @@ export const ContratoAlquilerForm = ({ formProps, mostrarMontoAlquiler }: Contra
 
   return (
     <Form {...formProps} layout="vertical" style={{ maxWidth: 960 }}>
-      <Divider orientation="left" orientationMargin={0} style={{ marginTop: 0 }}>
+      <SectionDivider icon={<HomeOutlined />} style={{ marginTop: 0 }}>
         Unidad e inquilino
-      </Divider>
-      <Row gutter={16}>
+      </SectionDivider>
+      <SectionRow>
         <Col xs={24} md={12}>
           <Form.Item label="Unidad" name="unidad_id" rules={[{ required: true }]}>
             <Select {...unidadSelectProps} placeholder="Elegí una unidad" />
@@ -64,12 +67,10 @@ export const ContratoAlquilerForm = ({ formProps, mostrarMontoAlquiler }: Contra
             <Select {...inquilinoSelectProps} placeholder="Elegí un inquilino" />
           </Form.Item>
         </Col>
-      </Row>
+      </SectionRow>
 
-      <Divider orientation="left" orientationMargin={0}>
-        Vigencia
-      </Divider>
-      <Row gutter={16}>
+      <SectionDivider icon={<CalendarOutlined />}>Vigencia</SectionDivider>
+      <SectionRow>
         <Col xs={24} md={8}>
           <Form.Item
             label="Fecha de inicio"
@@ -97,12 +98,10 @@ export const ContratoAlquilerForm = ({ formProps, mostrarMontoAlquiler }: Contra
             <Select options={CONTRATO_ALQUILER_ESTADO_OPTIONS} />
           </Form.Item>
         </Col>
-      </Row>
+      </SectionRow>
 
-      <Divider orientation="left" orientationMargin={0}>
-        Alquiler y expensas
-      </Divider>
-      <Row gutter={16}>
+      <SectionDivider icon={<DollarOutlined />}>Alquiler y expensas</SectionDivider>
+      <SectionRow>
         {mostrarMontoAlquiler && (
           <Col xs={24} md={8}>
             <Form.Item label="Monto de alquiler mensual" name="monto_alquiler" rules={[{ required: true }]}>
@@ -120,12 +119,10 @@ export const ContratoAlquilerForm = ({ formProps, mostrarMontoAlquiler }: Contra
             <Select options={EXPENSAS_A_CARGO_OPTIONS} />
           </Form.Item>
         </Col>
-      </Row>
+      </SectionRow>
 
-      <Divider orientation="left" orientationMargin={0}>
-        Vencimiento y mora
-      </Divider>
-      <Row gutter={16}>
+      <SectionDivider icon={<ClockCircleOutlined />}>Vencimiento y mora</SectionDivider>
+      <SectionRow>
         <Col xs={24} md={12}>
           <Form.Item label="Día de vencimiento" name="dia_vencimiento" rules={[{ required: true }]}>
             <InputNumber min={1} max={31} style={{ width: "100%" }} />
@@ -146,7 +143,7 @@ export const ContratoAlquilerForm = ({ formProps, mostrarMontoAlquiler }: Contra
             <InputNumber min={0} max={100} style={{ width: "100%" }} addonAfter="%" />
           </Form.Item>
         </Col>
-      </Row>
+      </SectionRow>
     </Form>
   );
 };

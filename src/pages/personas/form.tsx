@@ -1,6 +1,9 @@
 import { useSelect } from "@refinedev/antd";
-import { Col, Divider, Form, Input, Row, Select } from "antd";
+import { IdcardOutlined, PhoneOutlined, SafetyCertificateOutlined, UserOutlined } from "@ant-design/icons";
+import { Col, Form, Input, Select } from "antd";
 import type { FormProps } from "antd";
+import { SectionDivider } from "../../components/section-divider";
+import { SectionRow } from "../../components/section-row";
 import { capitalize } from "../../utils/strings";
 import { TIPO_PERSONA_OPTIONS } from "./types";
 
@@ -37,10 +40,10 @@ export const PersonaForm = ({ formProps }: PersonaFormProps) => {
 
   return (
     <Form {...formProps} layout="vertical" style={{ maxWidth: 960 }}>
-      <Divider orientation="left" orientationMargin={0} style={{ marginTop: 0 }}>
+      <SectionDivider icon={<IdcardOutlined />} style={{ marginTop: 0 }}>
         Identificación
-      </Divider>
-      <Row gutter={16}>
+      </SectionDivider>
+      <SectionRow>
         <Col xs={24} md={8}>
           <Form.Item label="Tipo de identificación" name="tipo_identificacion_id" rules={[{ required: true }]}>
             <Select {...tipoIdentificacionSelectProps} />
@@ -57,12 +60,10 @@ export const PersonaForm = ({ formProps }: PersonaFormProps) => {
             <Input />
           </Form.Item>
         </Col>
-      </Row>
+      </SectionRow>
 
-      <Divider orientation="left" orientationMargin={0}>
-        Datos personales
-      </Divider>
-      <Row gutter={16}>
+      <SectionDivider icon={<UserOutlined />}>Datos personales</SectionDivider>
+      <SectionRow>
         <Col xs={24} md={12}>
           <Form.Item label="Tipo de persona" name="tipo_persona" rules={[{ required: true }]}>
             <Select options={TIPO_PERSONA_OPTIONS} />
@@ -73,12 +74,10 @@ export const PersonaForm = ({ formProps }: PersonaFormProps) => {
             <Input />
           </Form.Item>
         </Col>
-      </Row>
+      </SectionRow>
 
-      <Divider orientation="left" orientationMargin={0}>
-        Contacto
-      </Divider>
-      <Row gutter={16}>
+      <SectionDivider icon={<PhoneOutlined />}>Contacto</SectionDivider>
+      <SectionRow>
         <Col xs={24} md={12}>
           <Form.Item label="Dirección" name="direccion">
             <Input />
@@ -99,18 +98,16 @@ export const PersonaForm = ({ formProps }: PersonaFormProps) => {
             <Input />
           </Form.Item>
         </Col>
-      </Row>
+      </SectionRow>
 
-      <Divider orientation="left" orientationMargin={0}>
-        Acceso
-      </Divider>
-      <Row gutter={16}>
+      <SectionDivider icon={<SafetyCertificateOutlined />}>Acceso</SectionDivider>
+      <SectionRow>
         <Col xs={24}>
           <Form.Item label="Roles" name="roles">
             <Select mode="multiple" {...roleSelectProps} placeholder="Sin rol" />
           </Form.Item>
         </Col>
-      </Row>
+      </SectionRow>
     </Form>
   );
 };

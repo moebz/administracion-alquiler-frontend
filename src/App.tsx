@@ -328,6 +328,12 @@ function App() {
                   warnWhenUnsavedChanges: true,
                   projectId: "jMr9IO-7L6vwi-jkJRSg",
                   title: { text: <AppWordmark />, icon: <AppIcon /> },
+                  // Sin breadcrumbs: con el menú lateral ya alcanza para
+                  // ubicarse, y en Create/Edit/Show duplicaban el título de
+                  // la página. Global acá (lo leen List/Create/Edit/Show de
+                  // @refinedev/antd) en vez de `breadcrumb={false}` en cada
+                  // page.
+                  breadcrumb: false,
                 }}
               >
                 <Routes>

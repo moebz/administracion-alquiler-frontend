@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import { useSelect } from "@refinedev/antd";
-import { Col, Divider, Form, Input, InputNumber, Row, Select } from "antd";
+import { ApartmentOutlined, HomeOutlined, UserOutlined } from "@ant-design/icons";
+import { Col, Form, Input, InputNumber, Select } from "antd";
 import type { FormProps } from "antd";
+import { SectionDivider } from "../../components/section-divider";
+import { SectionRow } from "../../components/section-row";
 import { UNIDAD_ESTADO_OPTIONS } from "./types";
 
 type UnidadFormProps = {
@@ -60,10 +63,10 @@ export const UnidadForm = ({ formProps }: UnidadFormProps) => {
 
   return (
     <Form {...formProps} layout="vertical" style={{ maxWidth: 960 }}>
-      <Divider orientation="left" orientationMargin={0} style={{ marginTop: 0 }}>
+      <SectionDivider icon={<ApartmentOutlined />} style={{ marginTop: 0 }}>
         Ubicación
-      </Divider>
-      <Row gutter={16}>
+      </SectionDivider>
+      <SectionRow>
         <Col xs={24} md={12}>
           <Form.Item label="Edificio" required>
             <Select
@@ -86,12 +89,10 @@ export const UnidadForm = ({ formProps }: UnidadFormProps) => {
             />
           </Form.Item>
         </Col>
-      </Row>
+      </SectionRow>
 
-      <Divider orientation="left" orientationMargin={0}>
-        Propietario
-      </Divider>
-      <Row gutter={16}>
+      <SectionDivider icon={<UserOutlined />}>Propietario</SectionDivider>
+      <SectionRow>
         <Col xs={24}>
           <Form.Item
             label="Propietario"
@@ -102,12 +103,10 @@ export const UnidadForm = ({ formProps }: UnidadFormProps) => {
             <Select {...propietarioSelectProps} />
           </Form.Item>
         </Col>
-      </Row>
+      </SectionRow>
 
-      <Divider orientation="left" orientationMargin={0}>
-        Datos de la unidad
-      </Divider>
-      <Row gutter={16}>
+      <SectionDivider icon={<HomeOutlined />}>Datos de la unidad</SectionDivider>
+      <SectionRow>
         <Col xs={24} md={8}>
           <Form.Item label="Número" name="numero" rules={[{ required: true }]}>
             <Input />
@@ -133,7 +132,7 @@ export const UnidadForm = ({ formProps }: UnidadFormProps) => {
             <InputNumber min={0} style={{ width: "100%" }} />
           </Form.Item>
         </Col>
-      </Row>
+      </SectionRow>
     </Form>
   );
 };

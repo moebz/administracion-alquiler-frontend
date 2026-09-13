@@ -1,4 +1,6 @@
 import { Edit, useForm } from "@refinedev/antd";
+import { UserOutlined } from "@ant-design/icons";
+import { PageTitle } from "../../components/page-title";
 import { PersonaForm } from "./form";
 
 // A diferencia de UserEdit/ProveedorEdit, acá documento/tipo de identificación
@@ -10,7 +12,11 @@ export const PersonaEdit = () => {
   const { formProps, saveButtonProps, formLoading } = useForm({});
 
   return (
-    <Edit saveButtonProps={saveButtonProps} isLoading={formLoading} title="Editar persona">
+    <Edit
+      saveButtonProps={saveButtonProps}
+      isLoading={formLoading}
+      title={<PageTitle icon={<UserOutlined />}>Editar persona</PageTitle>}
+    >
       <PersonaForm formProps={formProps} />
     </Edit>
   );

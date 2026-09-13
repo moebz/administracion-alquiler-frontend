@@ -1,5 +1,7 @@
 import { Create, useForm } from "@refinedev/antd";
+import { FileTextOutlined } from "@ant-design/icons";
 import { useSearchParams } from "react-router";
+import { PageTitle } from "../../components/page-title";
 import { ContratoAlquilerForm } from "./form";
 
 export const ContratoAlquilerCreate = () => {
@@ -12,7 +14,10 @@ export const ContratoAlquilerCreate = () => {
   const unidadId = unidadIdParam ? Number(unidadIdParam) : undefined;
 
   return (
-    <Create saveButtonProps={saveButtonProps} title="Crear contrato de alquiler">
+    <Create
+      saveButtonProps={saveButtonProps}
+      title={<PageTitle icon={<FileTextOutlined />}>Crear contrato de alquiler</PageTitle>}
+    >
       <ContratoAlquilerForm
         formProps={{
           ...formProps,

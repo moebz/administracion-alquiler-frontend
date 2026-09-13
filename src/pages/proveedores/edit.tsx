@@ -1,5 +1,9 @@
 import { Edit, useForm, useSelect } from "@refinedev/antd";
-import { Col, Divider, Form, Input, Row, Select } from "antd";
+import { ShopOutlined, TagsOutlined } from "@ant-design/icons";
+import { Col, Form, Input, Select } from "antd";
+import { PageTitle } from "../../components/page-title";
+import { SectionRow } from "../../components/section-row";
+import { SectionDivider } from "../../components/section-divider";
 
 // Documento/tipo de documento no se editan acá: son la clave de
 // deduplicación de la persona (ver PersonaBuscador, usado solo en create).
@@ -14,7 +18,11 @@ export const ProveedorEdit = () => {
   });
 
   return (
-    <Edit saveButtonProps={saveButtonProps} isLoading={formLoading} title="Editar proveedor">
+    <Edit
+      saveButtonProps={saveButtonProps}
+      isLoading={formLoading}
+      title={<PageTitle icon={<ShopOutlined />}>Editar proveedor</PageTitle>}
+    >
       <Form
         {...formProps}
         layout="vertical"
@@ -27,7 +35,7 @@ export const ProveedorEdit = () => {
           rubros: formProps.initialValues?.rubros?.map((rubro: { id: number }) => rubro.id),
         }}
       >
-        <Row gutter={16}>
+        <SectionRow>
           <Col xs={24}>
             <Form.Item label="Nombre" name={["persona", "nombre"]} rules={[{ required: true }]}>
               <Input />
@@ -43,10 +51,8 @@ export const ProveedorEdit = () => {
               <Input />
             </Form.Item>
           </Col>
-        </Row>
-        <Divider orientation="left" orientationMargin={0}>
-          Rubros
-        </Divider>
+        </SectionRow>
+        <SectionDivider icon={<TagsOutlined />}>Rubros</SectionDivider>
         <Form.Item label="Rubros" name="rubros" rules={[{ required: true }]}>
           <Select mode="multiple" {...rubroSelectProps} />
         </Form.Item>

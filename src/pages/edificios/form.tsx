@@ -1,6 +1,9 @@
 import { useSelect } from "@refinedev/antd";
-import { Col, Divider, Form, Input, InputNumber, Row, Select, Switch } from "antd";
+import { ApartmentOutlined, StarOutlined, UserOutlined } from "@ant-design/icons";
+import { Col, Form, Input, InputNumber, Select, Switch } from "antd";
 import type { FormProps } from "antd";
+import { SectionDivider } from "../../components/section-divider";
+import { SectionRow } from "../../components/section-row";
 
 type EdificioFormProps = {
   formProps: FormProps;
@@ -38,10 +41,10 @@ export const EdificioForm = ({ formProps }: EdificioFormProps) => {
 
   return (
     <Form {...formProps} layout="vertical" style={{ maxWidth: 960 }}>
-      <Divider orientation="left" orientationMargin={0} style={{ marginTop: 0 }}>
+      <SectionDivider icon={<ApartmentOutlined />} style={{ marginTop: 0 }}>
         Datos generales
-      </Divider>
-      <Row gutter={16}>
+      </SectionDivider>
+      <SectionRow>
         <Col xs={24} md={12}>
           <Form.Item label="Nombre" name="nombre" rules={[{ required: true }]}>
             <Input />
@@ -57,23 +60,19 @@ export const EdificioForm = ({ formProps }: EdificioFormProps) => {
             <Input />
           </Form.Item>
         </Col>
-      </Row>
+      </SectionRow>
 
-      <Divider orientation="left" orientationMargin={0}>
-        Administración
-      </Divider>
-      <Row gutter={16}>
+      <SectionDivider icon={<UserOutlined />}>Administración</SectionDivider>
+      <SectionRow>
         <Col xs={24} md={12}>
           <Form.Item label="Administración" name="administracion_id">
             <Select {...administracionSelectProps} allowClear placeholder="Sin administración asignada" />
           </Form.Item>
         </Col>
-      </Row>
+      </SectionRow>
 
-      <Divider orientation="left" orientationMargin={0}>
-        Características
-      </Divider>
-      <Row gutter={16}>
+      <SectionDivider icon={<StarOutlined />}>Características</SectionDivider>
+      <SectionRow>
         <Col xs={24} md={12}>
           <Form.Item label="Superficie (m²)" name="superficie_m2">
             <InputNumber min={0} style={{ width: "100%" }} />
@@ -89,7 +88,7 @@ export const EdificioForm = ({ formProps }: EdificioFormProps) => {
             <Select {...comodidadesSelectProps} mode="multiple" />
           </Form.Item>
         </Col>
-      </Row>
+      </SectionRow>
     </Form>
   );
 };
