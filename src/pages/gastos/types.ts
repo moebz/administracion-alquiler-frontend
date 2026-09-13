@@ -86,7 +86,9 @@ export type GastoRow = {
   descripcion: string;
   fecha: string;
   periodo: string | null;
-  monto: number;
+  // Serializado como string: `monto` tiene cast `decimal:2` en el modelo (App\Models\Gasto), y Laravel siempre
+  // manda un decimal como string en el JSON (no como number) para no perder precisión.
+  monto: number | string;
   proveedor_id: number;
   proveedor: { id: number; nombre: string };
   a_cargo_de: ACargoDe;

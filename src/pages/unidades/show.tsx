@@ -9,6 +9,7 @@ import {
   EXPENSAS_A_CARGO_LABEL,
   type ContratoAlquilerRow,
 } from "../contratos-alquiler/types";
+import { formatMonto } from "../../utils/monto";
 import { UNIDAD_ESTADO_COLOR, UNIDAD_ESTADO_LABEL, type UnidadRow } from "./types";
 
 export const UnidadShow = () => {
@@ -87,10 +88,9 @@ export const UnidadShow = () => {
               <Descriptions.Item label="Inicio">{dayjs(contrato.fecha_inicio).format("DD/MM/YYYY")}</Descriptions.Item>
               <Descriptions.Item label="Fin">{dayjs(contrato.fecha_fin).format("DD/MM/YYYY")}</Descriptions.Item>
               <Descriptions.Item label="Monto de alquiler">
-                {contrato.monto_alquiler_vigente?.toLocaleString("es-PY", {
-                  style: "currency",
-                  currency: "PYG",
-                }) ?? "—"}
+                {contrato.monto_alquiler_vigente !== undefined && contrato.monto_alquiler_vigente !== null
+                  ? formatMonto(contrato.monto_alquiler_vigente)
+                  : "—"}
               </Descriptions.Item>
               <Descriptions.Item label="Día de vencimiento">{contrato.dia_vencimiento}</Descriptions.Item>
               <Descriptions.Item label="Expensas a cargo de">

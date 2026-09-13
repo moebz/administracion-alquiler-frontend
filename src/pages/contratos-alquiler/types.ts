@@ -49,8 +49,9 @@ export type ContratoAlquilerRow = {
   fecha_fin: string;
   // Calculado (App\Models\ContratoAlquiler::montoAlquilerVigente()): el
   // monto vive en contrato_reajustes, no en el contrato — se cambia
-  // creando un reajuste, no editando el contrato.
-  monto_alquiler_vigente: number | null;
+  // creando un reajuste, no editando el contrato. Serializado como string:
+  // `monto_alquiler` tiene cast `decimal:2` (App\Models\ContratoReajuste).
+  monto_alquiler_vigente: number | string | null;
   // Sin `deposito_garantia` acá a propósito: el depósito de garantía se saca
   // del front hasta que se pida explícitamente retomar ese desarrollo — ver
   // ARQUITECTURA.md. El backend lo sigue devolviendo; este tipo simplemente

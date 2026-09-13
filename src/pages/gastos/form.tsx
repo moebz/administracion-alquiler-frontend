@@ -2,9 +2,10 @@ import { useEffect, useState } from "react";
 import { useSelect } from "@refinedev/antd";
 import { useOne } from "@refinedev/core";
 import { FileTextOutlined, HomeOutlined, SafetyCertificateOutlined, ShopOutlined } from "@ant-design/icons";
-import { Col, DatePicker, Form, Input, InputNumber, Select, Switch } from "antd";
+import { Col, DatePicker, Form, Input, Select, Switch } from "antd";
 import type { FormProps } from "antd";
 import dayjs from "dayjs";
+import { MontoInput } from "../../components/monto-input";
 import { SectionDivider } from "../../components/section-divider";
 import { SectionRow } from "../../components/section-row";
 import type { ContratoAlquilerRow } from "../contratos-alquiler/types";
@@ -155,7 +156,7 @@ export const GastoForm = ({ formProps, mostrarRequiereAprobacion }: GastoFormPro
             <Input placeholder="Ej.: Reparación de cañería en baño" maxLength={255} showCount />
           </Form.Item>
         </Col>
-        <Col xs={24} md={esExpensa ? 8 : 12}>
+        <Col xs={24} md={12}>
           <Form.Item
             label="Fecha"
             name="fecha"
@@ -166,8 +167,13 @@ export const GastoForm = ({ formProps, mostrarRequiereAprobacion }: GastoFormPro
             <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />
           </Form.Item>
         </Col>
+        <Col xs={24} md={12}>
+          <Form.Item label="Monto" name="monto" rules={[{ required: true }]}>
+            <MontoInput />
+          </Form.Item>
+        </Col>
         {esExpensa && (
-          <Col xs={24} md={8}>
+          <Col xs={24} md={12}>
             <Form.Item
               label="Período"
               name="periodo"
@@ -179,17 +185,6 @@ export const GastoForm = ({ formProps, mostrarRequiereAprobacion }: GastoFormPro
             </Form.Item>
           </Col>
         )}
-        <Col xs={24} md={esExpensa ? 8 : 12}>
-          <Form.Item label="Monto" name="monto" rules={[{ required: true }]}>
-            <InputNumber<number>
-              min={0}
-              style={{ width: "100%" }}
-              addonAfter="Gs."
-              formatter={(value) => (value === undefined ? "" : `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, "."))}
-              parser={(value) => (value ? Number(value.replace(/\./g, "")) : 0)}
-            />
-          </Form.Item>
-        </Col>
       </SectionRow>
 
       <SectionDivider icon={<ShopOutlined />}>Proveedor</SectionDivider>

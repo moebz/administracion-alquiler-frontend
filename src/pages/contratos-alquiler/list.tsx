@@ -2,10 +2,11 @@ import { useState } from "react";
 import { EditButton, List, useTable } from "@refinedev/antd";
 import type { CrudFilter } from "@refinedev/core";
 import { App, Button, DatePicker, Popconfirm, Select, Space, Table, Tag } from "antd";
-import type { Dayjs } from "dayjs";
+import dayjs, { type Dayjs } from "dayjs";
 import { FilterBar } from "../../components/filter-bar";
 import { kyInstance } from "../../providers/data";
 import { extractErrorMessage } from "../../providers/auth";
+import { formatMonto } from "../../utils/monto";
 import {
   CONTRATO_ALQUILER_ESTADO_COLOR,
   CONTRATO_ALQUILER_ESTADO_LABEL,
@@ -109,8 +110,8 @@ export const ContratoAlquilerList = () => {
         <Table.Column
           title="Monto"
           dataIndex="monto_alquiler_vigente"
-          render={(monto: number | null) =>
-            monto === null ? "—" : monto.toLocaleString("es-PY", { style: "currency", currency: "PYG" })
+          render={(monto: ContratoAlquilerRow["monto_alquiler_vigente"]) =>
+            monto === null ? "—" : formatMonto(monto)
           }
         />
         <Table.Column title="Día venc." dataIndex="dia_vencimiento" />
@@ -119,8 +120,16 @@ export const ContratoAlquilerList = () => {
           dataIndex="mora_pct_diario"
           render={(porcentaje: number) => `${porcentaje}%`}
         />
-        <Table.Column dataIndex="fecha_inicio" title="Inicio" />
-        <Table.Column dataIndex="fecha_fin" title="Fin" />
+        <Table.Column
+          dataIndex="fecha_inicio"
+          title="Inicio"
+          render={(fechaInicio: ContratoAlquilerRow["fecha_inicio"]) => dayjs(fechaInicio).format("DD/MM/YYYY")}
+        />
+        <Table.Column
+          dataIndex="fecha_fin"
+          title="Fin"
+          render={(fechaFin: ContratoAlquilerRow["fecha_fin"]) => dayjs(fechaFin).format("DD/MM/YYYY")}
+        />
         <Table.Column
           title="Estado"
           dataIndex="estado"

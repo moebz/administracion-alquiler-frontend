@@ -4,6 +4,7 @@ import { App, Button, Form, Input, Modal, Popconfirm, Select, Space, Table, Tag 
 import dayjs from "dayjs";
 import { FilterBar } from "../../components/filter-bar";
 import { kyInstance } from "../../providers/data";
+import { formatMonto } from "../../utils/monto";
 import { extractErrorMessage } from "../../providers/auth";
 import { GASTO_ESTADO_COLOR, GASTO_TIPO_LABEL, type GastoEstado, type GastoRow } from "../gastos/types";
 import { GASTO_ESTADO_LABEL_PROPIETARIO, GASTO_ESTADO_OPTIONS_PROPIETARIO } from "./types";
@@ -80,11 +81,15 @@ export const GastoAprobacionList = () => {
         />
         <Table.Column title="Tipo" dataIndex="tipo" render={(tipo: GastoRow["tipo"]) => GASTO_TIPO_LABEL[tipo]} />
         <Table.Column title="Descripción" dataIndex="descripcion" />
-        <Table.Column dataIndex="fecha" title="Fecha" />
+        <Table.Column
+          dataIndex="fecha"
+          title="Fecha"
+          render={(fecha: GastoRow["fecha"]) => dayjs(fecha).format("DD/MM/YYYY")}
+        />
         <Table.Column
           title="Monto"
           dataIndex="monto"
-          render={(monto: number) => monto.toLocaleString("es-PY", { style: "currency", currency: "PYG" })}
+          render={(monto: GastoRow["monto"]) => formatMonto(monto)}
         />
         <Table.Column title="Proveedor" dataIndex="proveedor" render={(proveedor: GastoRow["proveedor"]) => proveedor.nombre} />
         <Table.Column

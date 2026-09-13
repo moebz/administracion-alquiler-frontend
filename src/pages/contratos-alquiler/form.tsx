@@ -3,6 +3,7 @@ import { CalendarOutlined, ClockCircleOutlined, DollarOutlined, HomeOutlined } f
 import { Col, DatePicker, Form, InputNumber, Select } from "antd";
 import type { FormProps } from "antd";
 import dayjs from "dayjs";
+import { MontoInput } from "../../components/monto-input";
 import { SectionDivider } from "../../components/section-divider";
 import { SectionRow } from "../../components/section-row";
 import { CONTRATO_ALQUILER_ESTADO_OPTIONS, EXPENSAS_A_CARGO_OPTIONS } from "./types";
@@ -105,7 +106,7 @@ export const ContratoAlquilerForm = ({ formProps, mostrarMontoAlquiler }: Contra
         {mostrarMontoAlquiler && (
           <Col xs={24} md={8}>
             <Form.Item label="Monto de alquiler mensual" name="monto_alquiler" rules={[{ required: true }]}>
-              <InputNumber min={0} style={{ width: "100%" }} />
+              <MontoInput />
             </Form.Item>
           </Col>
         )}

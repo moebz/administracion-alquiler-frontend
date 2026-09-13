@@ -4,6 +4,7 @@ import type { CrudFilter } from "@refinedev/core";
 import { Select, Space, Table, Tag } from "antd";
 import dayjs from "dayjs";
 import { FilterBar } from "../../components/filter-bar";
+import { formatMonto } from "../../utils/monto";
 import {
   GASTO_ESTADO_COLOR,
   GASTO_ESTADO_LABEL,
@@ -58,12 +59,16 @@ export const GastoList = () => {
         />
         <Table.Column title="Tipo" dataIndex="tipo" render={(tipo: GastoRow["tipo"]) => GASTO_TIPO_LABEL[tipo]} />
         <Table.Column title="Descripción" dataIndex="descripcion" />
-        <Table.Column dataIndex="fecha" title="Fecha" />
+        <Table.Column
+          dataIndex="fecha"
+          title="Fecha"
+          render={(fecha: GastoRow["fecha"]) => dayjs(fecha).format("DD/MM/YYYY")}
+        />
         <Table.Column title="Período" dataIndex="periodo" render={(periodo: string | null) => periodo ?? "—"} />
         <Table.Column
           title="Monto"
           dataIndex="monto"
-          render={(monto: number) => monto.toLocaleString("es-PY", { style: "currency", currency: "PYG" })}
+          render={(monto: GastoRow["monto"]) => formatMonto(monto)}
         />
         <Table.Column title="Proveedor" dataIndex="proveedor" render={(proveedor: GastoRow["proveedor"]) => proveedor.nombre}
         />

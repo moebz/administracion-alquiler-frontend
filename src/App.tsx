@@ -14,6 +14,7 @@ import {
   ShareAltOutlined,
   EnvironmentOutlined,
   DollarOutlined,
+  WalletOutlined,
 } from "@ant-design/icons";
 import { Refine, Authenticated, CanAccess } from "@refinedev/core";
 import { DevtoolsPanel, DevtoolsProvider } from "@refinedev/devtools";
@@ -63,6 +64,7 @@ import {
 } from "./pages/contratos-alquiler";
 import { GastoList, GastoCreate, GastoEdit } from "./pages/gastos";
 import { BancoList, BancoCreate, BancoEdit } from "./pages/bancos";
+import { FondoList, FondoCreate, FondoEdit } from "./pages/fondos";
 import { ComodidadList, ComodidadCreate, ComodidadEdit } from "./pages/comodidades";
 import { ProveedorList, ProveedorCreate, ProveedorEdit } from "./pages/proveedores";
 import { RubroList, RubroCreate, RubroEdit } from "./pages/rubros";
@@ -288,6 +290,17 @@ function App() {
                     },
                   },
                   {
+                    name: "fondos",
+                    list: "/administrador/fondos",
+                    create: "/administrador/fondos/create",
+                    edit: "/administrador/fondos/edit/:id",
+                    meta: {
+                      label: "Fondos",
+                      icon: <WalletOutlined />,
+                      parent: "catalogos",
+                    },
+                  },
+                  {
                     name: "tipos-identificacion",
                     list: "/administrador/tipos-identificacion",
                     create: "/administrador/tipos-identificacion/create",
@@ -423,6 +436,11 @@ function App() {
                         <Route index element={<BancoList />} />
                         <Route path="create" element={<BancoCreate />} />
                         <Route path="edit/:id" element={<BancoEdit />} />
+                      </Route>
+                      <Route path="fondos">
+                        <Route index element={<FondoList />} />
+                        <Route path="create" element={<FondoCreate />} />
+                        <Route path="edit/:id" element={<FondoEdit />} />
                       </Route>
                       <Route path="proveedores">
                         <Route index element={<ProveedorList />} />
