@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { EditButton, List, useSelect, useTable } from "@refinedev/antd";
 import type { CrudFilter } from "@refinedev/core";
-import { App, Button, Input, Popconfirm, Select, Space, Table, Tag } from "antd";
+import { App, Button, Input, Select, Space, Table, Tag, Tooltip } from "antd";
+import { CheckCircleOutlined, EditOutlined, SendOutlined, StopOutlined, UserAddOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router";
 import { ActiveFilterSwitch } from "../../components/active-filter-switch";
+import { FilterBar } from "../../components/filter-bar";
 import { kyInstance } from "../../providers/data";
 import { extractErrorMessage } from "../../providers/auth";
 import { capitalize } from "../../utils/strings";
@@ -17,7 +19,7 @@ export const PersonaList = () => {
       initial: [{ field: "is_active", operator: "eq", value: true }],
     },
   });
-  const { message } = App.useApp();
+  const { message, modal } = App.useApp();
   const navigate = useNavigate();
 
   const { selectProps: roleSelectProps } = useSelect({
@@ -104,7 +106,7 @@ export const PersonaList = () => {
 
   return (
     <List title="Personas">
-      <Space wrap style={{ marginBottom: 16 }}>
+      <FilterBar>
         <Input.Search
           allowClear
           placeholder="Buscar por nombre, documento o email"
@@ -139,7 +141,7 @@ export const PersonaList = () => {
           checked={showInactive}
           onChange={(checked) => applyFilters({ showInactive: checked })}
         />
-      </Space>
+      </FilterBar>
       <Table {...tableProps} rowKey="id">
         <Table.Column dataIndex="nombre" title="Nombre" />
         <Table.Column
@@ -165,75 +167,100 @@ export const PersonaList = () => {
         <Table.Column
           title="Email de cuenta"
           dataIndex="usuario"
-          render={(usuario: PersonaRow["usuario"]) => usuario?.email ?? "—"}
+          render={(usuario: PersonaRow["usuario"]) => (
+            <Space size={4}>
+              <span>{usuario?.email ?? "—"}</span>
+              {usuario && getAccountStatus(usuario) === "invitado" && (
+                <Tooltip title="Reenviar invitación">
+                  <Button
+                    size="small"
+                    icon={<SendOutlined />}
+                    onClick={() => resendInvitation(usuario.id)}
+                  />
+                </Tooltip>
+              )}
+            </Space>
+          )}
         />
         <Table.Column
           title="Estado de cuenta"
           dataIndex="usuario"
-          render={(usuario: PersonaRow["usuario"]) => {
+          render={(usuario: PersonaRow["usuario"], record: PersonaRow) => {
             const status = getAccountStatus(usuario);
-            return <Tag color={ACCOUNT_STATUS_COLOR[status]}>{ACCOUNT_STATUS_LABEL[status]}</Tag>;
+            return (
+              <Space size={4} wrap>
+                <Tag color={ACCOUNT_STATUS_COLOR[status]}>{ACCOUNT_STATUS_LABEL[status]}</Tag>
+                {usuario ? (
+                  <>
+                    <Tooltip title="Editar cuenta">
+                      <Button
+                        size="small"
+                        icon={<EditOutlined />}
+                        onClick={() => navigate(`/administrador/usuarios/edit/${usuario.id}`)}
+                      />
+                    </Tooltip>
+                    <Tooltip title={usuario.is_active ? "Desactivar cuenta" : "Activar cuenta"}>
+                      <Button
+                        size="small"
+                        danger={usuario.is_active}
+                        icon={usuario.is_active ? <StopOutlined /> : <CheckCircleOutlined />}
+                        onClick={() => {
+                          if (!usuario.is_active) {
+                            toggleActivaCuenta(record);
+                            return;
+                          }
+                          modal.confirm({
+                            title: "¿Desactivar esta cuenta?",
+                            okText: "Desactivar",
+                            okButtonProps: { danger: true },
+                            onOk: () => toggleActivaCuenta(record),
+                          });
+                        }}
+                      />
+                    </Tooltip>
+                  </>
+                ) : (
+                  <Tooltip title="Crear cuenta">
+                    <Button
+                      size="small"
+                      icon={<UserAddOutlined />}
+                      onClick={() => navigate(`/administrador/usuarios/create?persona_id=${record.id}`)}
+                    />
+                  </Tooltip>
+                )}
+              </Space>
+            );
           }}
         />
         <Table.Column
           title="Estado de persona"
           dataIndex="is_active"
-          render={(isActive: boolean) => (
-            <Tag color={isActive ? "green" : "red"}>{isActive ? "Activa" : "Inactiva"}</Tag>
-          )}
-        />
-        <Table.Column
-          title="Acciones"
-          dataIndex="actions"
-          render={(_, record: PersonaRow) => (
-            <Space wrap>
-              <EditButton hideText size="small" recordItemId={record.id} />
-              {record.usuario ? (
-                <>
-                  <Button
-                    size="small"
-                    onClick={() => navigate(`/administrador/usuarios/edit/${record.usuario!.id}`)}
-                  >
-                    Editar cuenta
-                  </Button>
-                  {getAccountStatus(record.usuario) === "invitado" && (
-                    <Button size="small" onClick={() => resendInvitation(record.usuario!.id)}>
-                      Reenviar invitación
-                    </Button>
-                  )}
-                  <Button
-                    size="small"
-                    danger={record.usuario.is_active}
-                    onClick={() => toggleActivaCuenta(record)}
-                  >
-                    {record.usuario.is_active ? "Desactivar cuenta" : "Activar cuenta"}
-                  </Button>
-                </>
-              ) : (
+          render={(isActive: boolean, record: PersonaRow) => (
+            <Space size={4} wrap>
+              <Tag color={isActive ? "green" : "red"}>{isActive ? "Activa" : "Inactiva"}</Tag>
+              <Tooltip title="Editar persona">
+                <EditButton hideText size="small" recordItemId={record.id} />
+              </Tooltip>
+              <Tooltip title={isActive ? "Desactivar persona" : "Activar persona"}>
                 <Button
                   size="small"
-                  onClick={() => navigate(`/administrador/usuarios/create?persona_id=${record.id}`)}
-                >
-                  Crear cuenta
-                </Button>
-              )}
-              {record.is_active ? (
-                <Popconfirm
-                  title="¿Desactivar esta persona?"
-                  description={record.usuario ? "Esto también desactiva su cuenta." : undefined}
-                  okText="Desactivar"
-                  okButtonProps={{ danger: true }}
-                  onConfirm={() => toggleActivaPersona(record)}
-                >
-                  <Button size="small" danger>
-                    Desactivar persona
-                  </Button>
-                </Popconfirm>
-              ) : (
-                <Button size="small" onClick={() => toggleActivaPersona(record)}>
-                  Activar persona
-                </Button>
-              )}
+                  danger={isActive}
+                  icon={isActive ? <StopOutlined /> : <CheckCircleOutlined />}
+                  onClick={() => {
+                    if (!isActive) {
+                      toggleActivaPersona(record);
+                      return;
+                    }
+                    modal.confirm({
+                      title: "¿Desactivar esta persona?",
+                      content: record.usuario ? "Esto también desactiva su cuenta." : undefined,
+                      okText: "Desactivar",
+                      okButtonProps: { danger: true },
+                      onOk: () => toggleActivaPersona(record),
+                    });
+                  }}
+                />
+              </Tooltip>
             </Space>
           )}
         />

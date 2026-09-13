@@ -1,6 +1,7 @@
 import { EditButton, List, useTable } from "@refinedev/antd";
 import { useGo } from "@refinedev/core";
-import { App, Button, Space, Table, Tag } from "antd";
+import { App, Button, Space, Table, Tag, Tooltip } from "antd";
+import { CheckCircleOutlined, StopOutlined } from "@ant-design/icons";
 import { ActiveFilterSwitch } from "../../components/active-filter-switch";
 import { kyInstance } from "../../providers/data";
 import { extractErrorMessage } from "../../providers/auth";
@@ -13,7 +14,7 @@ export const EdificioList = () => {
       initial: [{ field: "is_active", operator: "eq", value: true }],
     },
   });
-  const { message } = App.useApp();
+  const { message, modal } = App.useApp();
   const go = useGo();
 
   const verBloques = (record: EdificioRow) =>
@@ -96,10 +97,28 @@ export const EdificioList = () => {
               <Button size="small" onClick={() => verUnidades(record)}>
                 Ver unidades
               </Button>
-              <EditButton hideText size="small" recordItemId={record.id} />
-              <Button size="small" danger={record.is_active} onClick={() => toggleActive(record)}>
-                {record.is_active ? "Desactivar" : "Activar"}
-              </Button>
+              <Tooltip title="Editar edificio">
+                <EditButton hideText size="small" recordItemId={record.id} />
+              </Tooltip>
+              <Tooltip title={record.is_active ? "Desactivar edificio" : "Activar edificio"}>
+                <Button
+                  size="small"
+                  danger={record.is_active}
+                  icon={record.is_active ? <StopOutlined /> : <CheckCircleOutlined />}
+                  onClick={() => {
+                    if (!record.is_active) {
+                      toggleActive(record);
+                      return;
+                    }
+                    modal.confirm({
+                      title: "¿Desactivar este edificio?",
+                      okText: "Desactivar",
+                      okButtonProps: { danger: true },
+                      onOk: () => toggleActive(record),
+                    });
+                  }}
+                />
+              </Tooltip>
             </Space>
           )}
         />

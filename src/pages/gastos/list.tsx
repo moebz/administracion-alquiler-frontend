@@ -3,6 +3,7 @@ import { EditButton, List, useTable } from "@refinedev/antd";
 import type { CrudFilter } from "@refinedev/core";
 import { Select, Space, Table, Tag } from "antd";
 import dayjs from "dayjs";
+import { FilterBar } from "../../components/filter-bar";
 import {
   GASTO_ESTADO_COLOR,
   GASTO_ESTADO_LABEL,
@@ -36,7 +37,7 @@ export const GastoList = () => {
 
   return (
     <List title="Gastos" headerButtons={() => null}>
-      <Space wrap style={{ marginBottom: 16 }}>
+      <FilterBar>
         <Space>
           <span>Estado</span>
           <Select
@@ -48,7 +49,7 @@ export const GastoList = () => {
             onChange={applyFilters}
           />
         </Space>
-      </Space>
+      </FilterBar>
       <Table {...tableProps} rowKey="id">
         <Table.Column
           title="Unidad"

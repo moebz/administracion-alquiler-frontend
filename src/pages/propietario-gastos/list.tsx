@@ -2,6 +2,7 @@ import { useState } from "react";
 import { List, useTable } from "@refinedev/antd";
 import { App, Button, Form, Input, Modal, Popconfirm, Select, Space, Table, Tag } from "antd";
 import dayjs from "dayjs";
+import { FilterBar } from "../../components/filter-bar";
 import { kyInstance } from "../../providers/data";
 import { extractErrorMessage } from "../../providers/auth";
 import { GASTO_ESTADO_COLOR, GASTO_TIPO_LABEL, type GastoEstado, type GastoRow } from "../gastos/types";
@@ -58,7 +59,7 @@ export const GastoAprobacionList = () => {
 
   return (
     <List title="Gastos a mi cargo" headerButtons={() => null}>
-      <Space wrap style={{ marginBottom: 16 }}>
+      <FilterBar>
         <Space>
           <span>Estado</span>
           <Select
@@ -70,7 +71,7 @@ export const GastoAprobacionList = () => {
             onChange={applyEstado}
           />
         </Space>
-      </Space>
+      </FilterBar>
       <Table {...tableProps} rowKey="id">
         <Table.Column
           title="Unidad"

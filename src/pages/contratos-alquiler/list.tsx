@@ -3,6 +3,7 @@ import { EditButton, List, useTable } from "@refinedev/antd";
 import type { CrudFilter } from "@refinedev/core";
 import { App, Button, DatePicker, Popconfirm, Select, Space, Table, Tag } from "antd";
 import type { Dayjs } from "dayjs";
+import { FilterBar } from "../../components/filter-bar";
 import { kyInstance } from "../../providers/data";
 import { extractErrorMessage } from "../../providers/auth";
 import {
@@ -66,7 +67,7 @@ export const ContratoAlquilerList = () => {
     // entiende español — "Contratos de alquiler" queda "Contratos de
     // alquilers" (mismo motivo por el que Create/Edit ya lo hacen).
     <List headerButtons={() => null} title="Contratos de alquiler">
-      <Space wrap style={{ marginBottom: 16 }}>
+      <FilterBar>
         <Space>
           <span>Estado</span>
           <Select
@@ -86,7 +87,7 @@ export const ContratoAlquilerList = () => {
             onChange={(value) => applyFilters({ venceEntre: value as RangoFechas })}
           />
         </Space>
-      </Space>
+      </FilterBar>
       <Table {...tableProps} rowKey="id">
         <Table.Column
           title="Unidad"

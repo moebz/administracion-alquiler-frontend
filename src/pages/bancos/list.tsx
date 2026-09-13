@@ -1,5 +1,6 @@
 import { EditButton, List, useTable } from "@refinedev/antd";
-import { App, Button, Space, Table, Tag } from "antd";
+import { App, Button, Space, Table, Tag, Tooltip } from "antd";
+import { CheckCircleOutlined, StopOutlined } from "@ant-design/icons";
 import { ActiveFilterSwitch } from "../../components/active-filter-switch";
 import { kyInstance } from "../../providers/data";
 import { extractErrorMessage } from "../../providers/auth";
@@ -12,7 +13,7 @@ export const BancoList = () => {
       initial: [{ field: "is_active", operator: "eq", value: true }],
     },
   });
-  const { message } = App.useApp();
+  const { message, modal } = App.useApp();
 
   const showInactive = !filters.some((filter) => "field" in filter && filter.field === "is_active");
   const toggleShowInactive = (checked: boolean) =>
@@ -52,10 +53,28 @@ export const BancoList = () => {
           dataIndex="actions"
           render={(_, record: BancoRow) => (
             <Space>
-              <EditButton hideText size="small" recordItemId={record.id} />
-              <Button size="small" danger={record.is_active} onClick={() => toggleActive(record)}>
-                {record.is_active ? "Desactivar" : "Activar"}
-              </Button>
+              <Tooltip title="Editar banco">
+                <EditButton hideText size="small" recordItemId={record.id} />
+              </Tooltip>
+              <Tooltip title={record.is_active ? "Desactivar banco" : "Activar banco"}>
+                <Button
+                  size="small"
+                  danger={record.is_active}
+                  icon={record.is_active ? <StopOutlined /> : <CheckCircleOutlined />}
+                  onClick={() => {
+                    if (!record.is_active) {
+                      toggleActive(record);
+                      return;
+                    }
+                    modal.confirm({
+                      title: "¿Desactivar este banco?",
+                      okText: "Desactivar",
+                      okButtonProps: { danger: true },
+                      onOk: () => toggleActive(record),
+                    });
+                  }}
+                />
+              </Tooltip>
             </Space>
           )}
         />
