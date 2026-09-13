@@ -113,7 +113,18 @@ export const GastoForm = ({ formProps, mostrarRequiereAprobacion }: GastoFormPro
   }, [esACargoDePropietario, formProps.form]);
 
   return (
-    <Form {...formProps} layout="vertical" style={{ maxWidth: 960 }}>
+    <Form
+      {...formProps}
+      layout="horizontal"
+      // Ancho de label fijo (no en `span`/porcentaje): así todas las
+      // etiquetas del form miden lo mismo sin importar cuán ancha sea la
+      // columna que las contiene (una de dos, una de tres, ancho completo).
+      labelCol={{ xs: { span: 24 }, sm: { flex: "160px" } }}
+      wrapperCol={{ xs: { span: 24 }, sm: { flex: 1 } }}
+      labelAlign="right"
+      labelWrap
+      style={{ maxWidth: 960 }}
+    >
       <Divider orientation="left" orientationMargin={0} style={{ marginTop: 0 }}>
         Unidad y tipo
       </Divider>
@@ -180,8 +191,8 @@ export const GastoForm = ({ formProps, mostrarRequiereAprobacion }: GastoFormPro
         Proveedor
       </Divider>
       <Row gutter={16}>
-        <Col xs={24} md={8}>
-          <Form.Item label="Filtrar proveedores por Rubro">
+        <Col xs={24} md={12}>
+          <Form.Item label="Filtrar por Rubro">
             <Select
               options={rubroSelectProps.options}
               onSearch={rubroSelectProps.onSearch}
@@ -194,7 +205,7 @@ export const GastoForm = ({ formProps, mostrarRequiereAprobacion }: GastoFormPro
             />
           </Form.Item>
         </Col>
-        <Col xs={24} md={16}>
+        <Col xs={24} md={12}>
           <Form.Item label="Proveedor" name="proveedor_id" rules={[{ required: true, message: "Elegí un proveedor" }]}>
             <Select
               {...proveedorSelectProps}
@@ -216,9 +227,16 @@ export const GastoForm = ({ formProps, mostrarRequiereAprobacion }: GastoFormPro
             name="a_cargo_de"
             rules={[{ required: true }]}
             extra={
-              aCargoDeSugerido
-                ? `Sugerido por el contrato vigente de la unidad: ${A_CARGO_DE_LABEL[aCargoDeSugerido]}. Podés cambiarlo.`
-                : undefined
+              <>
+                ¿Quién se encarga de reintegrar a la administradora el gasto?
+                {aCargoDeSugerido && (
+                  <>
+                    <br />
+                    Sugerido por el contrato vigente de la unidad: {A_CARGO_DE_LABEL[aCargoDeSugerido]}. Podés
+                    cambiarlo.
+                  </>
+                )}
+              </>
             }
           >
             <Select options={A_CARGO_DE_OPTIONS} />

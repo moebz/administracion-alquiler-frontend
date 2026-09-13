@@ -54,7 +54,7 @@ export const UserCreate = () => {
           </Descriptions.Item>
         </Descriptions>
       )}
-      <Form {...formProps} layout="vertical">
+      <Form {...formProps} layout="vertical" style={{ maxWidth: 480 }}>
         <Form.Item name="persona_id" hidden rules={[{ required: true }]}>
           <Input />
         </Form.Item>

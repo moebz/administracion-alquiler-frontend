@@ -8,7 +8,7 @@ export const UserEdit = () => {
 
   return (
     <Edit saveButtonProps={saveButtonProps} isLoading={formLoading} title="Editar usuario">
-      <Form {...formProps} layout="vertical">
+      <Form {...formProps} layout="vertical" style={{ maxWidth: 480 }}>
         <Form.Item label="Email" name="email" rules={[{ required: true, type: "email" }]}>
           <Input />
         </Form.Item>

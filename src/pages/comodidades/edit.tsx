@@ -6,7 +6,7 @@ export const ComodidadEdit = () => {
 
   return (
     <Edit saveButtonProps={saveButtonProps} isLoading={formLoading} title="Editar comodidad">
-      <Form {...formProps} layout="vertical">
+      <Form {...formProps} layout="vertical" style={{ maxWidth: 480 }}>
         <Form.Item label="Nombre" name="nombre" rules={[{ required: true }]}>
           <Input />
         </Form.Item>

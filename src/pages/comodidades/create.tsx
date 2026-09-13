@@ -6,7 +6,7 @@ export const ComodidadCreate = () => {
 
   return (
     <Create saveButtonProps={saveButtonProps} title="Crear comodidad">
-      <Form {...formProps} layout="vertical">
+      <Form {...formProps} layout="vertical" style={{ maxWidth: 480 }}>
         <Form.Item label="Nombre" name="nombre" rules={[{ required: true }]}>
           <Input />
         </Form.Item>

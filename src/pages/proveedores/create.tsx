@@ -1,5 +1,5 @@
 import { Create, useForm, useSelect } from "@refinedev/antd";
-import { Form, Select } from "antd";
+import { Divider, Form, Select } from "antd";
 import { PersonaBuscador } from "../../components/persona-buscador";
 
 export const ProveedorCreate = () => {
@@ -13,8 +13,11 @@ export const ProveedorCreate = () => {
 
   return (
     <Create saveButtonProps={saveButtonProps} title="Crear proveedor">
-      <Form {...formProps} layout="vertical">
+      <Form {...formProps} layout="vertical" style={{ maxWidth: 720 }}>
         <PersonaBuscador form={form} />
+        <Divider orientation="left" orientationMargin={0}>
+          Rubros
+        </Divider>
         <Form.Item label="Rubros" name="rubros" rules={[{ required: true }]}>
           <Select mode="multiple" {...rubroSelectProps} />
         </Form.Item>

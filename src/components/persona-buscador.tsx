@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useSelect } from "@refinedev/antd";
-import { Alert, Button, Form, Input, Select, Space } from "antd";
+import { Alert, Button, Col, Form, Input, Row, Select, Space } from "antd";
 import type { FormInstance } from "antd";
 import { kyInstance } from "../providers/data";
 
@@ -109,15 +109,23 @@ export const PersonaBuscador = ({ form }: Props) => {
           }
         />
       )}
-      <Form.Item label="Nombre" name={["persona", "nombre"]} rules={[{ required: true }]}>
-        <Input disabled={personaEncontrada} />
-      </Form.Item>
-      <Form.Item label="Teléfono" name={["persona", "telefono"]}>
-        <Input disabled={personaEncontrada} />
-      </Form.Item>
-      <Form.Item label="Email de contacto" name={["persona", "email_contacto"]}>
-        <Input disabled={personaEncontrada} />
-      </Form.Item>
+      <Row gutter={16}>
+        <Col xs={24}>
+          <Form.Item label="Nombre" name={["persona", "nombre"]} rules={[{ required: true }]}>
+            <Input disabled={personaEncontrada} />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={12}>
+          <Form.Item label="Teléfono" name={["persona", "telefono"]}>
+            <Input disabled={personaEncontrada} />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={12}>
+          <Form.Item label="Email de contacto" name={["persona", "email_contacto"]}>
+            <Input disabled={personaEncontrada} />
+          </Form.Item>
+        </Col>
+      </Row>
     </>
   );
 };
