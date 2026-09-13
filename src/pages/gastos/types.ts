@@ -47,10 +47,13 @@ export const GASTO_ESTADO_COLOR: Record<GastoEstado, string> = {
 
 export type ACargoDe = "PROPIETARIO" | "INQUILINO" | "ADMINISTRADORA";
 
+// ADMINISTRADORA existe a nivel de modelo (un gasto que la administradora
+// absorbe sin cobrárselo a nadie, ver MODELO_DATOS.md "Gastos") pero no se
+// ofrece todavía como opción de carga manual acá — por ahora el alta/edición
+// de gastos solo admite Propietario o Inquilino.
 export const A_CARGO_DE_OPTIONS: { label: string; value: ACargoDe }[] = [
   { label: "Propietario", value: "PROPIETARIO" },
   { label: "Inquilino", value: "INQUILINO" },
-  { label: "Administradora", value: "ADMINISTRADORA" },
 ];
 
 export const A_CARGO_DE_LABEL: Record<ACargoDe, string> = {

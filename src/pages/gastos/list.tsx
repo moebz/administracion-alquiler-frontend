@@ -1,10 +1,8 @@
 import { useState } from "react";
 import { EditButton, List, useTable } from "@refinedev/antd";
 import type { CrudFilter } from "@refinedev/core";
-import { App, Button, Form, Input, Modal, Popconfirm, Select, Space, Table, Tag } from "antd";
+import { Select, Space, Table, Tag } from "antd";
 import dayjs from "dayjs";
-import { kyInstance } from "../../providers/data";
-import { extractErrorMessage } from "../../providers/auth";
 import {
   GASTO_ESTADO_COLOR,
   GASTO_ESTADO_LABEL,
@@ -14,16 +12,16 @@ import {
   type GastoRow,
 } from "./types";
 
+// Sin Aprobar/Rechazar acá: esa acción es siempre del propietario de la
+// unidad, desde su propio portal (pages/propietario-gastos/list.tsx) — el
+// panel interno solo puede ver y editar (mientras el gasto siga SOLICITADO).
 export const GastoList = () => {
-  const { tableProps, tableQuery, setFilters } = useTable<GastoRow>({
+  const { tableProps, setFilters } = useTable<GastoRow>({
     syncWithLocation: true,
     sorters: { initial: [{ field: "fecha", order: "desc" }] },
   });
-  const { message } = App.useApp();
 
   const [estado, setEstado] = useState<GastoEstado>();
-  const [rechazando, setRechazando] = useState<GastoRow | null>(null);
-  const [formRechazo] = Form.useForm<{ motivo_rechazo: string }>();
 
   // Mismo criterio que pages/contratos-alquiler/list.tsx: recalcula el array completo de filtros en cada cambio.
   const applyFilters = (nextEstado: GastoEstado | undefined) => {
@@ -34,32 +32,6 @@ export const GastoList = () => {
       filters.push({ field: "estado", operator: "eq", value: nextEstado });
     }
     setFilters(filters, "replace");
-  };
-
-  const aprobar = async (record: GastoRow) => {
-    const response = await kyInstance.patch(`gastos/${record.id}/aprobar`, {
-      json: { aprobado_por: "ADMINISTRADORA" },
-    });
-    if (response.ok) {
-      message.success("Gasto aprobado.");
-      tableQuery.refetch();
-    } else {
-      message.error(await extractErrorMessage(response, "No se pudo aprobar el gasto."));
-    }
-  };
-
-  const rechazar = async (values: { motivo_rechazo: string }) => {
-    if (!rechazando) return;
-
-    const response = await kyInstance.patch(`gastos/${rechazando.id}/rechazar`, { json: values });
-    if (response.ok) {
-      message.success("Gasto rechazado.");
-      setRechazando(null);
-      formRechazo.resetFields();
-      tableQuery.refetch();
-    } else {
-      message.error(await extractErrorMessage(response, "No se pudo rechazar el gasto."));
-    }
   };
 
   return (
@@ -111,43 +83,11 @@ export const GastoList = () => {
         <Table.Column
           title="Acciones"
           dataIndex="actions"
-          render={(_, record: GastoRow) => (
-            <Space>
-              <EditButton hideText size="small" recordItemId={record.id} />
-              {record.estado === "SOLICITADO" && (
-                <>
-                  <Popconfirm title="¿Aprobar este gasto?" okText="Aprobar" cancelText="Cancelar" onConfirm={() => aprobar(record)}>
-                    <Button size="small" type="primary">
-                      Aprobar
-                    </Button>
-                  </Popconfirm>
-                  <Button size="small" danger onClick={() => setRechazando(record)}>
-                    Rechazar
-                  </Button>
-                </>
-              )}
-            </Space>
-          )}
+          render={(_, record: GastoRow) =>
+            record.estado === "SOLICITADO" ? <EditButton hideText size="small" recordItemId={record.id} /> : "—"
+          }
         />
       </Table>
-      <Modal
-        title="Rechazar gasto"
-        open={rechazando !== null}
-        onCancel={() => {
-          setRechazando(null);
-          formRechazo.resetFields();
-        }}
-        onOk={() => formRechazo.submit()}
-        okText="Rechazar"
-        okButtonProps={{ danger: true }}
-        cancelText="Cancelar"
-      >
-        <Form form={formRechazo} layout="vertical" onFinish={rechazar}>
-          <Form.Item label="Motivo del rechazo" name="motivo_rechazo" rules={[{ required: true, message: "Ingresá un motivo" }]}>
-            <Input.TextArea rows={3} />
-          </Form.Item>
-        </Form>
-      </Modal>
     </List>
   );
 };
