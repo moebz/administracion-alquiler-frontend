@@ -240,7 +240,8 @@ export const RoleList = () => {
         padding: "8px 10px",
         marginBottom: 2,
         cursor: "pointer",
-        background: role.id === selectedRoleId ? "#e6f4ff" : "transparent",
+        background: role.id === selectedRoleId ? "#d6ebff" : "transparent",
+        boxShadow: role.id === selectedRoleId ? "inset 3px 0 0 0 #1677ff" : "none",
       }}
     >
       <Badge dot={isDirty(role)} offset={[3, 3]}>
@@ -302,7 +303,16 @@ export const RoleList = () => {
                 style={{ marginBottom: 12 }}
               />
             </div>
-            <div style={{ overflowY: "auto", padding: "0 12px 12px" }}>
+            <div
+              style={{
+                overflowY: "auto",
+                margin: "0 12px 12px",
+                padding: 12,
+                background: "#eeeeee",
+                border: "1px solid #e0e0e0",
+                borderRadius: 8,
+              }}
+            >
               {sistema.length > 0 && (
                 <>
                   <Text type="secondary" style={{ fontSize: 11, textTransform: "uppercase" }}>
@@ -410,7 +420,17 @@ export const RoleList = () => {
                 style={{ marginBottom: 16, maxWidth: 360 }}
               />
 
-              <div style={{ overflowY: "auto", flex: 1, minHeight: 0 }}>
+              <div
+                style={{
+                  overflowY: "auto",
+                  flex: 1,
+                  minHeight: 0,
+                  background: "#eeeeee",
+                  border: "1px solid #e0e0e0",
+                  borderRadius: 8,
+                  padding: 12,
+                }}
+              >
                 {Object.keys(groups).length === 0 ? (
                   <Empty description="No se encontraron recursos." />
                 ) : (
@@ -419,7 +439,10 @@ export const RoleList = () => {
                       const names = items.map((item) => item.name);
                       const state = groupCheckboxState(currentRole, names, draftFor(currentRole));
                       return (
-                        <div key={group} style={{ border: "1px solid #f0f0f0", borderRadius: 8, padding: 12 }}>
+                        <div
+                          key={group}
+                          style={{ border: "1px solid #f0f0f0", borderRadius: 8, padding: 12, background: "#fff" }}
+                        >
                           <div
                             style={{
                               display: "flex",
