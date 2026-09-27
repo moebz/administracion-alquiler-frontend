@@ -1,15 +1,9 @@
-import { useState } from "react";
-import { EditButton, List, ShowButton, useSelect, useTable } from "@refinedev/antd";
-import type { CrudFilter } from "@refinedev/core";
-import { App, Button, Input, Select, Space, Table, Tag, Tooltip, Typography } from "antd";
-import { CheckCircleOutlined, EditOutlined, SendOutlined, StopOutlined, UserAddOutlined } from "@ant-design/icons";
-import { useNavigate } from "react-router";
-import { ActiveFilterSwitch } from "../../components/active-filter-switch";
-import { FilterBar } from "../../components/filter-bar";
-import { kyInstance } from "../../providers/data";
-import { extractErrorMessage } from "../../providers/auth";
-import { capitalize } from "../../utils/strings";
-import { ACCOUNT_STATUS_COLOR, ACCOUNT_STATUS_LABEL, ACCOUNT_STATUS_OPTIONS, getAccountStatus } from "./account-status";
+import { List, useTable } from "@refinedev/antd";
+import { Table, Typography } from "antd";
+import { RolesTags } from "../../components/roles-tags";
+import { PersonaListFilters } from "./persona-list-filters";
+import { PersonaStatusCell } from "./persona-status-cell";
+import { PersonaUsuarioCell } from "./persona-usuario-cell";
 import type { PersonaRow } from "./types";
 
 export const PersonaList = () => {
@@ -19,129 +13,12 @@ export const PersonaList = () => {
       initial: [{ field: "is_active", operator: "eq", value: true }],
     },
   });
-  const { message, modal } = App.useApp();
-  const navigate = useNavigate();
 
-  const { selectProps: roleSelectProps } = useSelect({
-    resource: "roles",
-    optionLabel: (role: { name: string }) => capitalize(role.name),
-    optionValue: "name",
-  });
-
-  const [search, setSearch] = useState<string>();
-  const [roles, setRoles] = useState<string[]>([]);
-  const [estadoCuenta, setEstadoCuenta] = useState<string>();
-  const [showInactive, setShowInactive] = useState(false);
-
-  // Los filtros del header son independientes entre sí — se recalcula el
-  // array completo de CrudFilters cada vez que cambia uno, en vez de tratar
-  // de mergear contra `filters` de useTable (más simple que parsear su forma
-  // de vuelta).
-  const applyFilters = (overrides: {
-    search?: string;
-    roles?: string[];
-    estadoCuenta?: string;
-    showInactive?: boolean;
-  }) => {
-    const nextSearch = "search" in overrides ? overrides.search : search;
-    const nextRoles = overrides.roles ?? roles;
-    const nextEstadoCuenta = "estadoCuenta" in overrides ? overrides.estadoCuenta : estadoCuenta;
-    const nextShowInactive = overrides.showInactive ?? showInactive;
-
-    setSearch(nextSearch);
-    setRoles(nextRoles);
-    setEstadoCuenta(nextEstadoCuenta);
-    setShowInactive(nextShowInactive);
-
-    const filters: CrudFilter[] = [];
-    if (nextSearch) {
-      filters.push({ field: "search", operator: "eq", value: nextSearch });
-    }
-    if (nextRoles.length > 0) {
-      filters.push({ field: "roles", operator: "in", value: nextRoles });
-    }
-    if (nextEstadoCuenta) {
-      filters.push({ field: "estado_cuenta", operator: "eq", value: nextEstadoCuenta });
-    }
-    if (!nextShowInactive) {
-      filters.push({ field: "is_active", operator: "eq", value: true });
-    }
-    setFilters(filters, "replace");
-  };
-
-  const toggleActivaPersona = async (record: PersonaRow) => {
-    const action = record.is_active ? "deactivate" : "activate";
-    const response = await kyInstance.patch(`personas/${record.id}/${action}`);
-    if (response.ok) {
-      message.success(record.is_active ? "Persona desactivada." : "Persona activada.");
-      tableQuery.refetch();
-    } else {
-      message.error(await extractErrorMessage(response, "No se pudo actualizar el estado."));
-    }
-  };
-
-  const toggleActivaCuenta = async (record: PersonaRow) => {
-    if (!record.usuario) {
-      return;
-    }
-    const action = record.usuario.is_active ? "deactivate" : "activate";
-    const response = await kyInstance.patch(`users/${record.usuario.id}/${action}`);
-    if (response.ok) {
-      message.success(record.usuario.is_active ? "Cuenta desactivada." : "Cuenta activada.");
-      tableQuery.refetch();
-    } else {
-      message.error(await extractErrorMessage(response, "No se pudo actualizar el estado."));
-    }
-  };
-
-  const resendInvitation = async (usuarioId: number) => {
-    const response = await kyInstance.post(`users/${usuarioId}/resend-invitation`);
-    if (response.ok) {
-      message.success("Invitación reenviada.");
-      tableQuery.refetch();
-    } else {
-      message.error(await extractErrorMessage(response, "No se pudo reenviar la invitación."));
-    }
-  };
+  const refetch = () => tableQuery.refetch();
 
   return (
     <List title="Personas">
-      <FilterBar>
-        <Input.Search
-          allowClear
-          placeholder="Buscar por nombre, documento o email"
-          style={{ width: 280 }}
-          defaultValue={search}
-          onSearch={(value) => applyFilters({ search: value || undefined })}
-        />
-        <Space>
-          <span>Roles</span>
-          <Select
-            mode="multiple"
-            style={{ minWidth: 220 }}
-            allowClear
-            placeholder="Todos"
-            options={roleSelectProps.options}
-            value={roles}
-            onChange={(value) => applyFilters({ roles: value })}
-          />
-        </Space>
-        <Space>
-          <span>Estado de cuenta</span>
-          <Select
-            style={{ minWidth: 200 }}
-            allowClear
-            placeholder="Todos"
-            options={ACCOUNT_STATUS_OPTIONS}
-            value={estadoCuenta}
-            onChange={(value) => applyFilters({ estadoCuenta: value })}
-          />
-        </Space>
-        <ActiveFilterSwitch
-          checked={showInactive}
-          onChange={(checked) => applyFilters({ showInactive: checked })}
-        />
-      </FilterBar>
+      <PersonaListFilters onChange={(filters) => setFilters(filters, "replace")} />
       <Table {...tableProps} rowKey="id" scroll={{ x: "max-content" }}>
         <Table.Column
           title="Nombre"
@@ -155,119 +32,18 @@ export const PersonaList = () => {
             </>
           )}
         />
-        <Table.Column
-          dataIndex="roles"
-          title="Roles"
-          render={(personaRoles: string[]) =>
-            personaRoles.length ? (
-              <Space size={[4, 4]} wrap>
-                {personaRoles.map((role) => (
-                  <Tag key={role}>{capitalize(role)}</Tag>
-                ))}
-              </Space>
-            ) : (
-              "—"
-            )
-          }
-        />
+        <Table.Column dataIndex="roles" title="Roles" render={(roles: string[]) => <RolesTags roles={roles} />} />
         <Table.Column
           title="Persona"
           dataIndex="is_active"
-          render={(isActive: boolean, record: PersonaRow) => (
-            <Space size={4} wrap>
-              <Tag color={isActive ? "green" : "red"}>{isActive ? "Activa" : "Inactiva"}</Tag>
-              <Tooltip title="Ver persona">
-                <ShowButton hideText size="small" recordItemId={record.id} />
-              </Tooltip>
-              <Tooltip title="Editar persona">
-                <EditButton hideText size="small" recordItemId={record.id} />
-              </Tooltip>
-              <Tooltip title={isActive ? "Desactivar persona" : "Activar persona"}>
-                <Button
-                  size="small"
-                  danger={isActive}
-                  icon={isActive ? <StopOutlined /> : <CheckCircleOutlined />}
-                  onClick={() => {
-                    if (!isActive) {
-                      toggleActivaPersona(record);
-                      return;
-                    }
-                    modal.confirm({
-                      title: "¿Desactivar esta persona?",
-                      content: record.usuario ? "Esto también desactiva su cuenta." : undefined,
-                      okText: "Desactivar",
-                      okButtonProps: { danger: true },
-                      onOk: () => toggleActivaPersona(record),
-                    });
-                  }}
-                />
-              </Tooltip>
-            </Space>
-          )}
+          render={(_: boolean, record: PersonaRow) => <PersonaStatusCell persona={record} onChanged={refetch} />}
         />
         <Table.Column
           title="Usuario"
           dataIndex="usuario"
-          render={(usuario: PersonaRow["usuario"], record: PersonaRow) => {
-            const status = getAccountStatus(usuario);
-            return (
-              <Space direction="vertical" size={4}>
-                <Space size={4}>
-                  <span>{usuario?.email ?? "—"}</span>
-                  {usuario && getAccountStatus(usuario) === "invitado" && (
-                    <Tooltip title="Reenviar invitación">
-                      <Button
-                        size="small"
-                        icon={<SendOutlined />}
-                        onClick={() => resendInvitation(usuario.id)}
-                      />
-                    </Tooltip>
-                  )}
-                </Space>
-                <Space size={4} wrap>
-                  <Tag color={ACCOUNT_STATUS_COLOR[status]}>{ACCOUNT_STATUS_LABEL[status]}</Tag>
-                  {usuario ? (
-                    <>
-                      <Tooltip title="Editar cuenta">
-                        <Button
-                          size="small"
-                          icon={<EditOutlined />}
-                          onClick={() => navigate(`/administrador/usuarios/edit/${usuario.id}`)}
-                        />
-                      </Tooltip>
-                      <Tooltip title={usuario.is_active ? "Desactivar cuenta" : "Activar cuenta"}>
-                        <Button
-                          size="small"
-                          danger={usuario.is_active}
-                          icon={usuario.is_active ? <StopOutlined /> : <CheckCircleOutlined />}
-                          onClick={() => {
-                            if (!usuario.is_active) {
-                              toggleActivaCuenta(record);
-                              return;
-                            }
-                            modal.confirm({
-                              title: "¿Desactivar esta cuenta?",
-                              okText: "Desactivar",
-                              okButtonProps: { danger: true },
-                              onOk: () => toggleActivaCuenta(record),
-                            });
-                          }}
-                        />
-                      </Tooltip>
-                    </>
-                  ) : (
-                    <Tooltip title="Crear cuenta">
-                      <Button
-                        size="small"
-                        icon={<UserAddOutlined />}
-                        onClick={() => navigate(`/administrador/usuarios/create?persona_id=${record.id}`)}
-                      />
-                    </Tooltip>
-                  )}
-                </Space>
-              </Space>
-            );
-          }}
+          render={(_: PersonaRow["usuario"], record: PersonaRow) => (
+            <PersonaUsuarioCell persona={record} onChanged={refetch} />
+          )}
         />
       </Table>
     </List>

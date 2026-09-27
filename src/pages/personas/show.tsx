@@ -2,8 +2,8 @@ import { Show } from "@refinedev/antd";
 import { useShow } from "@refinedev/core";
 import { UserOutlined } from "@ant-design/icons";
 import { Card, Descriptions, Space, Tag } from "antd";
-import { capitalize } from "../../utils/strings";
 import { PageTitle } from "../../components/page-title";
+import { RolesTags } from "../../components/roles-tags";
 import { PersonaCuentasBancarias } from "./cuentas-bancarias";
 import { TIPO_PERSONA_LABEL, type PersonaRow } from "./types";
 
@@ -29,17 +29,7 @@ export const PersonaShow = () => {
             <Descriptions.Item label="Dirección">{persona?.direccion ?? "—"}</Descriptions.Item>
             <Descriptions.Item label="Teléfono">{persona?.telefono ?? "—"}</Descriptions.Item>
             <Descriptions.Item label="Email de contacto">{persona?.email_contacto ?? "—"}</Descriptions.Item>
-            <Descriptions.Item label="Roles">
-              {persona && persona.roles.length > 0 ? (
-                <Space size={[4, 4]} wrap>
-                  {persona.roles.map((role) => (
-                    <Tag key={role}>{capitalize(role)}</Tag>
-                  ))}
-                </Space>
-              ) : (
-                "—"
-              )}
-            </Descriptions.Item>
+            <Descriptions.Item label="Roles">{persona && <RolesTags roles={persona.roles} />}</Descriptions.Item>
             <Descriptions.Item label="Estado">
               {persona && (
                 <Tag color={persona.is_active ? "green" : "red"}>{persona.is_active ? "Activa" : "Inactiva"}</Tag>
