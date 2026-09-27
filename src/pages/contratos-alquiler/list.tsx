@@ -7,6 +7,7 @@ import { FilterBar } from "../../components/filter-bar";
 import { kyInstance } from "../../providers/data";
 import { extractErrorMessage } from "../../providers/auth";
 import { formatMonto } from "../../utils/monto";
+import { formatPorcentaje } from "../../utils/porcentaje";
 import {
   CONTRATO_ALQUILER_ESTADO_COLOR,
   CONTRATO_ALQUILER_ESTADO_LABEL,
@@ -118,7 +119,7 @@ export const ContratoAlquilerList = () => {
         <Table.Column
           title="Mora diaria"
           dataIndex="mora_pct_diario"
-          render={(porcentaje: number) => `${porcentaje}%`}
+          render={(porcentaje: ContratoAlquilerRow["mora_pct_diario"]) => formatPorcentaje(porcentaje)}
         />
         <Table.Column
           dataIndex="fecha_inicio"

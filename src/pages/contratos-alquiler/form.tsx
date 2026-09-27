@@ -4,6 +4,7 @@ import { Col, DatePicker, Form, InputNumber, Select } from "antd";
 import type { FormProps } from "antd";
 import dayjs from "dayjs";
 import { MontoInput } from "../../components/monto-input";
+import { PorcentajeInput } from "../../components/porcentaje-input";
 import { SectionDivider } from "../../components/section-divider";
 import { SectionRow } from "../../components/section-row";
 import { CONTRATO_ALQUILER_ESTADO_OPTIONS, EXPENSAS_A_CARGO_OPTIONS } from "./types";
@@ -112,7 +113,7 @@ export const ContratoAlquilerForm = ({ formProps, mostrarMontoAlquiler }: Contra
         )}
         <Col xs={24} md={mostrarMontoAlquiler ? 8 : 12}>
           <Form.Item label="Porcentaje de comisión" name="comision_pct" rules={[{ required: true }]}>
-            <InputNumber min={0} max={100} style={{ width: "100%" }} addonAfter="%" />
+            <PorcentajeInput />
           </Form.Item>
         </Col>
         <Col xs={24} md={mostrarMontoAlquiler ? 8 : 12}>
@@ -136,12 +137,12 @@ export const ContratoAlquilerForm = ({ formProps, mostrarMontoAlquiler }: Contra
         </Col>
         <Col xs={24} md={12}>
           <Form.Item label="Porcentaje de mora diario" name="mora_pct_diario" rules={[{ required: true }]}>
-            <InputNumber min={0} max={100} style={{ width: "100%" }} addonAfter="%" />
+            <PorcentajeInput />
           </Form.Item>
         </Col>
         <Col xs={24} md={12}>
           <Form.Item label="Tope de mora (% del alquiler)" name="mora_tope_pct">
-            <InputNumber min={0} max={100} style={{ width: "100%" }} addonAfter="%" />
+            <PorcentajeInput />
           </Form.Item>
         </Col>
       </SectionRow>

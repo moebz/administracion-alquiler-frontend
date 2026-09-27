@@ -1,10 +1,9 @@
-export type GastoTipo = "EXPENSA" | "REPARACION" | "SERVICIO" | "IMPUESTO" | "OTRO";
+export type GastoTipo = "EXPENSA" | "REPARACION" | "SERVICIO" | "OTRO";
 
 export const GASTO_TIPO_OPTIONS: { label: string; value: GastoTipo }[] = [
   { label: "Expensa", value: "EXPENSA" },
   { label: "Reparación", value: "REPARACION" },
   { label: "Servicio", value: "SERVICIO" },
-  { label: "Impuesto", value: "IMPUESTO" },
   { label: "Otro", value: "OTRO" },
 ];
 
@@ -12,7 +11,6 @@ export const GASTO_TIPO_LABEL: Record<GastoTipo, string> = {
   EXPENSA: "Expensa",
   REPARACION: "Reparación",
   SERVICIO: "Servicio",
-  IMPUESTO: "Impuesto",
   OTRO: "Otro",
 };
 
@@ -86,7 +84,7 @@ export type GastoRow = {
   descripcion: string;
   fecha: string;
   periodo: string | null;
-  // Serializado como string: `monto` tiene cast `decimal:2` en el modelo (App\Models\Gasto), y Laravel siempre
+  // Serializado como string: `monto` tiene cast `decimal:4` en el modelo (App\Models\Gasto), y Laravel siempre
   // manda un decimal como string en el JSON (no como number) para no perder precisión.
   monto: number | string;
   proveedor_id: number;
