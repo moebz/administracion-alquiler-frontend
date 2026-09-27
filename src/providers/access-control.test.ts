@@ -17,6 +17,16 @@ describe("requiredPermission", () => {
     expect(requiredPermission("fondos", "delete")).toBe("fondos.gestionar_estado");
   });
 
+  it("resuelve compras (ver-only) igual que bancos para list/show", () => {
+    expect(requiredPermission("compras", "list")).toBe("compras.ver");
+    expect(requiredPermission("compras", "show")).toBe("compras.ver");
+  });
+
+  it("resuelve pagos-proveedor a su alias de grupo real (pagos)", () => {
+    expect(requiredPermission("pagos-proveedor", "list")).toBe("pagos.ver");
+    expect(requiredPermission("pagos-proveedor", "show")).toBe("pagos.ver");
+  });
+
   it("resuelve cada alias de resource a su grupo de permisos real", () => {
     expect(requiredPermission("personas-todos", "list")).toBe("personas.ver");
     expect(requiredPermission("personas", "create")).toBe("personas.crear");
@@ -76,6 +86,13 @@ describe("canAccessResource", () => {
   it("deniega fondos a quien no tiene fondos.ver (regresion: faltaba en RESOURCES_WITH_PERMISSIONS)", () => {
     expect(canAccessResource(["acceso.administrador", "edificios.ver"], "fondos", "list")).toBe(false);
     expect(canAccessResource(["acceso.administrador", "fondos.ver"], "fondos", "list")).toBe(true);
+  });
+
+  it("deniega compras/pagos-proveedor a quien no tiene el permiso .ver correspondiente", () => {
+    expect(canAccessResource(["acceso.administrador", "edificios.ver"], "compras", "list")).toBe(false);
+    expect(canAccessResource(["acceso.administrador", "compras.ver"], "compras", "list")).toBe(true);
+    expect(canAccessResource(["acceso.administrador", "edificios.ver"], "pagos-proveedor", "list")).toBe(false);
+    expect(canAccessResource(["acceso.administrador", "pagos.ver"], "pagos-proveedor", "list")).toBe(true);
   });
 
   it("permite sin chequear nada para un resource agrupador sin entrada en FIXED_PERMISSION", () => {

@@ -35,4 +35,43 @@ export type FondoRow = {
   titular: string | null;
   is_active: boolean;
   fecha_baja: string | null;
+  // null si el usuario no tiene fondos.ver_saldo (ver App\Http\Controllers\Admin\FondoController).
+  saldo: number | string | null;
+};
+
+export type MovimientoFondoTipo = "INGRESO" | "EGRESO";
+
+export const MOVIMIENTO_FONDO_TIPO_LABEL: Record<MovimientoFondoTipo, string> = {
+  INGRESO: "Ingreso",
+  EGRESO: "Egreso",
+};
+
+export type MovimientoFondoOrigenTipo =
+  | "COBRO_VALOR"
+  | "PAGO_VALOR"
+  | "CHEQUE_RECIBIDO"
+  | "CHEQUE_EMITIDO"
+  | "TRANSFERENCIA"
+  | "DEPOSITO_GARANTIA"
+  | "AJUSTE";
+
+export const MOVIMIENTO_FONDO_ORIGEN_LABEL: Record<MovimientoFondoOrigenTipo, string> = {
+  COBRO_VALOR: "Cobro",
+  PAGO_VALOR: "Pago",
+  CHEQUE_RECIBIDO: "Cheque recibido",
+  CHEQUE_EMITIDO: "Cheque emitido",
+  TRANSFERENCIA: "Transferencia entre fondos",
+  DEPOSITO_GARANTIA: "Depósito en garantía",
+  AJUSTE: "Ajuste",
+};
+
+export type MovimientoFondoRow = {
+  id: number;
+  fecha: string;
+  tipo: MovimientoFondoTipo;
+  monto_gs: number | string;
+  concepto: string | null;
+  origen_tipo: MovimientoFondoOrigenTipo;
+  origen_id: number;
+  estado: "ACTIVO" | "ANULADO";
 };

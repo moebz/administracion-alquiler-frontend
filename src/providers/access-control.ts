@@ -12,6 +12,7 @@ const RESOURCE_ALIAS: Record<string, string> = {
   "medios-pago": "medios_pago",
   "edificios-todos": "edificios",
   "proveedores-todos": "proveedores",
+  "pagos-proveedor": "pagos",
 };
 
 // roles y las pantallas propias de la sección propietario se gatean con un
@@ -78,6 +79,8 @@ const RESOURCES_WITH_PERMISSIONS = new Set([
   "tipos-relacion",
   "ciudades",
   "gastos",
+  "compras",
+  "pagos-proveedor",
 ]);
 
 /** null = acceso permitido sin chequeo (resources desconocidos, o agrupadores sin entrada en FIXED_PERMISSION). */

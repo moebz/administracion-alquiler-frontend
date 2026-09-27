@@ -1,13 +1,18 @@
 import { useState } from "react";
 import { EditButton, List, useTable } from "@refinedev/antd";
 import type { CrudFilter } from "@refinedev/core";
+import { usePermissions } from "@refinedev/core";
 import { App, Button, Select, Space, Table, Tag, Tooltip } from "antd";
-import { CheckCircleOutlined, StopOutlined } from "@ant-design/icons";
+import { CheckCircleOutlined, StopOutlined, WalletOutlined } from "@ant-design/icons";
 import { ActiveFilterSwitch } from "../../components/active-filter-switch";
 import { FilterBar } from "../../components/filter-bar";
 import { kyInstance } from "../../providers/data";
 import { extractErrorMessage } from "../../providers/auth";
+import { formatMonto } from "../../utils/monto";
+import { FondoMovimientosModal } from "./movimientos-modal";
 import { FONDO_TIPO_LABEL, FONDO_TIPO_OPTIONS, type FondoRow, type FondoTipo } from "./types";
+
+const PERMISO_VER_SALDO = "fondos.ver_saldo";
 
 export const FondoList = () => {
   const { tableProps, tableQuery, setFilters } = useTable<FondoRow>({
@@ -17,9 +22,12 @@ export const FondoList = () => {
     },
   });
   const { message, modal } = App.useApp();
+  const { data: permissions } = usePermissions<string[]>({});
+  const puedeVerSaldo = permissions?.includes(PERMISO_VER_SALDO) ?? false;
 
   const [tipo, setTipo] = useState<FondoTipo>();
   const [showInactive, setShowInactive] = useState(false);
+  const [movimientosDe, setMovimientosDe] = useState<FondoRow>();
 
   // Mismo criterio que pages/personas/list.tsx: recalcula el array completo de filtros en cada cambio.
   const applyFilters = (overrides: { tipo?: FondoTipo; showInactive?: boolean }) => {
@@ -79,6 +87,9 @@ export const FondoList = () => {
           dataIndex="numero_cuenta"
           render={(numeroCuenta: string | null) => numeroCuenta ?? "—"}
         />
+        {puedeVerSaldo && (
+          <Table.Column title="Saldo" dataIndex="saldo" render={(saldo: FondoRow["saldo"]) => formatMonto(saldo ?? 0)} />
+        )}
         <Table.Column
           title="Estado"
           dataIndex="is_active"
@@ -88,6 +99,11 @@ export const FondoList = () => {
               <Tooltip title="Editar fondo">
                 <EditButton hideText size="small" recordItemId={record.id} />
               </Tooltip>
+              {puedeVerSaldo && (
+                <Tooltip title="Ver movimientos">
+                  <Button size="small" icon={<WalletOutlined />} onClick={() => setMovimientosDe(record)} />
+                </Tooltip>
+              )}
               <Tooltip title={isActive ? "Desactivar fondo" : "Activar fondo"}>
                 <Button
                   size="small"
@@ -111,6 +127,7 @@ export const FondoList = () => {
           )}
         />
       </Table>
+      {movimientosDe && <FondoMovimientosModal fondo={movimientosDe} onClose={() => setMovimientosDe(undefined)} />}
     </List>
   );
 };

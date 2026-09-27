@@ -95,4 +95,12 @@ export type GastoRow = {
   aprobado_por: AprobadoPor | null;
   fecha_aprobacion: string | null;
   motivo_rechazo: string | null;
+  documento_compra_id: number | null;
+  documento_compra: {
+    id: number;
+    numero: string;
+    timbrado_proveedor: string;
+    estado: "REGISTRADO" | "ANULADO";
+    saldo: number | string;
+  } | null;
 };

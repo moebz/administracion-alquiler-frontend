@@ -16,6 +16,8 @@ import {
   DollarOutlined,
   WalletOutlined,
   CreditCardOutlined,
+  FileDoneOutlined,
+  TransactionOutlined,
 } from "@ant-design/icons";
 import { Refine, Authenticated, CanAccess } from "@refinedev/core";
 import { DevtoolsPanel, DevtoolsProvider } from "@refinedev/devtools";
@@ -64,6 +66,8 @@ import {
   ContratoAlquilerEdit,
 } from "./pages/contratos-alquiler";
 import { GastoList, GastoCreate, GastoEdit } from "./pages/gastos";
+import { CompraList, CompraShow } from "./pages/compras";
+import { PagoProveedorList, PagoProveedorShow } from "./pages/pagos-proveedor";
 import { BancoList, BancoCreate, BancoEdit } from "./pages/bancos";
 import { FondoList, FondoCreate, FondoEdit } from "./pages/fondos";
 import { MedioPagoList, MedioPagoCreate, MedioPagoEdit } from "./pages/medios-pago";
@@ -229,6 +233,24 @@ function App() {
                       label: "Gastos",
                       icon: <DollarOutlined />,
                       parent: "edificios",
+                    },
+                  },
+                  {
+                    name: "compras",
+                    list: "/administrador/compras",
+                    show: "/administrador/compras/show/:id",
+                    meta: {
+                      label: "Compras",
+                      icon: <FileDoneOutlined />,
+                    },
+                  },
+                  {
+                    name: "pagos-proveedor",
+                    list: "/administrador/pagos-proveedor",
+                    show: "/administrador/pagos-proveedor/show/:id",
+                    meta: {
+                      label: "Pagos a proveedores",
+                      icon: <TransactionOutlined />,
                     },
                   },
                   {
@@ -446,6 +468,14 @@ function App() {
                         <Route index element={<GastoList />} />
                         <Route path="create" element={<GastoCreate />} />
                         <Route path="edit/:id" element={<GastoEdit />} />
+                      </Route>
+                      <Route path="compras">
+                        <Route index element={<CompraList />} />
+                        <Route path="show/:id" element={<CompraShow />} />
+                      </Route>
+                      <Route path="pagos-proveedor">
+                        <Route index element={<PagoProveedorList />} />
+                        <Route path="show/:id" element={<PagoProveedorShow />} />
                       </Route>
                       <Route path="bancos">
                         <Route index element={<BancoList />} />
