@@ -24,6 +24,8 @@ describe("requiredPermission", () => {
     expect(requiredPermission("contratos-alquiler", "list")).toBe("contratos_alquiler.ver");
     expect(requiredPermission("tipos-identificacion", "list")).toBe("tipos_identificacion.ver");
     expect(requiredPermission("tipos-relacion", "list")).toBe("tipos_relacion.ver");
+    expect(requiredPermission("medios-pago", "list")).toBe("medios_pago.ver");
+    expect(requiredPermission("medios-pago", "create")).toBe("medios_pago.crear");
     expect(requiredPermission("edificios-todos", "list")).toBe("edificios.ver");
     expect(requiredPermission("proveedores-todos", "list")).toBe("proveedores.ver");
   });

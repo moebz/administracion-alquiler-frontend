@@ -132,6 +132,9 @@ const es = {
     "contratos-alquiler": {
       "contratos-alquiler": "contrato de alquiler",
     },
+    "medios-pago": {
+      "medios-pago": "medio de pago",
+    },
     "tipos-identificacion": {
       "tipos-identificacion": "tipo de identificación",
     },

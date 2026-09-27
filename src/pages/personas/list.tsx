@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { EditButton, List, useSelect, useTable } from "@refinedev/antd";
+import { EditButton, List, ShowButton, useSelect, useTable } from "@refinedev/antd";
 import type { CrudFilter } from "@refinedev/core";
-import { App, Button, Input, Select, Space, Table, Tag, Tooltip } from "antd";
+import { App, Button, Input, Select, Space, Table, Tag, Tooltip, Typography } from "antd";
 import { CheckCircleOutlined, EditOutlined, SendOutlined, StopOutlined, UserAddOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router";
 import { ActiveFilterSwitch } from "../../components/active-filter-switch";
@@ -142,12 +142,18 @@ export const PersonaList = () => {
           onChange={(checked) => applyFilters({ showInactive: checked })}
         />
       </FilterBar>
-      <Table {...tableProps} rowKey="id">
-        <Table.Column dataIndex="nombre" title="Nombre" />
+      <Table {...tableProps} rowKey="id" scroll={{ x: "max-content" }}>
         <Table.Column
-          title="Documento"
-          dataIndex="documento"
-          render={(documento: string, record: PersonaRow) => `${record.tipo_identificacion.nombre} ${documento}`}
+          title="Nombre"
+          dataIndex="nombre"
+          render={(nombre: string, record: PersonaRow) => (
+            <>
+              <div>{nombre}</div>
+              <Typography.Text type="secondary">
+                {record.tipo_identificacion.nombre} {record.documento}
+              </Typography.Text>
+            </>
+          )}
         />
         <Table.Column
           dataIndex="roles"
@@ -165,79 +171,14 @@ export const PersonaList = () => {
           }
         />
         <Table.Column
-          title="Email de cuenta"
-          dataIndex="usuario"
-          render={(usuario: PersonaRow["usuario"]) => (
-            <Space size={4}>
-              <span>{usuario?.email ?? "—"}</span>
-              {usuario && getAccountStatus(usuario) === "invitado" && (
-                <Tooltip title="Reenviar invitación">
-                  <Button
-                    size="small"
-                    icon={<SendOutlined />}
-                    onClick={() => resendInvitation(usuario.id)}
-                  />
-                </Tooltip>
-              )}
-            </Space>
-          )}
-        />
-        <Table.Column
-          title="Estado de cuenta"
-          dataIndex="usuario"
-          render={(usuario: PersonaRow["usuario"], record: PersonaRow) => {
-            const status = getAccountStatus(usuario);
-            return (
-              <Space size={4} wrap>
-                <Tag color={ACCOUNT_STATUS_COLOR[status]}>{ACCOUNT_STATUS_LABEL[status]}</Tag>
-                {usuario ? (
-                  <>
-                    <Tooltip title="Editar cuenta">
-                      <Button
-                        size="small"
-                        icon={<EditOutlined />}
-                        onClick={() => navigate(`/administrador/usuarios/edit/${usuario.id}`)}
-                      />
-                    </Tooltip>
-                    <Tooltip title={usuario.is_active ? "Desactivar cuenta" : "Activar cuenta"}>
-                      <Button
-                        size="small"
-                        danger={usuario.is_active}
-                        icon={usuario.is_active ? <StopOutlined /> : <CheckCircleOutlined />}
-                        onClick={() => {
-                          if (!usuario.is_active) {
-                            toggleActivaCuenta(record);
-                            return;
-                          }
-                          modal.confirm({
-                            title: "¿Desactivar esta cuenta?",
-                            okText: "Desactivar",
-                            okButtonProps: { danger: true },
-                            onOk: () => toggleActivaCuenta(record),
-                          });
-                        }}
-                      />
-                    </Tooltip>
-                  </>
-                ) : (
-                  <Tooltip title="Crear cuenta">
-                    <Button
-                      size="small"
-                      icon={<UserAddOutlined />}
-                      onClick={() => navigate(`/administrador/usuarios/create?persona_id=${record.id}`)}
-                    />
-                  </Tooltip>
-                )}
-              </Space>
-            );
-          }}
-        />
-        <Table.Column
-          title="Estado de persona"
+          title="Persona"
           dataIndex="is_active"
           render={(isActive: boolean, record: PersonaRow) => (
             <Space size={4} wrap>
               <Tag color={isActive ? "green" : "red"}>{isActive ? "Activa" : "Inactiva"}</Tag>
+              <Tooltip title="Ver persona">
+                <ShowButton hideText size="small" recordItemId={record.id} />
+              </Tooltip>
               <Tooltip title="Editar persona">
                 <EditButton hideText size="small" recordItemId={record.id} />
               </Tooltip>
@@ -263,6 +204,70 @@ export const PersonaList = () => {
               </Tooltip>
             </Space>
           )}
+        />
+        <Table.Column
+          title="Usuario"
+          dataIndex="usuario"
+          render={(usuario: PersonaRow["usuario"], record: PersonaRow) => {
+            const status = getAccountStatus(usuario);
+            return (
+              <Space direction="vertical" size={4}>
+                <Space size={4}>
+                  <span>{usuario?.email ?? "—"}</span>
+                  {usuario && getAccountStatus(usuario) === "invitado" && (
+                    <Tooltip title="Reenviar invitación">
+                      <Button
+                        size="small"
+                        icon={<SendOutlined />}
+                        onClick={() => resendInvitation(usuario.id)}
+                      />
+                    </Tooltip>
+                  )}
+                </Space>
+                <Space size={4} wrap>
+                  <Tag color={ACCOUNT_STATUS_COLOR[status]}>{ACCOUNT_STATUS_LABEL[status]}</Tag>
+                  {usuario ? (
+                    <>
+                      <Tooltip title="Editar cuenta">
+                        <Button
+                          size="small"
+                          icon={<EditOutlined />}
+                          onClick={() => navigate(`/administrador/usuarios/edit/${usuario.id}`)}
+                        />
+                      </Tooltip>
+                      <Tooltip title={usuario.is_active ? "Desactivar cuenta" : "Activar cuenta"}>
+                        <Button
+                          size="small"
+                          danger={usuario.is_active}
+                          icon={usuario.is_active ? <StopOutlined /> : <CheckCircleOutlined />}
+                          onClick={() => {
+                            if (!usuario.is_active) {
+                              toggleActivaCuenta(record);
+                              return;
+                            }
+                            modal.confirm({
+                              title: "¿Desactivar esta cuenta?",
+                              okText: "Desactivar",
+                              okButtonProps: { danger: true },
+                              onOk: () => toggleActivaCuenta(record),
+                            });
+                          }}
+                        />
+                      </Tooltip>
+                    </>
+                  ) : (
+                    <Tooltip title="Crear cuenta">
+                      <Button
+                        size="small"
+                        icon={<UserAddOutlined />}
+                        onClick={() => navigate(`/administrador/usuarios/create?persona_id=${record.id}`)}
+                      />
+                    </Tooltip>
+                  )}
+                </Space>
+              </Space>
+            );
+          }}
         />
       </Table>
     </List>

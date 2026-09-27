@@ -1,3 +1,4 @@
+import type { TipoCuenta } from "../fondos/types";
 import type { PersonaUsuario } from "./account-status";
 
 export type TipoPersona = "FISICA" | "JURIDICA";
@@ -10,6 +11,18 @@ export const TIPO_PERSONA_OPTIONS: { label: string; value: TipoPersona }[] = [
 export const TIPO_PERSONA_LABEL: Record<TipoPersona, string> = {
   FISICA: "Física",
   JURIDICA: "Jurídica",
+};
+
+export type PersonaCuentaBancariaRow = {
+  id: number;
+  persona_id: number;
+  banco_id: number;
+  banco: { id: number; nombre: string };
+  tipo_cuenta: TipoCuenta;
+  numero_cuenta: string;
+  titular: string;
+  is_active: boolean;
+  fecha_baja: string | null;
 };
 
 export type PersonaRow = {

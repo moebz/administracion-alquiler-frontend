@@ -9,6 +9,7 @@ const RESOURCE_ALIAS: Record<string, string> = {
   "contratos-alquiler": "contratos_alquiler",
   "tipos-identificacion": "tipos_identificacion",
   "tipos-relacion": "tipos_relacion",
+  "medios-pago": "medios_pago",
   "edificios-todos": "edificios",
   "proveedores-todos": "proveedores",
 };
@@ -33,7 +34,7 @@ const FIXED_PERMISSION: Record<string, string> = {
 // este chequeo extra un rol con acceso.administrador pero sin ningún permiso
 // de catálogo (ej. bancos.ver, fondos.ver) ve "Catálogos" en el menú con el
 // submenú vacío al desplegarlo.
-const CATALOGOS_CHILDREN = ["bancos", "fondos", "tipos-identificacion", "tipos-relacion", "ciudades"];
+const CATALOGOS_CHILDREN = ["bancos", "fondos", "medios-pago", "tipos-identificacion", "tipos-relacion", "ciudades"];
 
 // Sección a la que pertenece cada resource, para el chequeo de acceso.accion
 // de abajo. Default "administrador": hoy todo resource con permiso propio
@@ -72,6 +73,7 @@ const RESOURCES_WITH_PERMISSIONS = new Set([
   "proveedores-todos",
   "rubros",
   "contratos-alquiler",
+  "medios-pago",
   "tipos-identificacion",
   "tipos-relacion",
   "ciudades",

@@ -15,6 +15,7 @@ import {
   EnvironmentOutlined,
   DollarOutlined,
   WalletOutlined,
+  CreditCardOutlined,
 } from "@ant-design/icons";
 import { Refine, Authenticated, CanAccess } from "@refinedev/core";
 import { DevtoolsPanel, DevtoolsProvider } from "@refinedev/devtools";
@@ -52,7 +53,7 @@ import { SectionRoute } from "./components/section-route";
 import { RoleBasedIndex } from "./components/role-based-index";
 import { SECTIONS } from "./providers/sections";
 import { UserCreate, UserEdit } from "./pages/users";
-import { PersonaList, PersonaCreate, PersonaEdit } from "./pages/personas";
+import { PersonaList, PersonaCreate, PersonaEdit, PersonaShow } from "./pages/personas";
 import { RoleList } from "./pages/roles";
 import { EdificioList, EdificioCreate, EdificioEdit } from "./pages/edificios";
 import { BloqueList, BloqueCreate, BloqueEdit } from "./pages/bloques";
@@ -65,6 +66,7 @@ import {
 import { GastoList, GastoCreate, GastoEdit } from "./pages/gastos";
 import { BancoList, BancoCreate, BancoEdit } from "./pages/bancos";
 import { FondoList, FondoCreate, FondoEdit } from "./pages/fondos";
+import { MedioPagoList, MedioPagoCreate, MedioPagoEdit } from "./pages/medios-pago";
 import { ComodidadList, ComodidadCreate, ComodidadEdit } from "./pages/comodidades";
 import { ProveedorList, ProveedorCreate, ProveedorEdit } from "./pages/proveedores";
 import { RubroList, RubroCreate, RubroEdit } from "./pages/rubros";
@@ -97,6 +99,7 @@ function App() {
                     list: "/administrador/personas",
                     create: "/administrador/personas/create",
                     edit: "/administrador/personas/edit/:id",
+                    show: "/administrador/personas/show/:id",
                     meta: {
                       label: "Personas",
                       icon: <UserOutlined />,
@@ -301,6 +304,17 @@ function App() {
                     },
                   },
                   {
+                    name: "medios-pago",
+                    list: "/administrador/medios-pago",
+                    create: "/administrador/medios-pago/create",
+                    edit: "/administrador/medios-pago/edit/:id",
+                    meta: {
+                      label: "Medios de pago",
+                      icon: <CreditCardOutlined />,
+                      parent: "catalogos",
+                    },
+                  },
+                  {
                     name: "tipos-identificacion",
                     list: "/administrador/tipos-identificacion",
                     create: "/administrador/tipos-identificacion/create",
@@ -393,6 +407,7 @@ function App() {
                         <Route index element={<PersonaList />} />
                         <Route path="create" element={<PersonaCreate />} />
                         <Route path="edit/:id" element={<PersonaEdit />} />
+                        <Route path="show/:id" element={<PersonaShow />} />
                       </Route>
                       <Route path="usuarios">
                         <Route path="create" element={<UserCreate />} />
@@ -441,6 +456,11 @@ function App() {
                         <Route index element={<FondoList />} />
                         <Route path="create" element={<FondoCreate />} />
                         <Route path="edit/:id" element={<FondoEdit />} />
+                      </Route>
+                      <Route path="medios-pago">
+                        <Route index element={<MedioPagoList />} />
+                        <Route path="create" element={<MedioPagoCreate />} />
+                        <Route path="edit/:id" element={<MedioPagoEdit />} />
                       </Route>
                       <Route path="proveedores">
                         <Route index element={<ProveedorList />} />
