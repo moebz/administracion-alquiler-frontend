@@ -1,15 +1,10 @@
 import { useState } from "react";
-import { EditButton, List, useTable } from "@refinedev/antd";
+import { List, ShowButton, useTable } from "@refinedev/antd";
 import type { CrudFilter } from "@refinedev/core";
-import { usePermissions } from "@refinedev/core";
-import { Button, Select, Space, Table, Tag, Tooltip } from "antd";
+import { Select, Space, Table, Tag, Tooltip } from "antd";
 import dayjs from "dayjs";
-import { Link } from "react-router";
 import { FilterBar } from "../../components/filter-bar";
 import { formatMonto } from "../../utils/monto";
-import { AnularGastoModal } from "./anular-gasto-modal";
-import { RegistrarFacturaModal } from "./registrar-factura-modal";
-import { RegistrarPagoModal } from "./registrar-pago-modal";
 import {
   GASTO_ESTADO_COLOR,
   GASTO_ESTADO_LABEL,
@@ -19,29 +14,16 @@ import {
   type GastoRow,
 } from "./types";
 
-// Sin Aprobar/Rechazar acá: esa acción es siempre del propietario de la
-// unidad, desde su propio portal (pages/propietario-gastos/list.tsx) — el
-// panel interno solo puede ver y editar (mientras el gasto siga SOLICITADO).
+// Lista de solo lectura: Registrar factura/pago, Anular y Editar viven en el
+// detalle de cada gasto (pages/gastos/show.tsx) — un único lugar para todas
+// las acciones, en vez de duplicarlas acá (ver ARQUITECTURA.md, "Gastos").
 export const GastoList = () => {
-  const { tableProps, tableQuery, setFilters } = useTable<GastoRow>({
+  const { tableProps, setFilters } = useTable<GastoRow>({
     syncWithLocation: true,
     sorters: { initial: [{ field: "fecha", order: "desc" }] },
   });
 
   const [estado, setEstado] = useState<GastoEstado>();
-  const [facturaDe, setFacturaDe] = useState<GastoRow>();
-  const [pagoDe, setPagoDe] = useState<GastoRow>();
-  const [anularDe, setAnularDe] = useState<GastoRow>();
-
-  const { data: permissions } = usePermissions<string[]>({});
-  // Ver ARQUITECTURA.md, "Compras y pagos a proveedores": pagar un gasto
-  // exige el permiso del módulo de alquileres Y el del dominio fiscal
-  // correspondiente, no cualquiera de los dos por separado.
-  const puedeRegistrarFactura =
-    (permissions?.includes("gastos.registrar_pago") && permissions?.includes("compras.registrar")) ?? false;
-  const puedeRegistrarPago =
-    (permissions?.includes("gastos.registrar_pago") && permissions?.includes("pagos.registrar")) ?? false;
-  const puedeAnular = permissions?.includes("gastos.anular") ?? false;
 
   // Mismo criterio que pages/contratos-alquiler/list.tsx: recalcula el array completo de filtros en cada cambio.
   const applyFilters = (nextEstado: GastoEstado | undefined) => {
@@ -96,40 +78,17 @@ export const GastoList = () => {
           render={(estadoGasto: GastoRow["estado"], record: GastoRow) => {
             const documento = record.documento_compra;
             const saldo = documento ? Number(documento.saldo) : 0;
-            const puedeAnularEste =
-              puedeAnular && !documento && (estadoGasto === "SOLICITADO" || estadoGasto === "APROBADO");
 
             return (
               <Space direction="vertical" size={4}>
-                <Space size={4} wrap>
-                  <Tag color={GASTO_ESTADO_COLOR[estadoGasto]}>{GASTO_ESTADO_LABEL[estadoGasto]}</Tag>
-                  {estadoGasto === "APROBADO" && !documento && puedeRegistrarFactura && (
-                    <Tooltip title="Registrar la factura del proveedor">
-                      <Button size="small" onClick={() => setFacturaDe(record)}>
-                        Registrar factura
-                      </Button>
-                    </Tooltip>
-                  )}
-                  {documento && documento.estado === "REGISTRADO" && saldo > 0 && puedeRegistrarPago && (
-                    <Tooltip title="Registrar un pago a cuenta de esta factura">
-                      <Button size="small" onClick={() => setPagoDe(record)}>
-                        Registrar pago
-                      </Button>
-                    </Tooltip>
-                  )}
-                  {puedeAnularEste && (
-                    <Tooltip title="Anular este gasto">
-                      <Button danger size="small" onClick={() => setAnularDe(record)}>
-                        Anular
-                      </Button>
-                    </Tooltip>
-                  )}
-                </Space>
+                <Tag color={GASTO_ESTADO_COLOR[estadoGasto]}>{GASTO_ESTADO_LABEL[estadoGasto]}</Tag>
                 {documento && (
-                  <Link to={`/administrador/compras/show/${documento.id}`}>
-                    Factura {documento.numero}
-                    {saldo > 0 ? ` — saldo ${formatMonto(saldo)}` : ""}
-                  </Link>
+                  <Tooltip title="Ver el detalle de la factura en el gasto">
+                    <span>
+                      Factura {documento.numero}
+                      {saldo > 0 ? ` — saldo ${formatMonto(saldo)}` : ""}
+                    </span>
+                  </Tooltip>
                 )}
               </Space>
             );
@@ -145,41 +104,13 @@ export const GastoList = () => {
         <Table.Column
           title="Acciones"
           dataIndex="actions"
-          render={(_, record: GastoRow) =>
-            record.estado === "SOLICITADO" ? <EditButton hideText size="small" recordItemId={record.id} /> : "—"
-          }
+          render={(_, record: GastoRow) => (
+            <Tooltip title="Ver detalle">
+              <ShowButton hideText size="small" recordItemId={record.id} />
+            </Tooltip>
+          )}
         />
       </Table>
-      {facturaDe && (
-        <RegistrarFacturaModal
-          gasto={facturaDe}
-          onClose={() => setFacturaDe(undefined)}
-          onSuccess={() => {
-            setFacturaDe(undefined);
-            tableQuery.refetch();
-          }}
-        />
-      )}
-      {pagoDe && (
-        <RegistrarPagoModal
-          gasto={pagoDe}
-          onClose={() => setPagoDe(undefined)}
-          onSuccess={() => {
-            setPagoDe(undefined);
-            tableQuery.refetch();
-          }}
-        />
-      )}
-      {anularDe && (
-        <AnularGastoModal
-          gasto={anularDe}
-          onClose={() => setAnularDe(undefined)}
-          onSuccess={() => {
-            setAnularDe(undefined);
-            tableQuery.refetch();
-          }}
-        />
-      )}
     </List>
   );
 };

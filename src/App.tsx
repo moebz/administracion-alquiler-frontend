@@ -65,8 +65,8 @@ import {
   ContratoAlquilerCreate,
   ContratoAlquilerEdit,
 } from "./pages/contratos-alquiler";
-import { GastoList, GastoCreate, GastoEdit } from "./pages/gastos";
-import { CompraList, CompraShow } from "./pages/compras";
+import { GastoList, GastoCreate, GastoEdit, GastoShow } from "./pages/gastos";
+import { CompraShow } from "./pages/compras";
 import { PagoProveedorList, PagoProveedorShow } from "./pages/pagos-proveedor";
 import { BancoList, BancoCreate, BancoEdit } from "./pages/bancos";
 import { FondoList, FondoCreate, FondoEdit } from "./pages/fondos";
@@ -229,6 +229,7 @@ function App() {
                     list: "/administrador/gastos",
                     create: "/administrador/gastos/create",
                     edit: "/administrador/gastos/edit/:id",
+                    show: "/administrador/gastos/show/:id",
                     meta: {
                       label: "Gastos",
                       icon: <DollarOutlined />,
@@ -236,8 +237,12 @@ function App() {
                     },
                   },
                   {
+                    // Sin `list`: no tiene entrada propia en el menú, la
+                    // factura de una compra se ve desde el gasto que la
+                    // originó (pages/gastos/show.tsx). Sigue existiendo como
+                    // resource solo porque pages/pagos-proveedor/show.tsx
+                    // linkea acá (ver App\Http\Controllers\Admin\PagoProveedorController).
                     name: "compras",
-                    list: "/administrador/compras",
                     show: "/administrador/compras/show/:id",
                     meta: {
                       label: "Compras",
@@ -468,9 +473,9 @@ function App() {
                         <Route index element={<GastoList />} />
                         <Route path="create" element={<GastoCreate />} />
                         <Route path="edit/:id" element={<GastoEdit />} />
+                        <Route path="show/:id" element={<GastoShow />} />
                       </Route>
                       <Route path="compras">
-                        <Route index element={<CompraList />} />
                         <Route path="show/:id" element={<CompraShow />} />
                       </Route>
                       <Route path="pagos-proveedor">
