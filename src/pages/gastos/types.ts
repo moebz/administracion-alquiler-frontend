@@ -96,6 +96,8 @@ export type GastoRow = {
   fecha_aprobacion: string | null;
   motivo_rechazo: string | null;
   documento_compra_id: number | null;
+  fecha_anulacion: string | null;
+  motivo_anulacion: string | null;
   documento_compra: {
     id: number;
     numero: string;

@@ -7,6 +7,7 @@ import dayjs from "dayjs";
 import { Link } from "react-router";
 import { FilterBar } from "../../components/filter-bar";
 import { formatMonto } from "../../utils/monto";
+import { AnularGastoModal } from "./anular-gasto-modal";
 import { RegistrarFacturaModal } from "./registrar-factura-modal";
 import { RegistrarPagoModal } from "./registrar-pago-modal";
 import {
@@ -30,6 +31,7 @@ export const GastoList = () => {
   const [estado, setEstado] = useState<GastoEstado>();
   const [facturaDe, setFacturaDe] = useState<GastoRow>();
   const [pagoDe, setPagoDe] = useState<GastoRow>();
+  const [anularDe, setAnularDe] = useState<GastoRow>();
 
   const { data: permissions } = usePermissions<string[]>({});
   // Ver ARQUITECTURA.md, "Compras y pagos a proveedores": pagar un gasto
@@ -39,6 +41,7 @@ export const GastoList = () => {
     (permissions?.includes("gastos.registrar_pago") && permissions?.includes("compras.registrar")) ?? false;
   const puedeRegistrarPago =
     (permissions?.includes("gastos.registrar_pago") && permissions?.includes("pagos.registrar")) ?? false;
+  const puedeAnular = permissions?.includes("gastos.anular") ?? false;
 
   // Mismo criterio que pages/contratos-alquiler/list.tsx: recalcula el array completo de filtros en cada cambio.
   const applyFilters = (nextEstado: GastoEstado | undefined) => {
@@ -93,6 +96,8 @@ export const GastoList = () => {
           render={(estadoGasto: GastoRow["estado"], record: GastoRow) => {
             const documento = record.documento_compra;
             const saldo = documento ? Number(documento.saldo) : 0;
+            const puedeAnularEste =
+              puedeAnular && !documento && (estadoGasto === "SOLICITADO" || estadoGasto === "APROBADO");
 
             return (
               <Space direction="vertical" size={4}>
@@ -109,6 +114,13 @@ export const GastoList = () => {
                     <Tooltip title="Registrar un pago a cuenta de esta factura">
                       <Button size="small" onClick={() => setPagoDe(record)}>
                         Registrar pago
+                      </Button>
+                    </Tooltip>
+                  )}
+                  {puedeAnularEste && (
+                    <Tooltip title="Anular este gasto">
+                      <Button danger size="small" onClick={() => setAnularDe(record)}>
+                        Anular
                       </Button>
                     </Tooltip>
                   )}
@@ -154,6 +166,16 @@ export const GastoList = () => {
           onClose={() => setPagoDe(undefined)}
           onSuccess={() => {
             setPagoDe(undefined);
+            tableQuery.refetch();
+          }}
+        />
+      )}
+      {anularDe && (
+        <AnularGastoModal
+          gasto={anularDe}
+          onClose={() => setAnularDe(undefined)}
+          onSuccess={() => {
+            setAnularDe(undefined);
             tableQuery.refetch();
           }}
         />
