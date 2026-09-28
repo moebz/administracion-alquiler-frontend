@@ -21,7 +21,9 @@ export type PagoProveedorValorRow = {
   fondo: { id: number; nombre: string };
   monto: number | string;
   nro_comprobante: string | null;
-  estado: "ACTIVO" | "RECHAZADO";
+  estado: "ACTIVO" | "ANULADO";
+  fecha_anulacion: string | null;
+  motivo_anulacion: string | null;
 };
 
 export type PagoProveedorAplicacionRow = {
@@ -31,6 +33,7 @@ export type PagoProveedorAplicacionRow = {
   documento_compra_numero: string;
   monto_aplicado: number | string;
   estado: "ACTIVA" | "ANULADA";
+  valor_anulado_id: number | null;
 };
 
 export type PagoProveedorRow = {

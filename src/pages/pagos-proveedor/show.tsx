@@ -1,7 +1,8 @@
 import { useState } from "react";
+import { StopOutlined } from "@ant-design/icons";
 import { Show } from "@refinedev/antd";
 import { useShow, usePermissions } from "@refinedev/core";
-import { App, Button, Card, Descriptions, Form, Input, Modal, Space, Table, Tag } from "antd";
+import { App, Button, Card, Descriptions, Form, Input, Modal, Space, Table, Tag, Tooltip } from "antd";
 import dayjs from "dayjs";
 import { Link } from "react-router";
 import { extractErrorMessage } from "../../providers/auth";
@@ -24,22 +25,36 @@ export const PagoProveedorShow = () => {
   const puedeAnular = permissions?.includes(PERMISO_ANULAR) ?? false;
 
   const [modalAbierto, setModalAbierto] = useState(false);
+  const [valorAAnular, setValorAAnular] = useState<PagoProveedorValorRow | null>(null);
   const [guardando, setGuardando] = useState(false);
   const [form] = Form.useForm<{ motivo_anulacion: string }>();
+
+  const pagoActivo = pago?.estado === "ACTIVO";
+  const valoresActivos = pago?.valores.filter((valor) => valor.estado === "ACTIVO").length ?? 0;
+
+  const abrirAnulacion = (valor: PagoProveedorValorRow | null) => {
+    setValorAAnular(valor);
+    setModalAbierto(true);
+  };
 
   const anular = async (values: { motivo_anulacion: string }) => {
     if (!pago) return;
     setGuardando(true);
-    const response = await kyInstance.patch(`pagos-proveedor/${pago.id}/anular`, { json: values });
+    const url = valorAAnular
+      ? `pagos-proveedor/${pago.id}/valores/${valorAAnular.id}/anular`
+      : `pagos-proveedor/${pago.id}/anular`;
+    const response = await kyInstance.patch(url, { json: values });
     setGuardando(false);
 
     if (response.ok) {
-      message.success("Pago anulado.");
+      message.success(valorAAnular ? "Medio de pago anulado." : "Pago anulado.");
       setModalAbierto(false);
       query.refetch();
       return;
     }
-    message.error(await extractErrorMessage(response, "No se pudo anular el pago."));
+    message.error(
+      await extractErrorMessage(response, valorAAnular ? "No se pudo anular el medio de pago." : "No se pudo anular el pago."),
+    );
   };
 
   return (
@@ -47,8 +62,8 @@ export const PagoProveedorShow = () => {
       title="Detalle del pago"
       isLoading={query.isLoading}
       headerButtons={() =>
-        puedeAnular && pago?.estado === "ACTIVO" ? (
-          <Button danger onClick={() => setModalAbierto(true)}>
+        puedeAnular && pagoActivo ? (
+          <Button danger onClick={() => abrirAnulacion(null)}>
             Anular
           </Button>
         ) : null
@@ -86,11 +101,34 @@ export const PagoProveedorShow = () => {
             <Table.Column
               title="Estado"
               dataIndex="estado"
-              render={(estadoValor: PagoProveedorValorRow["estado"]) => (
-                <Tag color={estadoValor === "ACTIVO" ? "green" : "red"}>
-                  {estadoValor === "ACTIVO" ? "Activo" : "Rechazado"}
-                </Tag>
-              )}
+              render={(estadoValor: PagoProveedorValorRow["estado"], record: PagoProveedorValorRow) =>
+                estadoValor === "ACTIVO" ? (
+                  <Space size={4} wrap>
+                    <Tag color="green">Activo</Tag>
+                    {puedeAnular && pagoActivo && (
+                      <Tooltip
+                        title={
+                          valoresActivos > 1
+                            ? "Anular medio de pago"
+                            : "Es el único medio de pago activo: para anularlo, anulá el pago entero"
+                        }
+                      >
+                        <Button
+                          size="small"
+                          danger
+                          icon={<StopOutlined />}
+                          disabled={valoresActivos <= 1}
+                          onClick={() => abrirAnulacion(record)}
+                        />
+                      </Tooltip>
+                    )}
+                  </Space>
+                ) : (
+                  <Tooltip title={record.motivo_anulacion}>
+                    <Tag color="default">Anulado</Tag>
+                  </Tooltip>
+                )
+              }
             />
           </Table>
         </Card>
@@ -112,10 +150,12 @@ export const PagoProveedorShow = () => {
             <Table.Column
               title="Estado"
               dataIndex="estado"
-              render={(estadoAplicacion: PagoProveedorAplicacionRow["estado"]) => (
-                <Tag color={estadoAplicacion === "ACTIVA" ? "green" : "default"}>
-                  {estadoAplicacion === "ACTIVA" ? "Activa" : "Anulada"}
-                </Tag>
+              render={(estadoAplicacion: PagoProveedorAplicacionRow["estado"], record: PagoProveedorAplicacionRow) => (
+                <Tooltip title={record.valor_anulado_id ? "Anulada por la anulación de un medio de pago" : undefined}>
+                  <Tag color={estadoAplicacion === "ACTIVA" ? "green" : "default"}>
+                    {estadoAplicacion === "ACTIVA" ? "Activa" : "Anulada"}
+                  </Tag>
+                </Tooltip>
               )}
             />
           </Table>
@@ -123,7 +163,7 @@ export const PagoProveedorShow = () => {
       </Space>
 
       <Modal
-        title="Anular pago"
+        title={valorAAnular ? "Anular medio de pago" : "Anular pago"}
         open={modalAbierto}
         onCancel={() => setModalAbierto(false)}
         afterClose={() => form.resetFields()}
@@ -134,6 +174,12 @@ export const PagoProveedorShow = () => {
         confirmLoading={guardando}
       >
         <Form form={form} layout="vertical" onFinish={anular}>
+          {valorAAnular && (
+            <p>
+              {valorAAnular.medio_pago.nombre} por {formatMonto(valorAAnular.monto)}. El monto vuelve al fondo y se
+              anula lo aplicado a las facturas por ese importe, empezando por la última cuota.
+            </p>
+          )}
           <Form.Item label="Motivo" name="motivo_anulacion" rules={[{ required: true }, { max: 255 }]}>
             <Input.TextArea rows={3} />
           </Form.Item>
