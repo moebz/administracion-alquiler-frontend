@@ -132,7 +132,12 @@ export const GastoShow = () => {
           onClose={() => setFacturaAbierta(false)}
           onSuccess={() => {
             setFacturaAbierta(false);
-            refetchTodo();
+            // Solo el gasto: todavía no había documento_compra_id cuando se
+            // armó este cierre, así que compraQuery.refetch() pegaría con el
+            // id viejo (vacío). Al refetchear el gasto cambia el id que usa
+            // useOne más abajo, y React Query dispara solo el fetch de la
+            // compra recién creada.
+            gastoQuery.refetch();
           }}
         />
       )}

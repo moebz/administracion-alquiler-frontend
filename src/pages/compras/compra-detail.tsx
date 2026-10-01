@@ -2,6 +2,7 @@ import { useState } from "react";
 import { App, Button, Card, Descriptions, Form, Input, Modal, Space, Table, Tag, Typography } from "antd";
 import type { ReactNode } from "react";
 import dayjs from "dayjs";
+import { Link } from "react-router";
 import { extractErrorMessage } from "../../providers/auth";
 import { kyInstance } from "../../providers/data";
 import { formatMonto } from "../../utils/monto";
@@ -68,7 +69,7 @@ export const CompraDetail = ({
         }
       >
         <Descriptions column={2} size="small">
-          <Descriptions.Item label="Proveedor">{compra?.persona.nombre}</Descriptions.Item>
+          <Descriptions.Item label="Proveedor">{compra?.persona?.nombre}</Descriptions.Item>
           <Descriptions.Item label="RUC">
             {compra?.emisor_ruc}
             {compra?.emisor_dv ? `-${compra.emisor_dv}` : ""}
@@ -142,7 +143,10 @@ export const CompraDetail = ({
                 <Space direction="vertical" size={0}>
                   {pagos.map((pago) => (
                     <span key={pago.id}>
-                      Pago #{pago.pago_proveedor_numero} — {formatMonto(pago.monto_aplicado)}
+                      <Link to={`/administrador/pagos-proveedor/show/${pago.pago_proveedor_id}`}>
+                        Pago #{pago.pago_proveedor_numero}
+                      </Link>{" "}
+                      — {formatMonto(pago.monto_aplicado)}
                       {pago.estado === "ANULADA" && <Tag color="default" style={{ marginLeft: 4 }}>Anulado</Tag>}
                     </span>
                   ))}

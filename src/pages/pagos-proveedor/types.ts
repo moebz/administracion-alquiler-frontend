@@ -31,6 +31,7 @@ export type PagoProveedorAplicacionRow = {
   cuota_id: number;
   documento_compra_id: number;
   documento_compra_numero: string;
+  numero_cuota: number;
   monto_aplicado: number | string;
   estado: "ACTIVA" | "ANULADA";
   valor_anulado_id: number | null;

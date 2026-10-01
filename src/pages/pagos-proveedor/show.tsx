@@ -142,6 +142,7 @@ export const PagoProveedorShow = () => {
                 <Link to={`/administrador/compras/show/${record.documento_compra_id}`}>{numero}</Link>
               )}
             />
+            <Table.Column title="N° cuota" dataIndex="numero_cuota" />
             <Table.Column
               title="Monto aplicado"
               dataIndex="monto_aplicado"
