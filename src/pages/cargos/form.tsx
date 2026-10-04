@@ -22,6 +22,7 @@ export const CargoForm = ({ formProps }: { formProps: FormProps }) => {
 
   const { selectProps: contratoSelectProps } = useSelect<ContratoAlquilerRow>({
     resource: "contratos-alquiler",
+    filters: [{ field: "estado", operator: "ne", value: "ANULADO" }],
     optionLabel: (contrato) =>
       `${contrato.inquilino.nombre} — ${contrato.unidad.bloque.edificio.nombre} - ${contrato.unidad.bloque.nombre} - ${contrato.unidad.numero} (${CONTRATO_ALQUILER_ESTADO_LABEL[contrato.estado]})`,
     optionValue: "id",

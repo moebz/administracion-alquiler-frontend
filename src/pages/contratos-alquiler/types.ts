@@ -1,10 +1,11 @@
-export type ContratoAlquilerEstado = "FUTURO" | "VIGENTE" | "FINALIZADO" | "RESCINDIDO";
+export type ContratoAlquilerEstado = "FUTURO" | "VIGENTE" | "FINALIZADO" | "RESCINDIDO" | "ANULADO";
 
 export const CONTRATO_ALQUILER_ESTADO_OPTIONS: { label: string; value: ContratoAlquilerEstado }[] = [
   { label: "Futuro", value: "FUTURO" },
   { label: "Vigente", value: "VIGENTE" },
   { label: "Finalizado", value: "FINALIZADO" },
   { label: "Rescindido", value: "RESCINDIDO" },
+  { label: "Anulado", value: "ANULADO" },
 ];
 
 export const CONTRATO_ALQUILER_ESTADO_LABEL: Record<ContratoAlquilerEstado, string> = {
@@ -12,6 +13,7 @@ export const CONTRATO_ALQUILER_ESTADO_LABEL: Record<ContratoAlquilerEstado, stri
   VIGENTE: "Vigente",
   FINALIZADO: "Finalizado",
   RESCINDIDO: "Rescindido",
+  ANULADO: "Anulado",
 };
 
 export const CONTRATO_ALQUILER_ESTADO_COLOR: Record<ContratoAlquilerEstado, string> = {
@@ -19,6 +21,7 @@ export const CONTRATO_ALQUILER_ESTADO_COLOR: Record<ContratoAlquilerEstado, stri
   VIGENTE: "green",
   FINALIZADO: "gold",
   RESCINDIDO: "red",
+  ANULADO: "default",
 };
 
 export type ExpensasACargo = "PROPIETARIO" | "INQUILINO";
@@ -72,4 +75,6 @@ export type ContratoAlquilerRow = {
   rescision_programada: boolean;
   fecha_rescision: string | null;
   motivo_rescision: string | null;
+  fecha_anulacion: string | null;
+  motivo_anulacion: string | null;
 };

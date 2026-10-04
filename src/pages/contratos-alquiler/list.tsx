@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { EditButton, List, useTable } from "@refinedev/antd";
 import { usePermissions, type CrudFilter } from "@refinedev/core";
-import { Button, DatePicker, Select, Space, Table, Tag, Tooltip } from "antd";
+import { App, Button, DatePicker, Input, Select, Space, Table, Tag, Tooltip } from "antd";
 import dayjs, { type Dayjs } from "dayjs";
 import { useNavigate } from "react-router";
 import { FilterBar } from "../../components/filter-bar";
+import { extractErrorMessage } from "../../providers/auth";
+import { kyInstance } from "../../providers/data";
 import { formatMonto } from "../../utils/monto";
 import { formatPorcentaje } from "../../utils/porcentaje";
 import {
@@ -26,9 +28,11 @@ export const ContratoAlquilerList = () => {
     sorters: { initial: [{ field: "fecha_inicio", order: "desc" }] },
   });
   const navigate = useNavigate();
+  const { message, modal } = App.useApp();
   const { data: permissions } = usePermissions<string[]>({});
   const puedeCrear = permissions?.includes("contratos_alquiler.crear") ?? false;
   const puedeRescindir = permissions?.includes("contratos_alquiler.gestionar_estado") ?? false;
+  const puedeAnular = permissions?.includes("contratos_alquiler.anular") ?? false;
 
   const [rescindiendo, setRescindiendo] = useState<ContratoAlquilerRow>();
   const [estado, setEstado] = useState<ContratoAlquilerEstado>();
@@ -53,6 +57,47 @@ export const ContratoAlquilerList = () => {
       filters.push({ field: "fecha_fin", operator: "lte", value: nextVenceEntre[1].format("YYYY-MM-DD") });
     }
     setFilters(filters, "replace");
+  };
+
+  const anular = (contrato: ContratoAlquilerRow) => {
+    let motivo = "";
+
+    modal.confirm({
+      title: "¿Anular este contrato?",
+      content: (
+        <Space direction="vertical" style={{ width: "100%" }}>
+          <span>Solo se puede anular un contrato sin cargos activos. Para terminar un contrato real, rescindilo.</span>
+          <Input.TextArea
+            rows={3}
+            maxLength={255}
+            placeholder="Motivo de la anulación"
+            onChange={(event) => {
+              motivo = event.target.value;
+            }}
+          />
+        </Space>
+      ),
+      okText: "Anular",
+      okButtonProps: { danger: true },
+      cancelText: "Cancelar",
+      onOk: async () => {
+        if (!motivo.trim()) {
+          message.error("Ingresá el motivo de la anulación.");
+          throw new Error("motivo requerido");
+        }
+
+        const response = await kyInstance.patch(`contratos-alquiler/${contrato.id}/anular`, {
+          json: { motivo_anulacion: motivo },
+        });
+        if (!response.ok) {
+          message.error(await extractErrorMessage(response, "No se pudo anular el contrato."));
+          throw new Error("anulación rechazada");
+        }
+
+        message.success("Contrato anulado.");
+        tableQuery.refetch();
+      },
+    });
   };
 
   return (
@@ -130,9 +175,11 @@ export const ContratoAlquilerList = () => {
           dataIndex="estado"
           render={(estadoContrato: ContratoAlquilerRow["estado"], record: ContratoAlquilerRow) => (
             <Space size={4} wrap>
-              <Tag color={CONTRATO_ALQUILER_ESTADO_COLOR[estadoContrato]}>
-                {CONTRATO_ALQUILER_ESTADO_LABEL[estadoContrato]}
-              </Tag>
+              <Tooltip title={record.motivo_anulacion}>
+                <Tag color={CONTRATO_ALQUILER_ESTADO_COLOR[estadoContrato]}>
+                  {CONTRATO_ALQUILER_ESTADO_LABEL[estadoContrato]}
+                </Tag>
+              </Tooltip>
               {record.rescision_programada && (
                 <Tooltip title={record.motivo_rescision}>
                   <Tag color="orange">Sale el {dayjs(record.fecha_rescision).format("DD/MM/YYYY")}</Tag>
@@ -146,8 +193,8 @@ export const ContratoAlquilerList = () => {
           dataIndex="actions"
           render={(_, record: ContratoAlquilerRow) => (
             <Space>
-              <EditButton hideText size="small" recordItemId={record.id} />
-              {puedeCrear && record.estado !== "FUTURO" && (
+              {record.estado !== "ANULADO" && <EditButton hideText size="small" recordItemId={record.id} />}
+              {puedeCrear && record.estado !== "FUTURO" && record.estado !== "ANULADO" && (
                 <Button
                   size="small"
                   onClick={() => navigate(`/administrador/contratos-alquiler/create?renovar=${record.id}`)}
@@ -158,6 +205,11 @@ export const ContratoAlquilerList = () => {
               {puedeRescindir && record.estado === "VIGENTE" && !record.fecha_rescision && (
                 <Button size="small" danger onClick={() => setRescindiendo(record)}>
                   Rescindir
+                </Button>
+              )}
+              {puedeAnular && record.estado !== "ANULADO" && (
+                <Button size="small" danger onClick={() => anular(record)}>
+                  Anular
                 </Button>
               )}
             </Space>
