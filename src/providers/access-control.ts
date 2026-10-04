@@ -91,6 +91,7 @@ const RESOURCES_WITH_PERMISSIONS = new Set([
   "tipos-relacion",
   "ciudades",
   "gastos",
+  "cargos",
   "compras",
   "pagos-proveedor",
   "establecimientos",

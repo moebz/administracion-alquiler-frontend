@@ -7,7 +7,7 @@ import { MontoInput } from "../../components/monto-input";
 import { PorcentajeInput } from "../../components/porcentaje-input";
 import { SectionDivider } from "../../components/section-divider";
 import { SectionRow } from "../../components/section-row";
-import { CONTRATO_ALQUILER_ESTADO_OPTIONS, EXPENSAS_A_CARGO_OPTIONS } from "./types";
+import { EXPENSAS_A_CARGO_OPTIONS } from "./types";
 
 type ContratoAlquilerFormProps = {
   formProps: FormProps;
@@ -95,11 +95,6 @@ export const ContratoAlquilerForm = ({ formProps, mostrarMontoAlquiler }: Contra
             <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />
           </Form.Item>
         </Col>
-        <Col xs={24} md={8}>
-          <Form.Item label="Estado" name="estado" rules={[{ required: true }]}>
-            <Select options={CONTRATO_ALQUILER_ESTADO_OPTIONS} />
-          </Form.Item>
-        </Col>
       </SectionRow>
 
       <SectionDivider icon={<DollarOutlined />}>Alquiler y expensas</SectionDivider>
@@ -127,7 +122,7 @@ export const ContratoAlquilerForm = ({ formProps, mostrarMontoAlquiler }: Contra
       <SectionRow>
         <Col xs={24} md={8}>
           <Form.Item label="Día de vencimiento" name="dia_vencimiento" rules={[{ required: true }]}>
-            <InputNumber min={1} max={31} style={{ width: "100%" }} />
+            <InputNumber min={1} max={28} style={{ width: "100%" }} />
           </Form.Item>
         </Col>
         <Col xs={24} md={8}>

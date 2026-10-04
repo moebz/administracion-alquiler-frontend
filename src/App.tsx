@@ -22,6 +22,7 @@ import {
   ClusterOutlined,
   PrinterOutlined,
   FileProtectOutlined,
+  ReconciliationOutlined,
 } from "@ant-design/icons";
 import { Refine, Authenticated, CanAccess } from "@refinedev/core";
 import { DevtoolsPanel, DevtoolsProvider } from "@refinedev/devtools";
@@ -69,6 +70,7 @@ import {
   ContratoAlquilerCreate,
   ContratoAlquilerEdit,
 } from "./pages/contratos-alquiler";
+import { CargoList, CargoCreate } from "./pages/cargos";
 import { GastoList, GastoCreate, GastoEdit, GastoShow } from "./pages/gastos";
 import { CompraShow } from "./pages/compras";
 import { PagoProveedorList, PagoProveedorShow } from "./pages/pagos-proveedor";
@@ -228,6 +230,16 @@ function App() {
                     meta: {
                       label: "Contratos de alquiler",
                       icon: <FileTextOutlined />,
+                      parent: "edificios",
+                    },
+                  },
+                  {
+                    name: "cargos",
+                    list: "/administrador/cargos",
+                    create: "/administrador/cargos/create",
+                    meta: {
+                      label: "Cargos",
+                      icon: <ReconciliationOutlined />,
                       parent: "edificios",
                     },
                   },
@@ -518,6 +530,10 @@ function App() {
                         <Route index element={<ContratoAlquilerList />} />
                         <Route path="create" element={<ContratoAlquilerCreate />} />
                         <Route path="edit/:id" element={<ContratoAlquilerEdit />} />
+                      </Route>
+                      <Route path="cargos">
+                        <Route index element={<CargoList />} />
+                        <Route path="create" element={<CargoCreate />} />
                       </Route>
                       <Route path="gastos">
                         <Route index element={<GastoList />} />

@@ -1,18 +1,21 @@
-export type ContratoAlquilerEstado = "VIGENTE" | "FINALIZADO" | "RESCINDIDO";
+export type ContratoAlquilerEstado = "FUTURO" | "VIGENTE" | "FINALIZADO" | "RESCINDIDO";
 
 export const CONTRATO_ALQUILER_ESTADO_OPTIONS: { label: string; value: ContratoAlquilerEstado }[] = [
+  { label: "Futuro", value: "FUTURO" },
   { label: "Vigente", value: "VIGENTE" },
   { label: "Finalizado", value: "FINALIZADO" },
   { label: "Rescindido", value: "RESCINDIDO" },
 ];
 
 export const CONTRATO_ALQUILER_ESTADO_LABEL: Record<ContratoAlquilerEstado, string> = {
+  FUTURO: "Futuro",
   VIGENTE: "Vigente",
   FINALIZADO: "Finalizado",
   RESCINDIDO: "Rescindido",
 };
 
 export const CONTRATO_ALQUILER_ESTADO_COLOR: Record<ContratoAlquilerEstado, string> = {
+  FUTURO: "blue",
   VIGENTE: "green",
   FINALIZADO: "gold",
   RESCINDIDO: "red",
@@ -63,7 +66,10 @@ export type ContratoAlquilerRow = {
   dia_vencimiento: number;
   dias_gracia: number;
   expensas_a_cargo_de: ExpensasACargo;
+  // Derivado de las fechas en el backend (no se guarda).
   estado: ContratoAlquilerEstado;
+  fecha_fin_efectiva: string;
+  rescision_programada: boolean;
   fecha_rescision: string | null;
   motivo_rescision: string | null;
 };

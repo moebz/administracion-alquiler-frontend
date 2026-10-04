@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { EditButton, List, useTable } from "@refinedev/antd";
-import type { CrudFilter } from "@refinedev/core";
-import { App, Button, DatePicker, Popconfirm, Select, Space, Table, Tag } from "antd";
+import { usePermissions, type CrudFilter } from "@refinedev/core";
+import { Button, DatePicker, Select, Space, Table, Tag, Tooltip } from "antd";
 import dayjs, { type Dayjs } from "dayjs";
+import { useNavigate } from "react-router";
 import { FilterBar } from "../../components/filter-bar";
-import { kyInstance } from "../../providers/data";
-import { extractErrorMessage } from "../../providers/auth";
 import { formatMonto } from "../../utils/monto";
 import { formatPorcentaje } from "../../utils/porcentaje";
 import {
@@ -15,6 +14,7 @@ import {
   type ContratoAlquilerEstado,
   type ContratoAlquilerRow,
 } from "./types";
+import { RescindirContratoModal } from "./rescindir-contrato-modal";
 
 const { RangePicker } = DatePicker;
 
@@ -25,8 +25,12 @@ export const ContratoAlquilerList = () => {
     syncWithLocation: true,
     sorters: { initial: [{ field: "fecha_inicio", order: "desc" }] },
   });
-  const { message } = App.useApp();
+  const navigate = useNavigate();
+  const { data: permissions } = usePermissions<string[]>({});
+  const puedeCrear = permissions?.includes("contratos_alquiler.crear") ?? false;
+  const puedeRescindir = permissions?.includes("contratos_alquiler.gestionar_estado") ?? false;
 
+  const [rescindiendo, setRescindiendo] = useState<ContratoAlquilerRow>();
   const [estado, setEstado] = useState<ContratoAlquilerEstado>();
   const [venceEntre, setVenceEntre] = useState<RangoFechas>(null);
 
@@ -49,16 +53,6 @@ export const ContratoAlquilerList = () => {
       filters.push({ field: "fecha_fin", operator: "lte", value: nextVenceEntre[1].format("YYYY-MM-DD") });
     }
     setFilters(filters, "replace");
-  };
-
-  const rescindir = async (record: ContratoAlquilerRow) => {
-    const response = await kyInstance.patch(`contratos-alquiler/${record.id}/rescindir`);
-    if (response.ok) {
-      message.success("Contrato rescindido.");
-      tableQuery.refetch();
-    } else {
-      message.error(await extractErrorMessage(response, "No se pudo rescindir el contrato."));
-    }
   };
 
   return (
@@ -127,17 +121,24 @@ export const ContratoAlquilerList = () => {
           render={(fechaInicio: ContratoAlquilerRow["fecha_inicio"]) => dayjs(fechaInicio).format("DD/MM/YYYY")}
         />
         <Table.Column
-          dataIndex="fecha_fin"
+          dataIndex="fecha_fin_efectiva"
           title="Fin"
-          render={(fechaFin: ContratoAlquilerRow["fecha_fin"]) => dayjs(fechaFin).format("DD/MM/YYYY")}
+          render={(_, record: ContratoAlquilerRow) => dayjs(record.fecha_fin_efectiva).format("DD/MM/YYYY")}
         />
         <Table.Column
           title="Estado"
           dataIndex="estado"
-          render={(estadoContrato: ContratoAlquilerRow["estado"]) => (
-            <Tag color={CONTRATO_ALQUILER_ESTADO_COLOR[estadoContrato]}>
-              {CONTRATO_ALQUILER_ESTADO_LABEL[estadoContrato]}
-            </Tag>
+          render={(estadoContrato: ContratoAlquilerRow["estado"], record: ContratoAlquilerRow) => (
+            <Space size={4} wrap>
+              <Tag color={CONTRATO_ALQUILER_ESTADO_COLOR[estadoContrato]}>
+                {CONTRATO_ALQUILER_ESTADO_LABEL[estadoContrato]}
+              </Tag>
+              {record.rescision_programada && (
+                <Tooltip title={record.motivo_rescision}>
+                  <Tag color="orange">Sale el {dayjs(record.fecha_rescision).format("DD/MM/YYYY")}</Tag>
+                </Tooltip>
+              )}
+            </Space>
           )}
         />
         <Table.Column
@@ -146,22 +147,33 @@ export const ContratoAlquilerList = () => {
           render={(_, record: ContratoAlquilerRow) => (
             <Space>
               <EditButton hideText size="small" recordItemId={record.id} />
-              {record.estado === "VIGENTE" && (
-                <Popconfirm
-                  title="¿Rescindir este contrato?"
-                  okText="Rescindir"
-                  cancelText="Cancelar"
-                  onConfirm={() => rescindir(record)}
+              {puedeCrear && record.estado !== "FUTURO" && (
+                <Button
+                  size="small"
+                  onClick={() => navigate(`/administrador/contratos-alquiler/create?renovar=${record.id}`)}
                 >
-                  <Button size="small" danger>
-                    Rescindir
-                  </Button>
-                </Popconfirm>
+                  Renovar
+                </Button>
+              )}
+              {puedeRescindir && record.estado === "VIGENTE" && !record.fecha_rescision && (
+                <Button size="small" danger onClick={() => setRescindiendo(record)}>
+                  Rescindir
+                </Button>
               )}
             </Space>
           )}
         />
       </Table>
+      {rescindiendo && (
+        <RescindirContratoModal
+          contrato={rescindiendo}
+          onClose={() => setRescindiendo(undefined)}
+          onSuccess={() => {
+            setRescindiendo(undefined);
+            tableQuery.refetch();
+          }}
+        />
+      )}
     </List>
   );
 };

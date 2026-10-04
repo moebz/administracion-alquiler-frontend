@@ -40,6 +40,11 @@ describe("requiredPermission", () => {
     expect(requiredPermission("proveedores-todos", "list")).toBe("proveedores.ver");
   });
 
+  it("resuelve cargos al patron estandar", () => {
+    expect(requiredPermission("cargos", "list")).toBe("cargos.ver");
+    expect(requiredPermission("cargos", "create")).toBe("cargos.crear");
+  });
+
   it("resuelve establecimientos y puntos-expedicion al patron estandar, y timbrados a un unico permiso administrar", () => {
     expect(requiredPermission("establecimientos", "create")).toBe("establecimientos.crear");
     expect(requiredPermission("puntos-expedicion", "list")).toBe("puntos_expedicion.ver");
