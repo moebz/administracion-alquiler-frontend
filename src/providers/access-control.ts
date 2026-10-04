@@ -13,6 +13,7 @@ const RESOURCE_ALIAS: Record<string, string> = {
   "edificios-todos": "edificios",
   "proveedores-todos": "proveedores",
   "pagos-proveedor": "pagos",
+  "puntos-expedicion": "puntos_expedicion",
 };
 
 // roles y las pantallas propias de la sección propietario se gatean con un
@@ -26,6 +27,7 @@ const RESOURCE_ALIAS: Record<string, string> = {
 const FIXED_PERMISSION: Record<string, string> = {
   roles: "roles.administrar",
   catalogos: "acceso.administrador",
+  facturacion: "acceso.administrador",
   "propietario/gastos": "gastos.aprobar_propio",
 };
 
@@ -36,6 +38,14 @@ const FIXED_PERMISSION: Record<string, string> = {
 // de catálogo (ej. bancos.ver, fondos.ver) ve "Catálogos" en el menú con el
 // submenú vacío al desplegarlo.
 const CATALOGOS_CHILDREN = ["bancos", "fondos", "medios-pago", "tipos-identificacion", "tipos-relacion", "ciudades"];
+
+// Mismo criterio que CATALOGOS_CHILDREN, para el agrupador "Facturación".
+const FACTURACION_CHILDREN = ["establecimientos", "puntos-expedicion", "timbrados"];
+
+const GROUP_CHILDREN: Record<string, string[]> = {
+  catalogos: CATALOGOS_CHILDREN,
+  facturacion: FACTURACION_CHILDREN,
+};
 
 // Sección a la que pertenece cada resource, para el chequeo de acceso.accion
 // de abajo. Default "administrador": hoy todo resource con permiso propio
@@ -57,6 +67,8 @@ const ACTION_SUFFIX: Record<string, string> = {
 // son acciones propias (botones del listado, no pasan por este mecanismo).
 const RESOURCE_ACTION_SUFFIX: Record<string, Record<string, string>> = {
   gastos: { create: ".solicitar", edit: ".solicitar" },
+  // timbrados: un único permiso (`administrar`) gatea alta, edición y activar/desactivar.
+  timbrados: { create: ".administrar", edit: ".administrar", delete: ".administrar" },
 };
 
 const RESOURCES_WITH_PERMISSIONS = new Set([
@@ -81,6 +93,9 @@ const RESOURCES_WITH_PERMISSIONS = new Set([
   "gastos",
   "compras",
   "pagos-proveedor",
+  "establecimientos",
+  "puntos-expedicion",
+  "timbrados",
 ]);
 
 /** null = acceso permitido sin chequeo (resources desconocidos, o agrupadores sin entrada en FIXED_PERMISSION). */
@@ -107,11 +122,12 @@ export const requiredPermission = (resource: string, action: string): string | n
 // el menú aunque SectionRoute lo rebote al entrar.
 export const canAccessResource = (permissions: string[], resource: string, action: string): boolean => {
   // Ver comentario de CATALOGOS_CHILDREN: además del permiso fijo del nodo
-  // padre, exigimos que al menos un catálogo hijo sea accesible.
-  if (resource === "catalogos") {
+  // padre, exigimos que al menos un hijo sea accesible.
+  const children = GROUP_CHILDREN[resource];
+  if (children) {
     return (
       permissions.includes(accessPermission("administrador")) &&
-      CATALOGOS_CHILDREN.some((child) => canAccessResource(permissions, child, "list"))
+      children.some((child) => canAccessResource(permissions, child, "list"))
     );
   }
 

@@ -40,6 +40,15 @@ describe("requiredPermission", () => {
     expect(requiredPermission("proveedores-todos", "list")).toBe("proveedores.ver");
   });
 
+  it("resuelve establecimientos y puntos-expedicion al patron estandar, y timbrados a un unico permiso administrar", () => {
+    expect(requiredPermission("establecimientos", "create")).toBe("establecimientos.crear");
+    expect(requiredPermission("puntos-expedicion", "list")).toBe("puntos_expedicion.ver");
+    expect(requiredPermission("puntos-expedicion", "delete")).toBe("puntos_expedicion.gestionar_estado");
+    expect(requiredPermission("timbrados", "list")).toBe("timbrados.ver");
+    expect(requiredPermission("timbrados", "create")).toBe("timbrados.administrar");
+    expect(requiredPermission("timbrados", "edit")).toBe("timbrados.administrar");
+  });
+
   it("resuelve roles a roles.administrar sin importar la accion", () => {
     expect(requiredPermission("roles", "list")).toBe("roles.administrar");
     expect(requiredPermission("roles", "create")).toBe("roles.administrar");
@@ -111,6 +120,12 @@ describe("canAccessResource", () => {
   it("permite catalogos a quien tiene acceso.administrador y al menos un permiso de catalogo hijo", () => {
     expect(canAccessResource(["acceso.administrador", "bancos.ver"], "catalogos", "list")).toBe(true);
     expect(canAccessResource(["acceso.administrador", "fondos.ver"], "catalogos", "list")).toBe(true);
+  });
+
+  it("permite facturacion solo con acceso.administrador y algun permiso de un hijo", () => {
+    expect(canAccessResource(["acceso.administrador", "edificios.ver"], "facturacion", "list")).toBe(false);
+    expect(canAccessResource(["timbrados.ver"], "facturacion", "list")).toBe(false);
+    expect(canAccessResource(["acceso.administrador", "timbrados.ver"], "facturacion", "list")).toBe(true);
   });
 
   it("un resource de la seccion propietario pide el acceso de esa seccion, no el de administrador", () => {

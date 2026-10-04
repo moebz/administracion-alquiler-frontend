@@ -136,6 +136,9 @@ const es = {
     "medios-pago": {
       "medios-pago": "medio de pago",
     },
+    "puntos-expedicion": {
+      "puntos-expedicion": "punto de expedición",
+    },
     "tipos-identificacion": {
       "tipos-identificacion": "tipo de identificación",
     },

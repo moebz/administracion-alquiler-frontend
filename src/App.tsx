@@ -18,6 +18,10 @@ import {
   CreditCardOutlined,
   FileDoneOutlined,
   TransactionOutlined,
+  AuditOutlined,
+  ClusterOutlined,
+  PrinterOutlined,
+  FileProtectOutlined,
 } from "@ant-design/icons";
 import { Refine, Authenticated, CanAccess } from "@refinedev/core";
 import { DevtoolsPanel, DevtoolsProvider } from "@refinedev/devtools";
@@ -81,6 +85,9 @@ import {
 } from "./pages/tipos-identificacion";
 import { TipoRelacionList, TipoRelacionCreate, TipoRelacionEdit } from "./pages/tipos-relacion";
 import { CiudadList, CiudadCreate, CiudadEdit } from "./pages/ciudades";
+import { EstablecimientoList, EstablecimientoCreate, EstablecimientoEdit } from "./pages/establecimientos";
+import { PuntoExpedicionList, PuntoExpedicionCreate, PuntoExpedicionEdit } from "./pages/puntos-expedicion";
+import { TimbradoList, TimbradoCreate, TimbradoEdit } from "./pages/timbrados";
 import { GastoAprobacionList } from "./pages/propietario-gastos";
 
 function App() {
@@ -286,6 +293,49 @@ function App() {
                       label: "Rubros",
                       icon: <TagsOutlined />,
                       parent: "proveedores",
+                    },
+                  },
+                  {
+                    name: "facturacion",
+                    meta: {
+                      label: "Facturación",
+                      icon: <AuditOutlined />,
+                    },
+                  },
+                  {
+                    name: "establecimientos",
+                    list: "/administrador/establecimientos",
+                    create: "/administrador/establecimientos/create",
+                    edit: "/administrador/establecimientos/edit/:id",
+                    meta: {
+                      label: "Establecimientos",
+                      icon: <ClusterOutlined />,
+                      parent: "facturacion",
+                    },
+                  },
+                  {
+                    // Sin entrada propia en el menú: solo se accede
+                    // navegando Establecimientos -> "Ver puntos de expedición".
+                    name: "puntos-expedicion",
+                    list: "/administrador/puntos-expedicion",
+                    create: "/administrador/puntos-expedicion/create",
+                    edit: "/administrador/puntos-expedicion/edit/:id",
+                    meta: {
+                      label: "Puntos de expedición",
+                      icon: <PrinterOutlined />,
+                      parent: "facturacion",
+                      hide: true,
+                    },
+                  },
+                  {
+                    name: "timbrados",
+                    list: "/administrador/timbrados",
+                    create: "/administrador/timbrados/create",
+                    edit: "/administrador/timbrados/edit/:id",
+                    meta: {
+                      label: "Timbrados",
+                      icon: <FileProtectOutlined />,
+                      parent: "facturacion",
                     },
                   },
                   {
@@ -496,6 +546,21 @@ function App() {
                         <Route index element={<MedioPagoList />} />
                         <Route path="create" element={<MedioPagoCreate />} />
                         <Route path="edit/:id" element={<MedioPagoEdit />} />
+                      </Route>
+                      <Route path="establecimientos">
+                        <Route index element={<EstablecimientoList />} />
+                        <Route path="create" element={<EstablecimientoCreate />} />
+                        <Route path="edit/:id" element={<EstablecimientoEdit />} />
+                      </Route>
+                      <Route path="puntos-expedicion">
+                        <Route index element={<PuntoExpedicionList />} />
+                        <Route path="create" element={<PuntoExpedicionCreate />} />
+                        <Route path="edit/:id" element={<PuntoExpedicionEdit />} />
+                      </Route>
+                      <Route path="timbrados">
+                        <Route index element={<TimbradoList />} />
+                        <Route path="create" element={<TimbradoCreate />} />
+                        <Route path="edit/:id" element={<TimbradoEdit />} />
                       </Route>
                       <Route path="proveedores">
                         <Route index element={<ProveedorList />} />
