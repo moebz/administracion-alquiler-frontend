@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { useSelect } from "@refinedev/antd";
 import { useList, useOne } from "@refinedev/core";
-import { App, Button, DatePicker, Descriptions, Form, Input, Modal, Select, Space, Table, Typography } from "antd";
-import { DeleteOutlined, PlusOutlined } from "@ant-design/icons";
+import { App, Button, Col, DatePicker, Descriptions, Flex, Form, Input, Modal, Row, Select, Space, Table, Typography } from "antd";
+import { CalendarOutlined, DeleteOutlined, FileTextOutlined, PlusOutlined, WalletOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { extractErrorMessage } from "../../providers/auth";
 import { kyInstance } from "../../providers/data";
 import { MontoInput } from "../../components/monto-input";
+import { SectionDivider } from "../../components/section-divider";
+import { SectionRow } from "../../components/section-row";
 import { formatMonto } from "../../utils/monto";
 import type { CompraCuotaRow, CompraRow } from "../compras/types";
 import type { MedioPagoRow } from "../medios-pago/types";
@@ -127,24 +129,22 @@ export const RegistrarPagoModal = ({
         <Descriptions.Item label="Saldo de la factura">{formatMonto(compra?.saldo ?? 0)}</Descriptions.Item>
       </Descriptions>
 
-      <Typography.Title level={5}>Cuotas pendientes</Typography.Title>
-      <Table
-        dataSource={cuotasPendientes}
-        rowKey="id"
-        pagination={false}
-        size="small"
-        style={{ marginBottom: 16 }}
-      >
+      <SectionDivider icon={<CalendarOutlined />}>Cuotas pendientes</SectionDivider>
+      <Table dataSource={cuotasPendientes} rowKey="id" pagination={false} size="small" style={{ marginBottom: 12 }}>
         <Table.Column title="N°" dataIndex="numero_cuota" />
         <Table.Column
           title="Vencimiento"
           dataIndex="fecha_vencimiento"
           render={(fecha: string) => dayjs(fecha).format("DD/MM/YYYY")}
         />
-        <Table.Column title="Saldo" dataIndex="saldo" render={(saldo: CompraCuotaRow["saldo"]) => formatMonto(saldo)} />
+        <Table.Column
+          title="Saldo"
+          dataIndex="saldo"
+          align="right"
+          render={(saldo: CompraCuotaRow["saldo"]) => formatMonto(saldo)}
+        />
       </Table>
-
-      <Space style={{ marginBottom: 16 }}>
+      <Space>
         <Button disabled={!proximaCuota} onClick={() => proximaCuota && setMontoPrimerMedio(Number(proximaCuota.saldo))}>
           Pagar siguiente cuota
         </Button>
@@ -154,79 +154,102 @@ export const RegistrarPagoModal = ({
       </Space>
 
       <Form form={form} layout="vertical" onFinish={registrar} initialValues={{ fecha: dayjs() }}>
-        <Form.Item
-          label="Fecha"
-          name="fecha"
-          rules={[{ required: true }]}
-          getValueProps={(value) => ({ value: value ? dayjs(value) : undefined })}
-        >
-          <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />
-        </Form.Item>
-        <Form.Item label="Concepto" name="concepto">
-          <Input placeholder="Opcional" maxLength={255} />
-        </Form.Item>
+        <SectionDivider icon={<FileTextOutlined />}>Datos del pago</SectionDivider>
+        <SectionRow gutter={24} style={{ paddingLeft: 0 }}>
+          <Col xs={24} md={8}>
+            <Form.Item
+              label="Fecha"
+              name="fecha"
+              rules={[{ required: true }]}
+              getValueProps={(value) => ({ value: value ? dayjs(value) : undefined })}
+            >
+              <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />
+            </Form.Item>
+          </Col>
+          <Col xs={24} md={16}>
+            <Form.Item label="Concepto" name="concepto">
+              <Input placeholder="Opcional" maxLength={255} />
+            </Form.Item>
+          </Col>
+        </SectionRow>
 
-        <Typography.Title level={5}>Medios de pago</Typography.Title>
+        <SectionDivider icon={<WalletOutlined />}>Medios de pago</SectionDivider>
         <Form.List name="valores" initialValue={[{}]}>
           {(fields, { add, remove }) => (
-            <Space direction="vertical" style={{ width: "100%" }}>
+            <Space direction="vertical" size={12} style={{ width: "100%" }}>
               {fields.map((field) => {
                 const medioId = form.getFieldValue(["valores", field.name, "medio_pago_id"]);
                 const medio = (medioPagoQuery.data?.data ?? []).find((m) => m.id === medioId);
 
                 return (
-                  <Space key={field.key} align="baseline" wrap>
-                    <Form.Item
-                      {...field}
-                      name={[field.name, "medio_pago_id"]}
-                      rules={[{ required: true, message: "Medio" }]}
-                      noStyle
-                    >
-                      <Select {...medioPagoSelectProps} options={mediosPagoOptions} placeholder="Medio" style={{ width: 160 }} />
-                    </Form.Item>
-                    <Form.Item
-                      {...field}
-                      name={[field.name, "fondo_id"]}
-                      rules={[{ required: true, message: "Fondo" }]}
-                      noStyle
-                    >
-                      <Select {...fondoSelectProps} placeholder="Fondo" style={{ width: 160 }} />
-                    </Form.Item>
-                    <Form.Item {...field} name={[field.name, "monto"]} rules={[{ required: true, message: "Monto" }]} noStyle>
-                      <MontoInput style={{ width: 160 }} />
-                    </Form.Item>
-                    {medio?.requiere_datos_bancarios && (
-                      <Form.Item {...field} name={[field.name, "persona_cuenta_id"]} noStyle>
-                        <Select
-                          options={cuentaOptions}
-                          placeholder="Cuenta del proveedor (opcional)"
-                          allowClear
-                          style={{ width: 200 }}
-                        />
+                  <Row key={field.key} gutter={[8, 8]} align="middle">
+                    <Col xs={24} md={6}>
+                      <Form.Item
+                        {...field}
+                        name={[field.name, "medio_pago_id"]}
+                        rules={[{ required: true, message: "Medio" }]}
+                        noStyle
+                      >
+                        <Select {...medioPagoSelectProps} options={mediosPagoOptions} placeholder="Medio" style={{ width: "100%" }} />
                       </Form.Item>
+                    </Col>
+                    <Col xs={24} md={6}>
+                      <Form.Item
+                        {...field}
+                        name={[field.name, "fondo_id"]}
+                        rules={[{ required: true, message: "Fondo" }]}
+                        noStyle
+                      >
+                        <Select {...fondoSelectProps} placeholder="Fondo" style={{ width: "100%" }} />
+                      </Form.Item>
+                    </Col>
+                    <Col xs={24} md={6}>
+                      <Form.Item {...field} name={[field.name, "monto"]} rules={[{ required: true, message: "Monto" }]} noStyle>
+                        <MontoInput style={{ width: "100%" }} />
+                      </Form.Item>
+                    </Col>
+                    <Col xs={20} md={5}>
+                      <Form.Item
+                        {...field}
+                        name={[field.name, "nro_comprobante"]}
+                        rules={medio?.requiere_datos_bancarios ? [{ required: true, message: "Comprobante" }] : []}
+                        noStyle
+                      >
+                        <Input placeholder="N° comprobante" style={{ width: "100%" }} />
+                      </Form.Item>
+                    </Col>
+                    <Col xs={4} md={1}>
+                      <Button icon={<DeleteOutlined />} onClick={() => remove(field.name)} />
+                    </Col>
+                    {medio?.requiere_datos_bancarios && (
+                      <Col xs={24} md={12}>
+                        <Form.Item {...field} name={[field.name, "persona_cuenta_id"]} noStyle>
+                          <Select
+                            options={cuentaOptions}
+                            placeholder="Cuenta del proveedor (opcional)"
+                            allowClear
+                            style={{ width: "100%" }}
+                          />
+                        </Form.Item>
+                      </Col>
                     )}
-                    <Form.Item
-                      {...field}
-                      name={[field.name, "nro_comprobante"]}
-                      rules={medio?.requiere_datos_bancarios ? [{ required: true, message: "Comprobante" }] : []}
-                      noStyle
-                    >
-                      <Input placeholder="N° comprobante" style={{ width: 140 }} />
-                    </Form.Item>
-                    <Button icon={<DeleteOutlined />} onClick={() => remove(field.name)} />
-                  </Space>
+                  </Row>
                 );
               })}
-              <Button icon={<PlusOutlined />} onClick={() => add()}>
+              <Button type="dashed" icon={<PlusOutlined />} onClick={() => add()}>
                 Agregar medio de pago
               </Button>
             </Space>
           )}
         </Form.List>
 
-        <Typography.Text type={sumaValores > Number(compra?.saldo ?? 0) ? "danger" : "secondary"} style={{ display: "block", marginTop: 16 }}>
-          Total a pagar: {formatMonto(sumaValores)} / Saldo de la factura: {formatMonto(compra?.saldo ?? 0)}
-        </Typography.Text>
+        <Flex justify="flex-end" gap={8} style={{ marginTop: 16 }}>
+          <Typography.Text type="secondary">Total a pagar:</Typography.Text>
+          <Typography.Text strong type={sumaValores > Number(compra?.saldo ?? 0) ? "danger" : undefined}>
+            {formatMonto(sumaValores)}
+          </Typography.Text>
+          <Typography.Text type="secondary">de {formatMonto(compra?.saldo ?? 0)}</Typography.Text>
+        </Flex>
       </Form>
     </Modal>
   );

@@ -49,17 +49,17 @@ export const ContratoAlquilerForm = ({ formProps, mostrarMontoAlquiler }: Contra
   });
 
   return (
-    <Form {...formProps} layout="vertical" style={{ maxWidth: 960 }}>
+    <Form {...formProps} layout="vertical">
       <SectionDivider icon={<HomeOutlined />} style={{ marginTop: 0 }}>
         Unidad e inquilino
       </SectionDivider>
       <SectionRow>
-        <Col xs={24} md={12}>
+        <Col xs={24} md={8}>
           <Form.Item label="Unidad" name="unidad_id" rules={[{ required: true }]}>
             <Select {...unidadSelectProps} placeholder="Elegí una unidad" />
           </Form.Item>
         </Col>
-        <Col xs={24} md={12}>
+        <Col xs={24} md={16}>
           <Form.Item
             label="Inquilino"
             name="inquilino_id"
@@ -111,12 +111,12 @@ export const ContratoAlquilerForm = ({ formProps, mostrarMontoAlquiler }: Contra
             </Form.Item>
           </Col>
         )}
-        <Col xs={24} md={mostrarMontoAlquiler ? 8 : 12}>
+        <Col xs={24} md={8}>
           <Form.Item label="Porcentaje de comisión" name="comision_pct" rules={[{ required: true }]}>
             <PorcentajeInput />
           </Form.Item>
         </Col>
-        <Col xs={24} md={mostrarMontoAlquiler ? 8 : 12}>
+        <Col xs={24} md={8}>
           <Form.Item label="Expensas a cargo de" name="expensas_a_cargo_de" rules={[{ required: true }]}>
             <Select options={EXPENSAS_A_CARGO_OPTIONS} />
           </Form.Item>
@@ -125,22 +125,22 @@ export const ContratoAlquilerForm = ({ formProps, mostrarMontoAlquiler }: Contra
 
       <SectionDivider icon={<ClockCircleOutlined />}>Vencimiento y mora</SectionDivider>
       <SectionRow>
-        <Col xs={24} md={12}>
+        <Col xs={24} md={8}>
           <Form.Item label="Día de vencimiento" name="dia_vencimiento" rules={[{ required: true }]}>
             <InputNumber min={1} max={31} style={{ width: "100%" }} />
           </Form.Item>
         </Col>
-        <Col xs={24} md={12}>
+        <Col xs={24} md={8}>
           <Form.Item label="Días de gracia" name="dias_gracia" rules={[{ required: true }]}>
             <InputNumber min={0} style={{ width: "100%" }} />
           </Form.Item>
         </Col>
-        <Col xs={24} md={12}>
+        <Col xs={24} md={8}>
           <Form.Item label="Porcentaje de mora diario" name="mora_pct_diario" rules={[{ required: true }]}>
             <PorcentajeInput />
           </Form.Item>
         </Col>
-        <Col xs={24} md={12}>
+        <Col xs={24} md={8}>
           <Form.Item label="Tope de mora (% del alquiler)" name="mora_tope_pct">
             <PorcentajeInput />
           </Form.Item>

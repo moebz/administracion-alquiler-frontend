@@ -1,33 +1,68 @@
 import { useState } from "react";
-import { App, DatePicker, Descriptions, Form, Input, InputNumber, Modal, Select } from "antd";
+import { CreditCardOutlined, DeleteOutlined, FileTextOutlined, PlusOutlined, UnorderedListOutlined } from "@ant-design/icons";
+import { Alert, App, Button, Col, DatePicker, Descriptions, Form, Input, InputNumber, Modal, Select, Tooltip, Typography } from "antd";
 import dayjs from "dayjs";
 import { kyInstance } from "../../providers/data";
+import { SectionDivider } from "../../components/section-divider";
+import { SectionRow } from "../../components/section-row";
+import { MontoInput } from "../../components/monto-input";
+import { subtotalLinea, totalesFactura, type LineaFactura } from "../../utils/factura";
 import { formatMonto } from "../../utils/monto";
 import { COMPRA_CONDICION_OPTIONS, type CompraCondicion } from "../compras/types";
+import type { CompraRow } from "../compras/types";
 import type { GastoRow } from "./types";
 
 const TASA_IVA_OPTIONS = [
-  { label: "0% (exenta)", value: 0 },
+  { label: "Exenta", value: 0 },
   { label: "5%", value: 5 },
   { label: "10%", value: 10 },
 ];
+
+const FORM_GUTTER = 24;
+const ROW_STYLE = { paddingLeft: 0 };
+
+type Linea = LineaFactura & { descripcion: string };
 
 type Valores = {
   timbrado_proveedor: string;
   numero: string;
   fecha: string;
   condicion: CompraCondicion;
-  tasa_iva: number;
+  detalles: Linea[];
   cantidad_cuotas?: number;
   fecha_primer_vencimiento?: string;
 };
 
+const valoresIniciales = (gasto: GastoRow, compra?: CompraRow) =>
+  compra
+    ? {
+        timbrado_proveedor: compra.timbrado_proveedor,
+        numero: compra.numero,
+        fecha: compra.fecha,
+        condicion: compra.condicion,
+        detalles: compra.detalles.map((detalle) => ({
+          descripcion: detalle.descripcion,
+          cantidad: Number(detalle.cantidad),
+          precio_unitario: Number(detalle.precio_unitario),
+          tasa_iva: detalle.tasa_iva,
+        })),
+        cantidad_cuotas: compra.cuotas.length,
+        fecha_primer_vencimiento: compra.cuotas[0]?.fecha_vencimiento,
+      }
+    : {
+        condicion: "CONTADO",
+        detalles: [{ descripcion: gasto.descripcion, cantidad: 1, precio_unitario: Number(gasto.monto), tasa_iva: 10 }],
+      };
+
+// Con `compra` edita esa factura (PUT) en vez de registrar una nueva (POST).
 export const RegistrarFacturaModal = ({
   gasto,
+  compra,
   onClose,
   onSuccess,
 }: {
   gasto: GastoRow;
+  compra?: CompraRow;
   onClose: () => void;
   onSuccess: () => void;
 }) => {
@@ -35,10 +70,14 @@ export const RegistrarFacturaModal = ({
   const [guardando, setGuardando] = useState(false);
   const [form] = Form.useForm<Valores>();
   const condicion = Form.useWatch("condicion", form);
+  const detalles = Form.useWatch("detalles", form) ?? [];
+  const montoGasto = Number(gasto.monto);
+  const totales = totalesFactura(detalles);
+  const diferencia = montoGasto - totales.total;
 
   const registrar = async (values: Valores) => {
     setGuardando(true);
-    const response = await kyInstance.post(`gastos/${gasto.id}/factura`, {
+    const response = await kyInstance[compra ? "put" : "post"](`gastos/${gasto.id}/factura`, {
       json: {
         ...values,
         fecha: dayjs(values.fecha).format("YYYY-MM-DD"),
@@ -50,7 +89,7 @@ export const RegistrarFacturaModal = ({
     setGuardando(false);
 
     if (response.ok) {
-      message.success("Factura registrada.");
+      message.success(compra ? "Factura actualizada." : "Factura registrada.");
       onSuccess();
       return;
     }
@@ -58,66 +97,173 @@ export const RegistrarFacturaModal = ({
     const body = await response.json<{ message?: string; errors?: Record<string, string[]> }>().catch(() => null);
     if (response.status === 422 && body?.errors) {
       form.setFields(
-        Object.entries(body.errors).map(([name, errors]) => ({ name: name as keyof Valores, errors })),
+        Object.entries(body.errors).map(([name, errors]) => ({
+          name: name.split(".").map((parte) => (/^\d+$/.test(parte) ? Number(parte) : parte)) as never,
+          errors,
+        })),
       );
       return;
     }
-    message.error(body?.message ?? "No se pudo registrar la factura.");
+    message.error(body?.message ?? (compra ? "No se pudo actualizar la factura." : "No se pudo registrar la factura."));
   };
 
   return (
     <Modal
-      title="Registrar factura del proveedor"
+      title={compra ? "Editar factura del proveedor" : "Registrar factura del proveedor"}
       open
       onCancel={onClose}
       onOk={() => form.submit()}
-      okText="Registrar"
+      okText={compra ? "Guardar" : "Registrar"}
       cancelText="Cancelar"
       confirmLoading={guardando}
-      width={640}
+      width={960}
     >
       <Descriptions column={2} size="small" style={{ marginBottom: 16 }}>
         <Descriptions.Item label="Gasto">{gasto.descripcion}</Descriptions.Item>
         <Descriptions.Item label="Proveedor">{gasto.proveedor.nombre}</Descriptions.Item>
         <Descriptions.Item label="Monto">{formatMonto(gasto.monto)}</Descriptions.Item>
       </Descriptions>
-      <Form form={form} layout="vertical" onFinish={registrar} initialValues={{ condicion: "CONTADO", tasa_iva: 10 }}>
-        <Form.Item label="Timbrado del proveedor" name="timbrado_proveedor" rules={[{ required: true }, { max: 20 }]}>
-          <Input />
-        </Form.Item>
-        <Form.Item label="Número de factura" name="numero" rules={[{ required: true }, { max: 20 }]}>
-          <Input placeholder="001-001-0000001" />
-        </Form.Item>
-        <Form.Item
-          label="Fecha"
-          name="fecha"
-          rules={[{ required: true }]}
-          getValueProps={(value) => ({ value: value ? dayjs(value) : undefined })}
-        >
-          <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />
-        </Form.Item>
-        <Form.Item label="Tasa de IVA" name="tasa_iva" rules={[{ required: true }]}>
-          <Select options={TASA_IVA_OPTIONS} />
-        </Form.Item>
-        <Form.Item label="Condición" name="condicion" rules={[{ required: true }]}>
-          <Select options={COMPRA_CONDICION_OPTIONS} />
-        </Form.Item>
-
-        {condicion === "CREDITO" && (
-          <>
-            <Form.Item label="Cantidad de cuotas" name="cantidad_cuotas" rules={[{ required: true }]}>
-              <InputNumber style={{ width: "100%" }} min={1} precision={0} />
+      <Form
+        form={form}
+        layout="vertical"
+        onFinish={registrar}
+        initialValues={valoresIniciales(gasto, compra)}
+      >
+        <SectionDivider icon={<FileTextOutlined />} style={{ marginTop: 16 }}>
+          Datos de la factura
+        </SectionDivider>
+        <SectionRow gutter={FORM_GUTTER} style={ROW_STYLE}>
+          <Col xs={24} md={12}>
+            <Form.Item label="Timbrado del proveedor" name="timbrado_proveedor" rules={[{ required: true }, { max: 20 }]}>
+              <Input />
             </Form.Item>
+          </Col>
+          <Col xs={24} md={12}>
+            <Form.Item label="Número de factura" name="numero" rules={[{ required: true }, { max: 20 }]}>
+              <Input placeholder="001-001-0000001" />
+            </Form.Item>
+          </Col>
+          <Col xs={24} md={12}>
             <Form.Item
-              label="Fecha del primer vencimiento"
-              name="fecha_primer_vencimiento"
+              label="Fecha"
+              name="fecha"
               rules={[{ required: true }]}
               getValueProps={(value) => ({ value: value ? dayjs(value) : undefined })}
             >
               <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />
             </Form.Item>
-          </>
-        )}
+          </Col>
+        </SectionRow>
+
+        <SectionDivider icon={<UnorderedListOutlined />}>Detalle</SectionDivider>
+        <Form.List
+          name="detalles"
+          rules={[
+            {
+              validator: async () => {
+                if (diferencia > 0) throw new Error(`Faltan ${formatMonto(diferencia)} para completar el monto del gasto (${formatMonto(montoGasto)}).`);
+                if (diferencia < 0) throw new Error(`Las líneas superan en ${formatMonto(-diferencia)} el monto del gasto (${formatMonto(montoGasto)}).`);
+              },
+            },
+          ]}
+        >
+          {(fields, { add, remove }, { errors }) => (
+            <>
+              {fields.map(({ key, name }) => (
+                <SectionRow key={key} gutter={12} style={ROW_STYLE} align="top">
+                  <Col xs={24} md={8}>
+                    <Form.Item label={name === 0 ? "Descripción" : undefined} name={[name, "descripcion"]} rules={[{ required: true }, { max: 255 }]}>
+                      <Input />
+                    </Form.Item>
+                  </Col>
+                  <Col xs={12} md={3}>
+                    <Form.Item label={name === 0 ? "Cantidad" : undefined} name={[name, "cantidad"]} rules={[{ required: true }]}>
+                      <InputNumber style={{ width: "100%" }} min={0.0001} />
+                    </Form.Item>
+                  </Col>
+                  <Col xs={12} md={5}>
+                    <Form.Item label={name === 0 ? "Precio unitario" : undefined} name={[name, "precio_unitario"]} rules={[{ required: true }]}>
+                      <MontoInput min={1} />
+                    </Form.Item>
+                  </Col>
+                  <Col xs={12} md={4}>
+                    <Form.Item label={name === 0 ? "IVA" : undefined} name={[name, "tasa_iva"]} rules={[{ required: true }]}>
+                      <Select options={TASA_IVA_OPTIONS} />
+                    </Form.Item>
+                  </Col>
+                  <Col xs={10} md={3}>
+                    <Form.Item label={name === 0 ? "Subtotal" : undefined}>
+                      <Typography.Text>{formatMonto(subtotalLinea(detalles[name] ?? {}))}</Typography.Text>
+                    </Form.Item>
+                  </Col>
+                  <Col xs={2} md={1}>
+                    <Form.Item label={name === 0 ? " " : undefined}>
+                      <Tooltip title="Quitar línea">
+                        <Button size="small" icon={<DeleteOutlined />} disabled={fields.length === 1} onClick={() => remove(name)} />
+                      </Tooltip>
+                    </Form.Item>
+                  </Col>
+                </SectionRow>
+              ))}
+              <Button
+                type="dashed"
+                icon={<PlusOutlined />}
+                onClick={() => add({ cantidad: 1, tasa_iva: 10, precio_unitario: diferencia > 0 ? diferencia : undefined })}
+              >
+                Agregar línea
+              </Button>
+              {errors.length > 0 && <Alert type="error" showIcon message={errors} style={{ marginTop: 16 }} />}
+            </>
+          )}
+        </Form.List>
+        <Descriptions column={1} size="small" style={{ margin: "16px 0", maxWidth: 360, marginLeft: "auto" }}>
+          <Descriptions.Item label="Exentas">{formatMonto(totales.exentas)}</Descriptions.Item>
+          {totales.gravadas_5 > 0 && (
+            <Descriptions.Item label="Gravadas 5% / IVA">
+              {formatMonto(totales.gravadas_5)} / {formatMonto(totales.iva_5)}
+            </Descriptions.Item>
+          )}
+          {totales.gravadas_10 > 0 && (
+            <Descriptions.Item label="Gravadas 10% / IVA">
+              {formatMonto(totales.gravadas_10)} / {formatMonto(totales.iva_10)}
+            </Descriptions.Item>
+          )}
+          <Descriptions.Item label="Total">
+            <Typography.Text type={diferencia === 0 ? "success" : "danger"}>
+              {formatMonto(totales.total)} de {formatMonto(montoGasto)}
+              {diferencia > 0 && ` (faltan ${formatMonto(diferencia)})`}
+              {diferencia < 0 && ` (sobran ${formatMonto(-diferencia)})`}
+            </Typography.Text>
+          </Descriptions.Item>
+        </Descriptions>
+
+        <SectionDivider icon={<CreditCardOutlined />}>Condición de pago</SectionDivider>
+        <SectionRow gutter={FORM_GUTTER} style={ROW_STYLE}>
+          <Col xs={24} md={12}>
+            <Form.Item label="Condición" name="condicion" rules={[{ required: true }]}>
+              <Select options={COMPRA_CONDICION_OPTIONS} />
+            </Form.Item>
+          </Col>
+          {condicion === "CREDITO" && (
+            <>
+              <Col xs={24} md={12}>
+                <Form.Item label="Cantidad de cuotas" name="cantidad_cuotas" rules={[{ required: true }]}>
+                  <InputNumber style={{ width: "100%" }} min={1} precision={0} />
+                </Form.Item>
+              </Col>
+              <Col xs={24} md={12}>
+                <Form.Item
+                  label="Fecha del primer vencimiento"
+                  name="fecha_primer_vencimiento"
+                  rules={[{ required: true }]}
+                  getValueProps={(value) => ({ value: value ? dayjs(value) : undefined })}
+                >
+                  <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />
+                </Form.Item>
+              </Col>
+            </>
+          )}
+        </SectionRow>
       </Form>
     </Modal>
   );

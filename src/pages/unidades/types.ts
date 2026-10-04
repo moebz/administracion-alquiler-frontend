@@ -1,5 +1,5 @@
 // "Ocupada" no es un estado propio: se deriva de `contrato_vigente_fecha_fin`
-// (ver pages/unidades/list.tsx), no de `estado` (ver MODELO_DATOS.md).
+// (ver pages/unidades/ocupacion-tag.tsx), no de `estado` (ver MODELO_DATOS.md).
 export type UnidadEstado = "DISPONIBLE" | "NO_DISPONIBLE" | "MANTENIMIENTO";
 
 export const UNIDAD_ESTADO_OPTIONS: { label: string; value: UnidadEstado }[] = [

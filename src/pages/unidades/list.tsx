@@ -1,10 +1,10 @@
 import { EditButton, List, ShowButton, useTable } from "@refinedev/antd";
 import { App, Button, Space, Table, Tag, Tooltip } from "antd";
 import { CheckCircleOutlined, StopOutlined } from "@ant-design/icons";
-import dayjs from "dayjs";
 import { ActiveFilterSwitch } from "../../components/active-filter-switch";
 import { kyInstance } from "../../providers/data";
 import { extractErrorMessage } from "../../providers/auth";
+import { OcupacionTag } from "./ocupacion-tag";
 import { UNIDAD_ESTADO_COLOR, UNIDAD_ESTADO_LABEL, type UnidadRow } from "./types";
 
 export const UnidadList = () => {
@@ -63,13 +63,14 @@ export const UnidadList = () => {
         <Table.Column
           title="Estado"
           dataIndex="estado"
-          render={(estado: UnidadRow["estado"], record: UnidadRow) =>
-            record.contrato_vigente_fecha_fin ? (
-              <Tag color="blue">{`Ocupada hasta ${dayjs(record.contrato_vigente_fecha_fin).format("DD/MM/YYYY")}`}</Tag>
-            ) : (
-              <Tag color={UNIDAD_ESTADO_COLOR[estado]}>{UNIDAD_ESTADO_LABEL[estado]}</Tag>
-            )
-          }
+          render={(estado: UnidadRow["estado"]) => (
+            <Tag color={UNIDAD_ESTADO_COLOR[estado]}>{UNIDAD_ESTADO_LABEL[estado]}</Tag>
+          )}
+        />
+        <Table.Column
+          title="Ocupación"
+          dataIndex="contrato_vigente_fecha_fin"
+          render={(_, record: UnidadRow) => <OcupacionTag unidad={record} />}
         />
         <Table.Column
           title="Activa"

@@ -1,5 +1,24 @@
 import { useState } from "react";
-import { App, Button, Card, Descriptions, Form, Input, Modal, Space, Table, Tag, Typography } from "antd";
+import { CalculatorOutlined, CalendarOutlined, EditOutlined, FileDoneOutlined, StopOutlined } from "@ant-design/icons";
+import {
+  Alert,
+  App,
+  Button,
+  Card,
+  Col,
+  Descriptions,
+  Flex,
+  Form,
+  Input,
+  Modal,
+  Row,
+  Space,
+  Statistic,
+  Table,
+  Tag,
+  theme,
+  Typography,
+} from "antd";
 import type { ReactNode } from "react";
 import dayjs from "dayjs";
 import { Link } from "react-router";
@@ -23,14 +42,17 @@ export const CompraDetail = ({
   compra,
   puedeAnular,
   onAnulada,
-  headerExtra,
+  onEditar,
+  accionesCuotas,
 }: {
   compra: CompraRow | undefined;
   puedeAnular: boolean;
   onAnulada: () => void;
-  headerExtra?: ReactNode;
+  onEditar?: () => void;
+  accionesCuotas?: ReactNode;
 }) => {
   const { message } = App.useApp();
+  const { token } = theme.useToken();
   const [modalAbierto, setModalAbierto] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [form] = Form.useForm<{ motivo_anulacion: string }>();
@@ -50,107 +72,194 @@ export const CompraDetail = ({
     message.error(await extractErrorMessage(response, "No se pudo anular la compra."));
   };
 
+  const total = Number(compra?.total ?? 0);
+  const hoy = dayjs().startOf("day");
+
+  const cardStyle = { borderRadius: token.borderRadiusLG, boxShadow: token.boxShadowTertiary };
+  const cardTitle = (icon: ReactNode, text: string) => (
+    <Space>
+      {icon}
+      {text}
+    </Space>
+  );
+
   return (
     <Space direction="vertical" size="large" style={{ width: "100%" }}>
+      <Row gutter={[24, 24]} align="stretch">
+        <Col xs={24} xl={16}>
+          <Card
+            variant="borderless"
+            style={{ ...cardStyle, height: "100%" }}
+            title={cardTitle(<FileDoneOutlined />, "Factura")}
+            extra={
+              <Flex gap={12} align="center">
+                {compra && (
+                  <Tag bordered={false} color={COMPRA_ESTADO_COLOR[compra.estado]} style={{ margin: 0 }}>
+                    {COMPRA_ESTADO_LABEL[compra.estado]}
+                  </Tag>
+                )}
+                {onEditar && compra?.estado === "REGISTRADO" && compra.cuotas.every((cuota) => cuota.pagos.length === 0) && (
+                  <Button size="small" icon={<EditOutlined />} onClick={onEditar}>
+                    Editar factura
+                  </Button>
+                )}
+                {puedeAnular && compra?.estado === "REGISTRADO" && (
+                  <Button danger size="small" icon={<StopOutlined />} onClick={() => setModalAbierto(true)}>
+                    Anular factura
+                  </Button>
+                )}
+              </Flex>
+            }
+          >
+            <Descriptions
+              layout="vertical"
+              size="small"
+              column={{ xs: 1, sm: 2, lg: 5 }}
+              style={{ marginBottom: token.marginLG }}
+              items={[
+                { key: "numero", label: "Número", children: compra?.numero },
+                { key: "timbrado", label: "Timbrado", children: compra?.timbrado_proveedor },
+                {
+                  key: "ruc",
+                  label: "RUC",
+                  children: compra ? `${compra.emisor_ruc}${compra.emisor_dv ? `-${compra.emisor_dv}` : ""}` : "—",
+                },
+                { key: "fecha", label: "Fecha", children: compra ? dayjs(compra.fecha).format("DD/MM/YYYY") : "—" },
+                {
+                  key: "condicion",
+                  label: "Condición",
+                  children: compra ? COMPRA_CONDICION_LABEL[compra.condicion] : "—",
+                },
+              ]}
+            />
+            {compra?.estado === "ANULADO" && (
+              <Alert
+                type="warning"
+                showIcon
+                message="Motivo de anulación"
+                description={compra.motivo_anulacion}
+                style={{ marginBottom: 24 }}
+              />
+            )}
+            <Table dataSource={compra?.detalles} rowKey="id" pagination={false} size="middle">
+              <Table.Column title="Descripción" dataIndex="descripcion" />
+              <Table.Column title="Cant." dataIndex="cantidad" align="right" />
+              <Table.Column
+                title="Precio unit."
+                dataIndex="precio_unitario"
+                align="right"
+                render={(precio: CompraDetalleRow["precio_unitario"]) => formatMonto(precio)}
+              />
+              <Table.Column
+                title="IVA"
+                dataIndex="tasa_iva"
+                align="right"
+                render={(tasa: number) => <Tag bordered={false}>{tasa}%</Tag>}
+              />
+              <Table.Column
+                title="Subtotal"
+                dataIndex="subtotal"
+                align="right"
+                render={(subtotal: CompraDetalleRow["subtotal"]) => <strong>{formatMonto(subtotal)}</strong>}
+              />
+            </Table>
+          </Card>
+        </Col>
+
+        <Col xs={24} xl={8}>
+          <Card
+            variant="borderless"
+            style={{ ...cardStyle, height: "100%" }}
+            title={cardTitle(<CalculatorOutlined />, "Resumen")}
+          >
+            <Descriptions
+              column={1}
+              size="small"
+              styles={{ content: { justifyContent: "flex-end" } }}
+              items={[
+                ["Exentas", compra?.exentas],
+                ["Gravadas 5%", compra?.gravadas_5],
+                ["Gravadas 10%", compra?.gravadas_10],
+                ["IVA 5%", compra?.iva_5],
+                ["IVA 10%", compra?.iva_10],
+              ].map(([label, monto]) => ({
+                key: label as string,
+                label: label as string,
+                children: formatMonto(monto ?? 0),
+              }))}
+            />
+            <Statistic title="Total" value={formatMonto(total)} valueStyle={{ color: token.colorPrimary }} />
+          </Card>
+        </Col>
+      </Row>
+
       <Card
-        title="Datos de la factura"
-        size="small"
-        extra={
-          (headerExtra || (puedeAnular && compra?.estado === "REGISTRADO")) && (
-            <Space size={4}>
-              {headerExtra}
-              {puedeAnular && compra?.estado === "REGISTRADO" && (
-                <Button danger size="small" onClick={() => setModalAbierto(true)}>
-                  Anular
-                </Button>
-              )}
-            </Space>
-          )
-        }
+        variant="borderless"
+        style={cardStyle}
+        title={cardTitle(<CalendarOutlined />, "Cuotas y pagos")}
+        extra={accionesCuotas}
       >
-        <Descriptions column={2} size="small">
-          <Descriptions.Item label="Proveedor">{compra?.persona?.nombre}</Descriptions.Item>
-          <Descriptions.Item label="RUC">
-            {compra?.emisor_ruc}
-            {compra?.emisor_dv ? `-${compra.emisor_dv}` : ""}
-          </Descriptions.Item>
-          <Descriptions.Item label="Timbrado">{compra?.timbrado_proveedor}</Descriptions.Item>
-          <Descriptions.Item label="Número">{compra?.numero}</Descriptions.Item>
-          <Descriptions.Item label="Fecha">
-            {compra ? dayjs(compra.fecha).format("DD/MM/YYYY") : "—"}
-          </Descriptions.Item>
-          <Descriptions.Item label="Condición">
-            {compra ? COMPRA_CONDICION_LABEL[compra.condicion] : "—"}
-          </Descriptions.Item>
-          <Descriptions.Item label="Estado">
-            {compra && <Tag color={COMPRA_ESTADO_COLOR[compra.estado]}>{COMPRA_ESTADO_LABEL[compra.estado]}</Tag>}
-          </Descriptions.Item>
-          {compra?.estado === "ANULADO" && (
-            <Descriptions.Item label="Motivo de anulación">{compra.motivo_anulacion}</Descriptions.Item>
-          )}
-        </Descriptions>
-      </Card>
-
-      <Card title="Totales" size="small">
-        <Descriptions column={3} size="small">
-          <Descriptions.Item label="Exentas">{formatMonto(compra?.exentas ?? 0)}</Descriptions.Item>
-          <Descriptions.Item label="Gravadas 5%">{formatMonto(compra?.gravadas_5 ?? 0)}</Descriptions.Item>
-          <Descriptions.Item label="Gravadas 10%">{formatMonto(compra?.gravadas_10 ?? 0)}</Descriptions.Item>
-          <Descriptions.Item label="IVA 5%">{formatMonto(compra?.iva_5 ?? 0)}</Descriptions.Item>
-          <Descriptions.Item label="IVA 10%">{formatMonto(compra?.iva_10 ?? 0)}</Descriptions.Item>
-          <Descriptions.Item label="Total">
-            <Typography.Text strong>{formatMonto(compra?.total ?? 0)}</Typography.Text>
-          </Descriptions.Item>
-          <Descriptions.Item label="Saldo">{formatMonto(compra?.saldo ?? 0)}</Descriptions.Item>
-        </Descriptions>
-      </Card>
-
-      <Card title="Detalles" size="small">
-        <Table dataSource={compra?.detalles} rowKey="id" pagination={false} size="small">
-          <Table.Column title="Descripción" dataIndex="descripcion" />
-          <Table.Column title="Cantidad" dataIndex="cantidad" />
-          <Table.Column
-            title="Precio unitario"
-            dataIndex="precio_unitario"
-            render={(precio: CompraDetalleRow["precio_unitario"]) => formatMonto(precio)}
-          />
-          <Table.Column title="IVA" dataIndex="tasa_iva" render={(tasa: number) => `${tasa}%`} />
-          <Table.Column
-            title="Subtotal"
-            dataIndex="subtotal"
-            render={(subtotal: CompraDetalleRow["subtotal"]) => formatMonto(subtotal)}
-          />
-        </Table>
-      </Card>
-
-      <Card title="Cuotas y pagos" size="small">
-        <Table dataSource={compra?.cuotas} rowKey="id" pagination={false} size="small">
-          <Table.Column title="N°" dataIndex="numero_cuota" />
+        <Table dataSource={compra?.cuotas} rowKey="id" pagination={false} size="middle">
+          <Table.Column title="N°" dataIndex="numero_cuota" width={60} />
           <Table.Column
             title="Vencimiento"
             dataIndex="fecha_vencimiento"
             render={(fecha: string) => dayjs(fecha).format("DD/MM/YYYY")}
           />
-          <Table.Column title="Monto" dataIndex="monto" render={(monto: CompraCuotaRow["monto"]) => formatMonto(monto)} />
-          <Table.Column title="Saldo" dataIndex="saldo" render={(saldo: CompraCuotaRow["saldo"]) => formatMonto(saldo)} />
+          <Table.Column
+            title="Estado"
+            key="estado"
+            render={(_, cuota: CompraCuotaRow) =>
+              Number(cuota.saldo) === 0 ? (
+                <Tag color="success" bordered={false}>
+                  Pagada
+                </Tag>
+              ) : dayjs(cuota.fecha_vencimiento).isBefore(hoy) ? (
+                <Tag color="error" bordered={false}>
+                  Vencida
+                </Tag>
+              ) : (
+                <Tag color="warning" bordered={false}>
+                  Pendiente
+                </Tag>
+              )
+            }
+          />
+          <Table.Column
+            title="Monto"
+            dataIndex="monto"
+            align="right"
+            render={(monto: CompraCuotaRow["monto"]) => formatMonto(monto)}
+          />
+          <Table.Column
+            title="Saldo"
+            dataIndex="saldo"
+            align="right"
+            render={(saldo: CompraCuotaRow["saldo"]) => <strong>{formatMonto(saldo)}</strong>}
+          />
           <Table.Column
             title="Pagos aplicados"
             dataIndex="pagos"
             render={(pagos: CompraCuotaRow["pagos"]) =>
               pagos.length === 0 ? (
-                "—"
+                <Typography.Text type="secondary">Sin pagos</Typography.Text>
               ) : (
-                <Space direction="vertical" size={0}>
+                <Flex gap={6} wrap>
                   {pagos.map((pago) => (
-                    <span key={pago.id}>
-                      <Link to={`/administrador/pagos-proveedor/show/${pago.pago_proveedor_id}`}>
-                        Pago #{pago.pago_proveedor_numero}
-                      </Link>{" "}
-                      — {formatMonto(pago.monto_aplicado)}
-                      {pago.estado === "ANULADA" && <Tag color="default" style={{ marginLeft: 4 }}>Anulado</Tag>}
-                    </span>
+                    <Link key={pago.id} to={`/administrador/pagos-proveedor/show/${pago.pago_proveedor_id}`}>
+                      <Tag
+                        bordered={false}
+                        color={pago.estado === "ANULADA" ? "default" : "blue"}
+                        style={{
+                          cursor: "pointer",
+                          textDecoration: pago.estado === "ANULADA" ? "line-through" : undefined,
+                        }}
+                      >
+                        Pago #{pago.pago_proveedor_numero} · {formatMonto(pago.monto_aplicado)}
+                      </Tag>
+                    </Link>
                   ))}
-                </Space>
+                </Flex>
               )
             }
           />

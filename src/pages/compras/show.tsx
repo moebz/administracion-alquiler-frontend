@@ -16,7 +16,14 @@ export const CompraShow = () => {
   const puedeAnular = permissions?.includes(PERMISO_ANULAR) ?? false;
 
   return (
-    <Show title="Detalle de la compra" isLoading={query.isLoading}>
+    <Show
+      title="Detalle de la compra"
+      isLoading={query.isLoading}
+      contentProps={{
+        style: { background: "transparent", boxShadow: "none" },
+        styles: { body: { padding: 0 } },
+      }}
+    >
       <CompraDetail compra={compra} puedeAnular={puedeAnular} onAnulada={() => query.refetch()} />
     </Show>
   );

@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { StopOutlined } from "@ant-design/icons";
+import { FileTextOutlined, LinkOutlined, StopOutlined, WalletOutlined } from "@ant-design/icons";
 import { Show } from "@refinedev/antd";
 import { useShow, usePermissions } from "@refinedev/core";
-import { App, Button, Card, Descriptions, Form, Input, Modal, Space, Table, Tag, Tooltip } from "antd";
+import { App, Button, Descriptions, Flex, Form, Input, Modal, Space, Table, Tag, Tooltip, Typography } from "antd";
 import dayjs from "dayjs";
 import { Link } from "react-router";
+import { SectionDivider } from "../../components/section-divider";
 import { extractErrorMessage } from "../../providers/auth";
 import { kyInstance } from "../../providers/data";
 import { formatMonto } from "../../utils/monto";
@@ -69,99 +70,102 @@ export const PagoProveedorShow = () => {
         ) : null
       }
     >
-      <Space direction="vertical" size="large" style={{ width: "100%" }}>
-        <Card title="Datos del pago" size="small">
-          <Descriptions column={2} size="small">
-            <Descriptions.Item label="Número">{pago?.numero}</Descriptions.Item>
-            <Descriptions.Item label="Proveedor">{pago?.persona.nombre}</Descriptions.Item>
-            <Descriptions.Item label="Fecha">{pago ? dayjs(pago.fecha).format("DD/MM/YYYY") : "—"}</Descriptions.Item>
-            <Descriptions.Item label="Monto total">{formatMonto(pago?.monto_total ?? 0)}</Descriptions.Item>
-            <Descriptions.Item label="Concepto">{pago?.concepto ?? "—"}</Descriptions.Item>
-            <Descriptions.Item label="Estado">
-              {pago && (
-                <Tag color={PAGO_PROVEEDOR_ESTADO_COLOR[pago.estado]}>{PAGO_PROVEEDOR_ESTADO_LABEL[pago.estado]}</Tag>
-              )}
-            </Descriptions.Item>
-            {pago?.estado === "ANULADO" && (
-              <Descriptions.Item label="Motivo de anulación">{pago.motivo_anulacion}</Descriptions.Item>
-            )}
-          </Descriptions>
-        </Card>
+      <Flex justify="space-between" align="center" wrap gap={16}>
+        <Space size="middle" align="center">
+          <Typography.Title level={4} style={{ margin: 0 }}>
+            {pago && `Pago #${pago.numero}`}
+          </Typography.Title>
+          {pago && (
+            <Tag color={PAGO_PROVEEDOR_ESTADO_COLOR[pago.estado]}>{PAGO_PROVEEDOR_ESTADO_LABEL[pago.estado]}</Tag>
+          )}
+        </Space>
+        <Typography.Title level={3} style={{ margin: 0 }}>
+          {formatMonto(pago?.monto_total ?? 0)}
+        </Typography.Title>
+      </Flex>
 
-        <Card title="Medios de pago" size="small">
-          <Table dataSource={pago?.valores} rowKey="id" pagination={false} size="small">
-            <Table.Column title="Medio" dataIndex="medio_pago" render={(mp: PagoProveedorValorRow["medio_pago"]) => mp.nombre} />
-            <Table.Column title="Fondo" dataIndex="fondo" render={(fondo: PagoProveedorValorRow["fondo"]) => fondo.nombre} />
-            <Table.Column title="Monto" dataIndex="monto" render={(monto: PagoProveedorValorRow["monto"]) => formatMonto(monto)} />
-            <Table.Column
-              title="N° comprobante"
-              dataIndex="nro_comprobante"
-              render={(nro: string | null) => nro ?? "—"}
-            />
-            <Table.Column
-              title="Estado"
-              dataIndex="estado"
-              render={(estadoValor: PagoProveedorValorRow["estado"], record: PagoProveedorValorRow) =>
-                estadoValor === "ACTIVO" ? (
-                  <Space size={4} wrap>
-                    <Tag color="green">Activo</Tag>
-                    {puedeAnular && pagoActivo && (
-                      <Tooltip
-                        title={
-                          valoresActivos > 1
-                            ? "Anular medio de pago"
-                            : "Es el único medio de pago activo: para anularlo, anulá el pago entero"
-                        }
-                      >
-                        <Button
-                          size="small"
-                          danger
-                          icon={<StopOutlined />}
-                          disabled={valoresActivos <= 1}
-                          onClick={() => abrirAnulacion(record)}
-                        />
-                      </Tooltip>
-                    )}
-                  </Space>
-                ) : (
-                  <Tooltip title={record.motivo_anulacion}>
-                    <Tag color="default">Anulado</Tag>
+      <SectionDivider icon={<FileTextOutlined />}>Datos del pago</SectionDivider>
+      <Descriptions column={{ xs: 1, md: 2, xl: 3 }} size="small" style={{ paddingLeft: 24 }}>
+        <Descriptions.Item label="Proveedor">{pago?.persona.nombre}</Descriptions.Item>
+        <Descriptions.Item label="Fecha">{pago ? dayjs(pago.fecha).format("DD/MM/YYYY") : "—"}</Descriptions.Item>
+        {pago?.concepto && <Descriptions.Item label="Concepto">{pago.concepto}</Descriptions.Item>}
+        {pago?.estado === "ANULADO" && (
+          <Descriptions.Item label="Motivo de anulación">{pago.motivo_anulacion}</Descriptions.Item>
+        )}
+      </Descriptions>
+
+      <SectionDivider icon={<WalletOutlined />}>Medios de pago</SectionDivider>
+      <Table dataSource={pago?.valores} rowKey="id" pagination={false} size="small">
+        <Table.Column title="Medio" dataIndex="medio_pago" render={(mp: PagoProveedorValorRow["medio_pago"]) => mp.nombre} />
+        <Table.Column title="Fondo" dataIndex="fondo" render={(fondo: PagoProveedorValorRow["fondo"]) => fondo.nombre} />
+        <Table.Column title="Monto" dataIndex="monto" align="right" render={(monto: PagoProveedorValorRow["monto"]) => formatMonto(monto)} />
+        <Table.Column
+          title="N° comprobante"
+          dataIndex="nro_comprobante"
+          render={(nro: string | null) => nro ?? "—"}
+        />
+        <Table.Column
+          title="Estado"
+          dataIndex="estado"
+          render={(estadoValor: PagoProveedorValorRow["estado"], record: PagoProveedorValorRow) =>
+            estadoValor === "ACTIVO" ? (
+              <Space size={4} wrap>
+                <Tag color="green">Activo</Tag>
+                {puedeAnular && pagoActivo && (
+                  <Tooltip
+                    title={
+                      valoresActivos > 1
+                        ? "Anular medio de pago"
+                        : "Es el único medio de pago activo: para anularlo, anulá el pago entero"
+                    }
+                  >
+                    <Button
+                      size="small"
+                      danger
+                      icon={<StopOutlined />}
+                      disabled={valoresActivos <= 1}
+                      onClick={() => abrirAnulacion(record)}
+                    />
                   </Tooltip>
-                )
-              }
-            />
-          </Table>
-        </Card>
+                )}
+              </Space>
+            ) : (
+              <Tooltip title={record.motivo_anulacion}>
+                <Tag color="default">Anulado</Tag>
+              </Tooltip>
+            )
+          }
+        />
+      </Table>
 
-        <Card title="Aplicado a" size="small">
-          <Table dataSource={pago?.aplicaciones} rowKey="id" pagination={false} size="small">
-            <Table.Column
-              title="Factura"
-              dataIndex="documento_compra_numero"
-              render={(numero: string, record: PagoProveedorAplicacionRow) => (
-                <Link to={`/administrador/compras/show/${record.documento_compra_id}`}>{numero}</Link>
-              )}
-            />
-            <Table.Column title="N° cuota" dataIndex="numero_cuota" />
-            <Table.Column
-              title="Monto aplicado"
-              dataIndex="monto_aplicado"
-              render={(monto: PagoProveedorAplicacionRow["monto_aplicado"]) => formatMonto(monto)}
-            />
-            <Table.Column
-              title="Estado"
-              dataIndex="estado"
-              render={(estadoAplicacion: PagoProveedorAplicacionRow["estado"], record: PagoProveedorAplicacionRow) => (
-                <Tooltip title={record.valor_anulado_id ? "Anulada por la anulación de un medio de pago" : undefined}>
-                  <Tag color={estadoAplicacion === "ACTIVA" ? "green" : "default"}>
-                    {estadoAplicacion === "ACTIVA" ? "Activa" : "Anulada"}
-                  </Tag>
-                </Tooltip>
-              )}
-            />
-          </Table>
-        </Card>
-      </Space>
+      <SectionDivider icon={<LinkOutlined />}>Aplicado a</SectionDivider>
+      <Table dataSource={pago?.aplicaciones} rowKey="id" pagination={false} size="small">
+        <Table.Column
+          title="Factura"
+          dataIndex="documento_compra_numero"
+          render={(numero: string, record: PagoProveedorAplicacionRow) => (
+            <Link to={`/administrador/compras/show/${record.documento_compra_id}`}>{numero}</Link>
+          )}
+        />
+        <Table.Column title="N° cuota" dataIndex="numero_cuota" />
+        <Table.Column
+          title="Monto aplicado"
+          dataIndex="monto_aplicado"
+          align="right"
+          render={(monto: PagoProveedorAplicacionRow["monto_aplicado"]) => formatMonto(monto)}
+        />
+        <Table.Column
+          title="Estado"
+          dataIndex="estado"
+          render={(estadoAplicacion: PagoProveedorAplicacionRow["estado"], record: PagoProveedorAplicacionRow) => (
+            <Tooltip title={record.valor_anulado_id ? "Anulada por la anulación de un medio de pago" : undefined}>
+              <Tag color={estadoAplicacion === "ACTIVA" ? "green" : "default"}>
+                {estadoAplicacion === "ACTIVA" ? "Activa" : "Anulada"}
+              </Tag>
+            </Tooltip>
+          )}
+        />
+      </Table>
 
       <Modal
         title={valorAAnular ? "Anular medio de pago" : "Anular pago"}
