@@ -40,6 +40,8 @@ export type UnidadRow = {
   // Id del contrato VIGENTE, si existe (ver pages/unidades/show.tsx, que lo usa
   // para pedir el contrato completo a contratos-alquiler/:id).
   contrato_vigente_id: number | null;
+  // Id del contrato futuro más cercano a empezar, si existe.
+  contrato_futuro_id: number | null;
   is_active: boolean;
   fecha_baja: string | null;
 };

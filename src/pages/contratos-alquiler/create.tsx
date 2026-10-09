@@ -11,11 +11,12 @@ import type { ContratoAlquilerRow } from "./types";
 export const ContratoAlquilerCreate = () => {
   const { formProps, saveButtonProps } = useForm({});
 
-  // Prellenado desde "Crear contrato" del detalle de Unidades (pages/unidades/show.tsx) y "Renovar" del listado.
+  // Prellenado desde "Crear contrato" y "Crear próximo contrato" del detalle de Unidades (pages/unidades/show.tsx) y "Renovar" del listado.
   const [searchParams] = useSearchParams();
   const unidadIdParam = searchParams.get("unidad_id");
   const unidadId = unidadIdParam ? Number(unidadIdParam) : undefined;
   const renovarId = searchParams.get("renovar");
+  const fechaInicio = searchParams.get("fecha_inicio") ?? undefined;
 
   const { result: contratoAnterior } = useOne<ContratoAlquilerRow>({
     resource: "contratos-alquiler",
@@ -44,6 +45,7 @@ export const ContratoAlquilerCreate = () => {
           ...formProps,
           initialValues: {
             unidad_id: unidadId,
+            fecha_inicio: fechaInicio,
             expensas_a_cargo_de: "INQUILINO",
             mora_pct_diario: 0,
             dias_gracia: 0,

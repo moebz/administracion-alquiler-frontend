@@ -1,6 +1,6 @@
 import { EditButton, Show } from "@refinedev/antd";
 import { useGo, useOne, useShow } from "@refinedev/core";
-import { DollarOutlined, FileTextOutlined, HomeOutlined } from "@ant-design/icons";
+import { CalendarOutlined, DollarOutlined, FileTextOutlined, HomeOutlined } from "@ant-design/icons";
 import { Button, Descriptions, Empty, Flex, Skeleton, Space, Tag, Typography } from "antd";
 import dayjs from "dayjs";
 import { useNavigate } from "react-router";
@@ -25,6 +25,13 @@ export const UnidadShow = () => {
     queryOptions: { enabled: !!unidad?.contrato_vigente_id },
   });
   const cargandoContrato = !!unidad?.contrato_vigente_id && contratoQuery.isFetching;
+
+  const { query: futuroQuery, result: contratoFuturo } = useOne<ContratoAlquilerRow>({
+    resource: "contratos-alquiler",
+    id: unidad?.contrato_futuro_id ?? "",
+    queryOptions: { enabled: !!unidad?.contrato_futuro_id },
+  });
+  const cargandoFuturo = !!unidad?.contrato_futuro_id && futuroQuery.isFetching;
 
   const go = useGo();
   const verGastos = () =>
@@ -70,9 +77,22 @@ export const UnidadShow = () => {
           </SectionDivider>
         </div>
         {contrato ? (
-          <EditButton resource="contratos-alquiler" recordItemId={contrato.id}>
-            Editar contrato
-          </EditButton>
+          <Space>
+            {!unidad?.contrato_futuro_id && (
+              <Button
+                onClick={() =>
+                  navigate(
+                    `/administrador/contratos-alquiler/create?unidad_id=${unidad?.id}&fecha_inicio=${dayjs(contrato.fecha_fin_efectiva).add(1, "day").format("YYYY-MM-DD")}`,
+                  )
+                }
+              >
+                Crear próximo contrato
+              </Button>
+            )}
+            <EditButton resource="contratos-alquiler" recordItemId={contrato.id}>
+              Editar contrato
+            </EditButton>
+          </Space>
         ) : (
           <Button
             type="primary"
@@ -104,6 +124,30 @@ export const UnidadShow = () => {
           <Empty description="Esta unidad no tiene un contrato vigente." image={Empty.PRESENTED_IMAGE_SIMPLE} />
         )}
       </Skeleton>
+
+      {unidad?.contrato_futuro_id && (
+        <>
+          <SectionDivider icon={<CalendarOutlined />}>
+            Próximo contrato
+            <Tag color={CONTRATO_ALQUILER_ESTADO_COLOR.FUTURO} style={{ marginLeft: 12 }}>
+              {CONTRATO_ALQUILER_ESTADO_LABEL.FUTURO}
+            </Tag>
+          </SectionDivider>
+          <Skeleton active loading={cargandoFuturo}>
+            {contratoFuturo && (
+              <Descriptions column={{ xs: 1, md: 2, xl: 3 }} size="small" style={{ paddingLeft: 24 }}>
+                <Descriptions.Item label="Inquilino">{contratoFuturo.inquilino.nombre}</Descriptions.Item>
+                <Descriptions.Item label="Inicio">
+                  {dayjs(contratoFuturo.fecha_inicio).format("DD/MM/YYYY")}
+                </Descriptions.Item>
+                <Descriptions.Item label="Fin">
+                  {dayjs(contratoFuturo.fecha_fin).format("DD/MM/YYYY")}
+                </Descriptions.Item>
+              </Descriptions>
+            )}
+          </Skeleton>
+        </>
+      )}
 
       <Flex align="center" gap={16}>
         <div style={{ flex: 1 }}>
