@@ -47,6 +47,22 @@ export const extractErrorMessage = async (
   return body?.message ?? fallback;
 };
 
+let permissionsInFlight: Promise<string[] | null> | null = null;
+
+const fetchPermissions = async (): Promise<string[] | null> => {
+  if (!localStorage.getItem(TOKEN_KEY)) {
+    return null;
+  }
+
+  const response = await kyInstance.get("user");
+  if (!response.ok) {
+    return null;
+  }
+
+  const user = await response.json<UserResponse>();
+  return user.permissions;
+};
+
 export const authProvider: AuthProvider = {
   login: async ({ email, password }) => {
     const response = await kyInstance.post("login", {
@@ -109,18 +125,12 @@ export const authProvider: AuthProvider = {
       redirectTo: "/login",
     };
   },
-  getPermissions: async () => {
-    if (!localStorage.getItem(TOKEN_KEY)) {
-      return null;
-    }
-
-    const response = await kyInstance.get("user");
-    if (!response.ok) {
-      return null;
-    }
-
-    const user = await response.json<UserResponse>();
-    return user.permissions;
+  getPermissions: () => {
+    // Comparte la request en vuelo: cada item del menú pregunta `can` a la vez.
+    permissionsInFlight ??= fetchPermissions().finally(() => {
+      permissionsInFlight = null;
+    });
+    return permissionsInFlight;
   },
   // "Olvidé mi contraseña" self-service — reusa la pantalla /forgot-password
   // ya scaffoldeada por Refine, solo hacía falta conectar el provider.

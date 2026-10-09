@@ -25,7 +25,6 @@ import {
   ReconciliationOutlined,
 } from "@ant-design/icons";
 import { Refine, Authenticated, CanAccess } from "@refinedev/core";
-import { DevtoolsPanel, DevtoolsProvider } from "@refinedev/devtools";
 import { RefineKbar, RefineKbarProvider } from "@refinedev/kbar";
 
 import {
@@ -60,11 +59,21 @@ import { SectionRoute } from "./components/section-route";
 import { RoleBasedIndex } from "./components/role-based-index";
 import { SECTIONS } from "./providers/sections";
 import { UserCreate, UserEdit } from "./pages/users";
-import { PersonaList, PersonaCreate, PersonaEdit, PersonaShow } from "./pages/personas";
+import {
+  PersonaList,
+  PersonaCreate,
+  PersonaEdit,
+  PersonaShow,
+} from "./pages/personas";
 import { RoleList } from "./pages/roles";
 import { EdificioList, EdificioCreate, EdificioEdit } from "./pages/edificios";
 import { BloqueList, BloqueCreate, BloqueEdit } from "./pages/bloques";
-import { UnidadList, UnidadCreate, UnidadEdit, UnidadShow } from "./pages/unidades";
+import {
+  UnidadList,
+  UnidadCreate,
+  UnidadEdit,
+  UnidadShow,
+} from "./pages/unidades";
 import {
   ContratoAlquilerList,
   ContratoAlquilerCreate,
@@ -76,19 +85,43 @@ import { CompraShow } from "./pages/compras";
 import { PagoProveedorList, PagoProveedorShow } from "./pages/pagos-proveedor";
 import { BancoList, BancoCreate, BancoEdit } from "./pages/bancos";
 import { FondoList, FondoCreate, FondoEdit } from "./pages/fondos";
-import { MedioPagoList, MedioPagoCreate, MedioPagoEdit } from "./pages/medios-pago";
-import { ComodidadList, ComodidadCreate, ComodidadEdit } from "./pages/comodidades";
-import { ProveedorList, ProveedorCreate, ProveedorEdit } from "./pages/proveedores";
+import {
+  MedioPagoList,
+  MedioPagoCreate,
+  MedioPagoEdit,
+} from "./pages/medios-pago";
+import {
+  ComodidadList,
+  ComodidadCreate,
+  ComodidadEdit,
+} from "./pages/comodidades";
+import {
+  ProveedorList,
+  ProveedorCreate,
+  ProveedorEdit,
+} from "./pages/proveedores";
 import { RubroList, RubroCreate, RubroEdit } from "./pages/rubros";
 import {
   TipoIdentificacionList,
   TipoIdentificacionCreate,
   TipoIdentificacionEdit,
 } from "./pages/tipos-identificacion";
-import { TipoRelacionList, TipoRelacionCreate, TipoRelacionEdit } from "./pages/tipos-relacion";
+import {
+  TipoRelacionList,
+  TipoRelacionCreate,
+  TipoRelacionEdit,
+} from "./pages/tipos-relacion";
 import { CiudadList, CiudadCreate, CiudadEdit } from "./pages/ciudades";
-import { EstablecimientoList, EstablecimientoCreate, EstablecimientoEdit } from "./pages/establecimientos";
-import { PuntoExpedicionList, PuntoExpedicionCreate, PuntoExpedicionEdit } from "./pages/puntos-expedicion";
+import {
+  EstablecimientoList,
+  EstablecimientoCreate,
+  EstablecimientoEdit,
+} from "./pages/establecimientos";
+import {
+  PuntoExpedicionList,
+  PuntoExpedicionCreate,
+  PuntoExpedicionEdit,
+} from "./pages/puntos-expedicion";
 import { TimbradoList, TimbradoCreate, TimbradoEdit } from "./pages/timbrados";
 import { GastoAprobacionList } from "./pages/propietario-gastos";
 
@@ -98,554 +131,569 @@ function App() {
       <RefineKbarProvider>
         <ColorModeContextProvider>
           <AntdApp>
-            <DevtoolsProvider>
-              <Refine
-                dataProvider={dataProvider}
-                notificationProvider={useNotificationProvider}
-                routerProvider={routerProvider}
-                authProvider={authProvider}
-                accessControlProvider={accessControlProvider}
-                i18nProvider={i18nProvider}
-                resources={[
-                  {
-                    name: "personas",
-                    list: "/administrador/personas",
-                    create: "/administrador/personas/create",
-                    edit: "/administrador/personas/edit/:id",
-                    show: "/administrador/personas/show/:id",
-                    meta: {
-                      label: "Personas",
-                      icon: <UserOutlined />,
-                    },
+            <Refine
+              dataProvider={dataProvider}
+              notificationProvider={useNotificationProvider}
+              routerProvider={routerProvider}
+              authProvider={authProvider}
+              accessControlProvider={accessControlProvider}
+              i18nProvider={i18nProvider}
+              resources={[
+                {
+                  name: "personas",
+                  list: "/administrador/personas",
+                  create: "/administrador/personas/create",
+                  edit: "/administrador/personas/edit/:id",
+                  show: "/administrador/personas/show/:id",
+                  meta: {
+                    label: "Personas",
+                    icon: <UserOutlined />,
                   },
-                  {
-                    name: "personas-todos",
-                    list: "/administrador/personas",
-                    meta: {
-                      label: "Personas",
-                      icon: <UserOutlined />,
-                      parent: "personas",
-                    },
+                },
+                {
+                  name: "personas-todos",
+                  list: "/administrador/personas",
+                  meta: {
+                    label: "Personas",
+                    icon: <UserOutlined />,
+                    parent: "personas",
                   },
-                  {
-                    // Sin `create`/`edit`: alta y renombrado de rol se hacen
-                    // con un modal desde la propia lista (ver pages/roles),
-                    // que también tiene los permisos del rol elegido — ya no
-                    // hay una pantalla de "Permisos por rol" aparte.
-                    name: "roles",
-                    list: "/administrador/roles",
-                    meta: {
-                      label: "Roles",
-                      icon: <SafetyCertificateOutlined />,
-                      parent: "personas",
-                    },
+                },
+                {
+                  // Sin `create`/`edit`: alta y renombrado de rol se hacen
+                  // con un modal desde la propia lista (ver pages/roles),
+                  // que también tiene los permisos del rol elegido — ya no
+                  // hay una pantalla de "Permisos por rol" aparte.
+                  name: "roles",
+                  list: "/administrador/roles",
+                  meta: {
+                    label: "Roles",
+                    icon: <SafetyCertificateOutlined />,
+                    parent: "personas",
                   },
-                  {
-                    // Sin `list`: el listado de usuarios se fusionó con el
-                    // de Personas. `list` apunta ahí para que el botón
-                    // "volver" de Create/Edit y el redirect post-guardado
-                    // caigan en /administrador/personas, y `meta.hide` para
-                    // que la cuenta no aparezca sola en el menú.
-                    name: "users",
-                    list: "/administrador/personas",
-                    create: "/administrador/usuarios/create",
-                    edit: "/administrador/usuarios/edit/:id",
-                    meta: {
-                      label: "Usuarios",
-                      icon: <UserOutlined />,
-                      hide: true,
-                      parent: "personas",
-                    },
+                },
+                {
+                  // Sin `list`: el listado de usuarios se fusionó con el
+                  // de Personas. `list` apunta ahí para que el botón
+                  // "volver" de Create/Edit y el redirect post-guardado
+                  // caigan en /administrador/personas, y `meta.hide` para
+                  // que la cuenta no aparezca sola en el menú.
+                  name: "users",
+                  list: "/administrador/personas",
+                  create: "/administrador/usuarios/create",
+                  edit: "/administrador/usuarios/edit/:id",
+                  meta: {
+                    label: "Usuarios",
+                    icon: <UserOutlined />,
+                    hide: true,
+                    parent: "personas",
                   },
-                  {
-                    name: "edificios",
-                    list: "/administrador/edificios",
-                    create: "/administrador/edificios/create",
-                    edit: "/administrador/edificios/edit/:id",
-                    meta: {
-                      label: "Edificios",
-                      icon: <ApartmentOutlined />,
-                    },
+                },
+                {
+                  name: "edificios",
+                  list: "/administrador/edificios",
+                  create: "/administrador/edificios/create",
+                  edit: "/administrador/edificios/edit/:id",
+                  meta: {
+                    label: "Edificios",
+                    icon: <ApartmentOutlined />,
                   },
-                  {
-                    name: "edificios-todos",
-                    list: "/administrador/edificios",
-                    meta: {
-                      label: "Edificios",
-                      icon: <ApartmentOutlined />,
-                      parent: "edificios",
-                    },
+                },
+                {
+                  name: "edificios-todos",
+                  list: "/administrador/edificios",
+                  meta: {
+                    label: "Edificios",
+                    icon: <ApartmentOutlined />,
+                    parent: "edificios",
                   },
-                  {
-                    name: "comodidades",
-                    list: "/administrador/comodidades",
-                    create: "/administrador/comodidades/create",
-                    edit: "/administrador/comodidades/edit/:id",
-                    meta: {
-                      label: "Comodidades",
-                      icon: <StarOutlined />,
-                      parent: "edificios",
-                    },
+                },
+                {
+                  name: "comodidades",
+                  list: "/administrador/comodidades",
+                  create: "/administrador/comodidades/create",
+                  edit: "/administrador/comodidades/edit/:id",
+                  meta: {
+                    label: "Comodidades",
+                    icon: <StarOutlined />,
+                    parent: "edificios",
                   },
-                  {
-                    // Sin entrada propia en el menú: solo se accede
-                    // navegando Edificios -> "Ver bloques" (pages/edificios/list.tsx).
-                    // meta.hide en el padre también saca del menú a sus
-                    // hijos (unidades, que lo tiene como parent) — ver
-                    // useMenu en @refinedev/core. Las rutas siguen activas.
-                    name: "bloques",
-                    list: "/administrador/bloques",
-                    create: "/administrador/bloques/create",
-                    edit: "/administrador/bloques/edit/:id",
-                    meta: {
-                      label: "Bloques",
-                      icon: <BlockOutlined />,
-                      parent: "edificios",
-                      hide: true,
-                    },
+                },
+                {
+                  // Sin entrada propia en el menú: solo se accede
+                  // navegando Edificios -> "Ver bloques" (pages/edificios/list.tsx).
+                  // meta.hide en el padre también saca del menú a sus
+                  // hijos (unidades, que lo tiene como parent) — ver
+                  // useMenu en @refinedev/core. Las rutas siguen activas.
+                  name: "bloques",
+                  list: "/administrador/bloques",
+                  create: "/administrador/bloques/create",
+                  edit: "/administrador/bloques/edit/:id",
+                  meta: {
+                    label: "Bloques",
+                    icon: <BlockOutlined />,
+                    parent: "edificios",
+                    hide: true,
                   },
-                  {
-                    // Sin entrada propia en el menú: solo se accede
-                    // navegando Edificios/Bloques -> "Ver unidades".
-                    name: "unidades",
-                    list: "/administrador/unidades",
-                    create: "/administrador/unidades/create",
-                    edit: "/administrador/unidades/edit/:id",
-                    show: "/administrador/unidades/show/:id",
-                    meta: {
-                      label: "Unidades",
-                      icon: <HomeOutlined />,
-                      parent: "bloques",
-                      hide: true,
-                    },
+                },
+                {
+                  // Sin entrada propia en el menú: solo se accede
+                  // navegando Edificios/Bloques -> "Ver unidades".
+                  name: "unidades",
+                  list: "/administrador/unidades",
+                  create: "/administrador/unidades/create",
+                  edit: "/administrador/unidades/edit/:id",
+                  show: "/administrador/unidades/show/:id",
+                  meta: {
+                    label: "Unidades",
+                    icon: <HomeOutlined />,
+                    parent: "bloques",
+                    hide: true,
                   },
-                  {
-                    // A diferencia de bloques/unidades, este sí queda visible en
-                    // el menú (bajo Edificios): tiene filtros propios (estado,
-                    // vencimiento) útiles para consultarlo sin pasar por una unidad.
-                    name: "contratos-alquiler",
-                    list: "/administrador/contratos-alquiler",
-                    create: "/administrador/contratos-alquiler/create",
-                    edit: "/administrador/contratos-alquiler/edit/:id",
-                    meta: {
-                      label: "Contratos de alquiler",
-                      icon: <FileTextOutlined />,
-                      parent: "edificios",
-                    },
+                },
+                {
+                  // A diferencia de bloques/unidades, este sí queda visible en
+                  // el menú (bajo Edificios): tiene filtros propios (estado,
+                  // vencimiento) útiles para consultarlo sin pasar por una unidad.
+                  name: "contratos-alquiler",
+                  list: "/administrador/contratos-alquiler",
+                  create: "/administrador/contratos-alquiler/create",
+                  edit: "/administrador/contratos-alquiler/edit/:id",
+                  meta: {
+                    label: "Contratos de alquiler",
+                    icon: <FileTextOutlined />,
+                    parent: "edificios",
                   },
-                  {
-                    name: "cargos",
-                    list: "/administrador/cargos",
-                    create: "/administrador/cargos/create",
-                    meta: {
-                      label: "Cargos",
-                      icon: <ReconciliationOutlined />,
-                      parent: "edificios",
-                    },
+                },
+                {
+                  name: "cargos",
+                  list: "/administrador/cargos",
+                  create: "/administrador/cargos/create",
+                  meta: {
+                    label: "Cargos",
+                    icon: <ReconciliationOutlined />,
+                    parent: "edificios",
                   },
-                  {
-                    name: "gastos",
-                    list: "/administrador/gastos",
-                    create: "/administrador/gastos/create",
-                    edit: "/administrador/gastos/edit/:id",
-                    show: "/administrador/gastos/show/:id",
-                    meta: {
-                      label: "Gastos",
-                      icon: <DollarOutlined />,
-                      parent: "edificios",
-                    },
+                },
+                {
+                  name: "gastos",
+                  list: "/administrador/gastos",
+                  create: "/administrador/gastos/create",
+                  edit: "/administrador/gastos/edit/:id",
+                  show: "/administrador/gastos/show/:id",
+                  meta: {
+                    label: "Gastos",
+                    icon: <DollarOutlined />,
+                    parent: "edificios",
                   },
-                  {
-                    // Sin `list`: no tiene entrada propia en el menú, la
-                    // factura de una compra se ve desde el gasto que la
-                    // originó (pages/gastos/show.tsx). Sigue existiendo como
-                    // resource solo porque pages/pagos-proveedor/show.tsx
-                    // linkea acá (ver App\Http\Controllers\Admin\PagoProveedorController).
-                    name: "compras",
-                    show: "/administrador/compras/show/:id",
-                    meta: {
-                      label: "Compras",
-                      icon: <FileDoneOutlined />,
-                    },
+                },
+                {
+                  // Sin `list`: no tiene entrada propia en el menú, la
+                  // factura de una compra se ve desde el gasto que la
+                  // originó (pages/gastos/show.tsx). Sigue existiendo como
+                  // resource solo porque pages/pagos-proveedor/show.tsx
+                  // linkea acá (ver App\Http\Controllers\Admin\PagoProveedorController).
+                  name: "compras",
+                  show: "/administrador/compras/show/:id",
+                  meta: {
+                    label: "Compras",
+                    icon: <FileDoneOutlined />,
                   },
-                  {
-                    name: "pagos-proveedor",
-                    list: "/administrador/pagos-proveedor",
-                    show: "/administrador/pagos-proveedor/show/:id",
-                    meta: {
-                      label: "Pagos a proveedores",
-                      icon: <TransactionOutlined />,
-                    },
+                },
+                {
+                  name: "pagos-proveedor",
+                  list: "/administrador/pagos-proveedor",
+                  show: "/administrador/pagos-proveedor/show/:id",
+                  meta: {
+                    label: "Pagos a proveedores",
+                    icon: <TransactionOutlined />,
                   },
-                  {
-                    name: "proveedores",
-                    list: "/administrador/proveedores",
-                    create: "/administrador/proveedores/create",
-                    edit: "/administrador/proveedores/edit/:id",
-                    meta: {
-                      label: "Proveedores",
-                      icon: <ShopOutlined />,
-                    },
+                },
+                {
+                  name: "proveedores",
+                  list: "/administrador/proveedores",
+                  create: "/administrador/proveedores/create",
+                  edit: "/administrador/proveedores/edit/:id",
+                  meta: {
+                    label: "Proveedores",
+                    icon: <ShopOutlined />,
                   },
-                  {
-                    name: "proveedores-todos",
-                    list: "/administrador/proveedores",
-                    meta: {
-                      label: "Proveedores",
-                      icon: <ShopOutlined />,
-                      parent: "proveedores",
-                    },
+                },
+                {
+                  name: "proveedores-todos",
+                  list: "/administrador/proveedores",
+                  meta: {
+                    label: "Proveedores",
+                    icon: <ShopOutlined />,
+                    parent: "proveedores",
                   },
-                  {
-                    name: "rubros",
-                    list: "/administrador/rubros",
-                    create: "/administrador/rubros/create",
-                    edit: "/administrador/rubros/edit/:id",
-                    meta: {
-                      label: "Rubros",
-                      icon: <TagsOutlined />,
-                      parent: "proveedores",
-                    },
+                },
+                {
+                  name: "rubros",
+                  list: "/administrador/rubros",
+                  create: "/administrador/rubros/create",
+                  edit: "/administrador/rubros/edit/:id",
+                  meta: {
+                    label: "Rubros",
+                    icon: <TagsOutlined />,
+                    parent: "proveedores",
                   },
-                  {
-                    name: "facturacion",
-                    meta: {
-                      label: "Facturación",
-                      icon: <AuditOutlined />,
-                    },
+                },
+                {
+                  name: "facturacion",
+                  meta: {
+                    label: "Facturación",
+                    icon: <AuditOutlined />,
                   },
-                  {
-                    name: "establecimientos",
-                    list: "/administrador/establecimientos",
-                    create: "/administrador/establecimientos/create",
-                    edit: "/administrador/establecimientos/edit/:id",
-                    meta: {
-                      label: "Establecimientos",
-                      icon: <ClusterOutlined />,
-                      parent: "facturacion",
-                    },
+                },
+                {
+                  name: "establecimientos",
+                  list: "/administrador/establecimientos",
+                  create: "/administrador/establecimientos/create",
+                  edit: "/administrador/establecimientos/edit/:id",
+                  meta: {
+                    label: "Establecimientos",
+                    icon: <ClusterOutlined />,
+                    parent: "facturacion",
                   },
-                  {
-                    // Sin entrada propia en el menú: solo se accede
-                    // navegando Establecimientos -> "Ver puntos de expedición".
-                    name: "puntos-expedicion",
-                    list: "/administrador/puntos-expedicion",
-                    create: "/administrador/puntos-expedicion/create",
-                    edit: "/administrador/puntos-expedicion/edit/:id",
-                    meta: {
-                      label: "Puntos de expedición",
-                      icon: <PrinterOutlined />,
-                      parent: "facturacion",
-                      hide: true,
-                    },
+                },
+                {
+                  // Sin entrada propia en el menú: solo se accede
+                  // navegando Establecimientos -> "Ver puntos de expedición".
+                  name: "puntos-expedicion",
+                  list: "/administrador/puntos-expedicion",
+                  create: "/administrador/puntos-expedicion/create",
+                  edit: "/administrador/puntos-expedicion/edit/:id",
+                  meta: {
+                    label: "Puntos de expedición",
+                    icon: <PrinterOutlined />,
+                    parent: "facturacion",
+                    hide: true,
                   },
-                  {
-                    name: "timbrados",
-                    list: "/administrador/timbrados",
-                    create: "/administrador/timbrados/create",
-                    edit: "/administrador/timbrados/edit/:id",
-                    meta: {
-                      label: "Timbrados",
-                      icon: <FileProtectOutlined />,
-                      parent: "facturacion",
-                    },
+                },
+                {
+                  name: "timbrados",
+                  list: "/administrador/timbrados",
+                  create: "/administrador/timbrados/create",
+                  edit: "/administrador/timbrados/edit/:id",
+                  meta: {
+                    label: "Timbrados",
+                    icon: <FileProtectOutlined />,
+                    parent: "facturacion",
                   },
-                  {
-                    name: "catalogos",
-                    meta: {
-                      label: "Catálogos",
-                      icon: <DatabaseOutlined />,
-                    },
+                },
+                {
+                  name: "catalogos",
+                  meta: {
+                    label: "Catálogos",
+                    icon: <DatabaseOutlined />,
                   },
-                  {
-                    // Nombre = path del endpoint (/api/propietario/gastos):
-                    // el data provider usa `resource` tal cual como URL, ver
-                    // providers/data.ts. Solo lista + aprobar/rechazar, sin
-                    // create/edit — esas acciones son botones del listado
-                    // (pages/propietario-gastos/list.tsx), no un form aparte.
-                    name: "propietario/gastos",
-                    list: "/propietario/gastos",
-                    meta: {
-                      label: "Gastos",
-                      icon: <DollarOutlined />,
-                    },
+                },
+                {
+                  // Nombre = path del endpoint (/api/propietario/gastos):
+                  // el data provider usa `resource` tal cual como URL, ver
+                  // providers/data.ts. Solo lista + aprobar/rechazar, sin
+                  // create/edit — esas acciones son botones del listado
+                  // (pages/propietario-gastos/list.tsx), no un form aparte.
+                  name: "propietario/gastos",
+                  list: "/propietario/gastos",
+                  meta: {
+                    label: "Gastos",
+                    icon: <DollarOutlined />,
                   },
-                  {
-                    name: "bancos",
-                    list: "/administrador/bancos",
-                    create: "/administrador/bancos/create",
-                    edit: "/administrador/bancos/edit/:id",
-                    meta: {
-                      label: "Bancos",
-                      icon: <BankOutlined />,
-                      parent: "catalogos",
-                    },
+                },
+                {
+                  name: "bancos",
+                  list: "/administrador/bancos",
+                  create: "/administrador/bancos/create",
+                  edit: "/administrador/bancos/edit/:id",
+                  meta: {
+                    label: "Bancos",
+                    icon: <BankOutlined />,
+                    parent: "catalogos",
                   },
-                  {
-                    name: "fondos",
-                    list: "/administrador/fondos",
-                    create: "/administrador/fondos/create",
-                    edit: "/administrador/fondos/edit/:id",
-                    meta: {
-                      label: "Fondos",
-                      icon: <WalletOutlined />,
-                      parent: "catalogos",
-                    },
+                },
+                {
+                  name: "fondos",
+                  list: "/administrador/fondos",
+                  create: "/administrador/fondos/create",
+                  edit: "/administrador/fondos/edit/:id",
+                  meta: {
+                    label: "Fondos",
+                    icon: <WalletOutlined />,
+                    parent: "catalogos",
                   },
-                  {
-                    name: "medios-pago",
-                    list: "/administrador/medios-pago",
-                    create: "/administrador/medios-pago/create",
-                    edit: "/administrador/medios-pago/edit/:id",
-                    meta: {
-                      label: "Medios de pago",
-                      icon: <CreditCardOutlined />,
-                      parent: "catalogos",
-                    },
+                },
+                {
+                  name: "medios-pago",
+                  list: "/administrador/medios-pago",
+                  create: "/administrador/medios-pago/create",
+                  edit: "/administrador/medios-pago/edit/:id",
+                  meta: {
+                    label: "Medios de pago",
+                    icon: <CreditCardOutlined />,
+                    parent: "catalogos",
                   },
-                  {
-                    name: "tipos-identificacion",
-                    list: "/administrador/tipos-identificacion",
-                    create: "/administrador/tipos-identificacion/create",
-                    edit: "/administrador/tipos-identificacion/edit/:id",
-                    meta: {
-                      label: "Tipos de identificación",
-                      icon: <IdcardOutlined />,
-                      parent: "catalogos",
-                    },
+                },
+                {
+                  name: "tipos-identificacion",
+                  list: "/administrador/tipos-identificacion",
+                  create: "/administrador/tipos-identificacion/create",
+                  edit: "/administrador/tipos-identificacion/edit/:id",
+                  meta: {
+                    label: "Tipos de identificación",
+                    icon: <IdcardOutlined />,
+                    parent: "catalogos",
                   },
-                  {
-                    name: "tipos-relacion",
-                    list: "/administrador/tipos-relacion",
-                    create: "/administrador/tipos-relacion/create",
-                    edit: "/administrador/tipos-relacion/edit/:id",
-                    meta: {
-                      label: "Tipos de relación",
-                      icon: <ShareAltOutlined />,
-                      parent: "catalogos",
-                      // Oculto del menú: no está en uso todavía en el front.
-                      hide: true,
-                    },
+                },
+                {
+                  name: "tipos-relacion",
+                  list: "/administrador/tipos-relacion",
+                  create: "/administrador/tipos-relacion/create",
+                  edit: "/administrador/tipos-relacion/edit/:id",
+                  meta: {
+                    label: "Tipos de relación",
+                    icon: <ShareAltOutlined />,
+                    parent: "catalogos",
+                    // Oculto del menú: no está en uso todavía en el front.
+                    hide: true,
                   },
-                  {
-                    name: "ciudades",
-                    list: "/administrador/ciudades",
-                    create: "/administrador/ciudades/create",
-                    edit: "/administrador/ciudades/edit/:id",
-                    meta: {
-                      label: "Ciudades",
-                      icon: <EnvironmentOutlined />,
-                      parent: "catalogos",
-                    },
+                },
+                {
+                  name: "ciudades",
+                  list: "/administrador/ciudades",
+                  create: "/administrador/ciudades/create",
+                  edit: "/administrador/ciudades/edit/:id",
+                  meta: {
+                    label: "Ciudades",
+                    icon: <EnvironmentOutlined />,
+                    parent: "catalogos",
                   },
-                ]}
-                options={{
-                  syncWithLocation: true,
-                  warnWhenUnsavedChanges: true,
-                  projectId: "jMr9IO-7L6vwi-jkJRSg",
-                  title: { text: <AppWordmark />, icon: <AppIcon /> },
-                  // Sin breadcrumbs: con el menú lateral ya alcanza para
-                  // ubicarse, y en Create/Edit/Show duplicaban el título de
-                  // la página. Global acá (lo leen List/Create/Edit/Show de
-                  // @refinedev/antd) en vez de `breadcrumb={false}` en cada
-                  // page.
-                  breadcrumb: false,
-                }}
-              >
-                <Routes>
-                  <Route
-                    element={
-                      <Authenticated
-                        key="authenticated-inner"
-                        fallback={<CatchAllNavigate to="/login" />}
+                },
+              ]}
+              options={{
+                syncWithLocation: true,
+                warnWhenUnsavedChanges: true,
+                projectId: "jMr9IO-7L6vwi-jkJRSg",
+                title: { text: <AppWordmark />, icon: <AppIcon /> },
+                // Sin breadcrumbs: con el menú lateral ya alcanza para
+                // ubicarse, y en Create/Edit/Show duplicaban el título de
+                // la página. Global acá (lo leen List/Create/Edit/Show de
+                // @refinedev/antd) en vez de `breadcrumb={false}` en cada
+                // page.
+                breadcrumb: false,
+              }}
+            >
+              <Routes>
+                <Route
+                  element={
+                    <Authenticated
+                      key="authenticated-inner"
+                      fallback={<CatchAllNavigate to="/login" />}
+                    >
+                      <ThemedLayout
+                        Header={Header}
+                        Sider={(props) => (
+                          <ThemedSider {...props} fixed Title={AppTitle} />
+                        )}
                       >
-                        <ThemedLayout
-                          Header={Header}
-                          Sider={(props) => (
-                            <ThemedSider {...props} fixed Title={AppTitle} />
-                          )}
-                        >
+                        <Outlet />
+                      </ThemedLayout>
+                    </Authenticated>
+                  }
+                >
+                  <Route index element={<RoleBasedIndex />} />
+                  {SECTIONS.map((section) => (
+                    <Route
+                      key={section}
+                      path={`/${section}/home`}
+                      element={
+                        <SectionRoute section={section}>
+                          <RoleHome section={section} />
+                        </SectionRoute>
+                      }
+                    />
+                  ))}
+                  <Route
+                    path="/administrador"
+                    element={
+                      <SectionRoute section="administrador">
+                        <CanAccess fallback={<ErrorComponent />}>
                           <Outlet />
-                        </ThemedLayout>
-                      </Authenticated>
+                        </CanAccess>
+                      </SectionRoute>
                     }
                   >
-                    <Route index element={<RoleBasedIndex />} />
-                    {SECTIONS.map((section) => (
+                    <Route path="personas">
+                      <Route index element={<PersonaList />} />
+                      <Route path="create" element={<PersonaCreate />} />
+                      <Route path="edit/:id" element={<PersonaEdit />} />
+                      <Route path="show/:id" element={<PersonaShow />} />
+                    </Route>
+                    <Route path="usuarios">
+                      <Route path="create" element={<UserCreate />} />
+                      <Route path="edit/:id" element={<UserEdit />} />
+                    </Route>
+                    <Route path="roles">
+                      <Route index element={<RoleList />} />
+                    </Route>
+                    <Route path="edificios">
+                      <Route index element={<EdificioList />} />
+                      <Route path="create" element={<EdificioCreate />} />
+                      <Route path="edit/:id" element={<EdificioEdit />} />
+                    </Route>
+                    <Route path="comodidades">
+                      <Route index element={<ComodidadList />} />
+                      <Route path="create" element={<ComodidadCreate />} />
+                      <Route path="edit/:id" element={<ComodidadEdit />} />
+                    </Route>
+                    <Route path="bloques">
+                      <Route index element={<BloqueList />} />
+                      <Route path="create" element={<BloqueCreate />} />
+                      <Route path="edit/:id" element={<BloqueEdit />} />
+                    </Route>
+                    <Route path="unidades">
+                      <Route index element={<UnidadList />} />
+                      <Route path="create" element={<UnidadCreate />} />
+                      <Route path="edit/:id" element={<UnidadEdit />} />
+                      <Route path="show/:id" element={<UnidadShow />} />
+                    </Route>
+                    <Route path="contratos-alquiler">
+                      <Route index element={<ContratoAlquilerList />} />
                       <Route
-                        key={section}
-                        path={`/${section}/home`}
-                        element={
-                          <SectionRoute section={section}>
-                            <RoleHome section={section} />
-                          </SectionRoute>
-                        }
+                        path="create"
+                        element={<ContratoAlquilerCreate />}
                       />
-                    ))}
-                    <Route
-                      path="/administrador"
-                      element={
-                        <SectionRoute section="administrador">
-                          <CanAccess fallback={<ErrorComponent />}>
-                            <Outlet />
-                          </CanAccess>
-                        </SectionRoute>
-                      }
-                    >
-                      <Route path="personas">
-                        <Route index element={<PersonaList />} />
-                        <Route path="create" element={<PersonaCreate />} />
-                        <Route path="edit/:id" element={<PersonaEdit />} />
-                        <Route path="show/:id" element={<PersonaShow />} />
-                      </Route>
-                      <Route path="usuarios">
-                        <Route path="create" element={<UserCreate />} />
-                        <Route path="edit/:id" element={<UserEdit />} />
-                      </Route>
-                      <Route path="roles">
-                        <Route index element={<RoleList />} />
-                      </Route>
-                      <Route path="edificios">
-                        <Route index element={<EdificioList />} />
-                        <Route path="create" element={<EdificioCreate />} />
-                        <Route path="edit/:id" element={<EdificioEdit />} />
-                      </Route>
-                      <Route path="comodidades">
-                        <Route index element={<ComodidadList />} />
-                        <Route path="create" element={<ComodidadCreate />} />
-                        <Route path="edit/:id" element={<ComodidadEdit />} />
-                      </Route>
-                      <Route path="bloques">
-                        <Route index element={<BloqueList />} />
-                        <Route path="create" element={<BloqueCreate />} />
-                        <Route path="edit/:id" element={<BloqueEdit />} />
-                      </Route>
-                      <Route path="unidades">
-                        <Route index element={<UnidadList />} />
-                        <Route path="create" element={<UnidadCreate />} />
-                        <Route path="edit/:id" element={<UnidadEdit />} />
-                        <Route path="show/:id" element={<UnidadShow />} />
-                      </Route>
-                      <Route path="contratos-alquiler">
-                        <Route index element={<ContratoAlquilerList />} />
-                        <Route path="create" element={<ContratoAlquilerCreate />} />
-                        <Route path="edit/:id" element={<ContratoAlquilerEdit />} />
-                      </Route>
-                      <Route path="cargos">
-                        <Route index element={<CargoList />} />
-                        <Route path="create" element={<CargoCreate />} />
-                      </Route>
-                      <Route path="gastos">
-                        <Route index element={<GastoList />} />
-                        <Route path="create" element={<GastoCreate />} />
-                        <Route path="edit/:id" element={<GastoEdit />} />
-                        <Route path="show/:id" element={<GastoShow />} />
-                      </Route>
-                      <Route path="compras">
-                        <Route path="show/:id" element={<CompraShow />} />
-                      </Route>
-                      <Route path="pagos-proveedor">
-                        <Route index element={<PagoProveedorList />} />
-                        <Route path="show/:id" element={<PagoProveedorShow />} />
-                      </Route>
-                      <Route path="bancos">
-                        <Route index element={<BancoList />} />
-                        <Route path="create" element={<BancoCreate />} />
-                        <Route path="edit/:id" element={<BancoEdit />} />
-                      </Route>
-                      <Route path="fondos">
-                        <Route index element={<FondoList />} />
-                        <Route path="create" element={<FondoCreate />} />
-                        <Route path="edit/:id" element={<FondoEdit />} />
-                      </Route>
-                      <Route path="medios-pago">
-                        <Route index element={<MedioPagoList />} />
-                        <Route path="create" element={<MedioPagoCreate />} />
-                        <Route path="edit/:id" element={<MedioPagoEdit />} />
-                      </Route>
-                      <Route path="establecimientos">
-                        <Route index element={<EstablecimientoList />} />
-                        <Route path="create" element={<EstablecimientoCreate />} />
-                        <Route path="edit/:id" element={<EstablecimientoEdit />} />
-                      </Route>
-                      <Route path="puntos-expedicion">
-                        <Route index element={<PuntoExpedicionList />} />
-                        <Route path="create" element={<PuntoExpedicionCreate />} />
-                        <Route path="edit/:id" element={<PuntoExpedicionEdit />} />
-                      </Route>
-                      <Route path="timbrados">
-                        <Route index element={<TimbradoList />} />
-                        <Route path="create" element={<TimbradoCreate />} />
-                        <Route path="edit/:id" element={<TimbradoEdit />} />
-                      </Route>
-                      <Route path="proveedores">
-                        <Route index element={<ProveedorList />} />
-                        <Route path="create" element={<ProveedorCreate />} />
-                        <Route path="edit/:id" element={<ProveedorEdit />} />
-                      </Route>
-                      <Route path="rubros">
-                        <Route index element={<RubroList />} />
-                        <Route path="create" element={<RubroCreate />} />
-                        <Route path="edit/:id" element={<RubroEdit />} />
-                      </Route>
-                      <Route path="tipos-identificacion">
-                        <Route index element={<TipoIdentificacionList />} />
-                        <Route path="create" element={<TipoIdentificacionCreate />} />
-                        <Route path="edit/:id" element={<TipoIdentificacionEdit />} />
-                      </Route>
-                      <Route path="tipos-relacion">
-                        <Route index element={<TipoRelacionList />} />
-                        <Route path="create" element={<TipoRelacionCreate />} />
-                        <Route path="edit/:id" element={<TipoRelacionEdit />} />
-                      </Route>
-                      <Route path="ciudades">
-                        <Route index element={<CiudadList />} />
-                        <Route path="create" element={<CiudadCreate />} />
-                        <Route path="edit/:id" element={<CiudadEdit />} />
-                      </Route>
+                      <Route
+                        path="edit/:id"
+                        element={<ContratoAlquilerEdit />}
+                      />
                     </Route>
-                    <Route
-                      path="/propietario"
-                      element={
-                        <SectionRoute section="propietario">
-                          <CanAccess fallback={<ErrorComponent />}>
-                            <Outlet />
-                          </CanAccess>
-                        </SectionRoute>
-                      }
-                    >
-                      <Route path="gastos" element={<GastoAprobacionList />} />
+                    <Route path="cargos">
+                      <Route index element={<CargoList />} />
+                      <Route path="create" element={<CargoCreate />} />
                     </Route>
-                    <Route path="*" element={<ErrorComponent />} />
+                    <Route path="gastos">
+                      <Route index element={<GastoList />} />
+                      <Route path="create" element={<GastoCreate />} />
+                      <Route path="edit/:id" element={<GastoEdit />} />
+                      <Route path="show/:id" element={<GastoShow />} />
+                    </Route>
+                    <Route path="compras">
+                      <Route path="show/:id" element={<CompraShow />} />
+                    </Route>
+                    <Route path="pagos-proveedor">
+                      <Route index element={<PagoProveedorList />} />
+                      <Route path="show/:id" element={<PagoProveedorShow />} />
+                    </Route>
+                    <Route path="bancos">
+                      <Route index element={<BancoList />} />
+                      <Route path="create" element={<BancoCreate />} />
+                      <Route path="edit/:id" element={<BancoEdit />} />
+                    </Route>
+                    <Route path="fondos">
+                      <Route index element={<FondoList />} />
+                      <Route path="create" element={<FondoCreate />} />
+                      <Route path="edit/:id" element={<FondoEdit />} />
+                    </Route>
+                    <Route path="medios-pago">
+                      <Route index element={<MedioPagoList />} />
+                      <Route path="create" element={<MedioPagoCreate />} />
+                      <Route path="edit/:id" element={<MedioPagoEdit />} />
+                    </Route>
+                    <Route path="establecimientos">
+                      <Route index element={<EstablecimientoList />} />
+                      <Route
+                        path="create"
+                        element={<EstablecimientoCreate />}
+                      />
+                      <Route
+                        path="edit/:id"
+                        element={<EstablecimientoEdit />}
+                      />
+                    </Route>
+                    <Route path="puntos-expedicion">
+                      <Route index element={<PuntoExpedicionList />} />
+                      <Route
+                        path="create"
+                        element={<PuntoExpedicionCreate />}
+                      />
+                      <Route
+                        path="edit/:id"
+                        element={<PuntoExpedicionEdit />}
+                      />
+                    </Route>
+                    <Route path="timbrados">
+                      <Route index element={<TimbradoList />} />
+                      <Route path="create" element={<TimbradoCreate />} />
+                      <Route path="edit/:id" element={<TimbradoEdit />} />
+                    </Route>
+                    <Route path="proveedores">
+                      <Route index element={<ProveedorList />} />
+                      <Route path="create" element={<ProveedorCreate />} />
+                      <Route path="edit/:id" element={<ProveedorEdit />} />
+                    </Route>
+                    <Route path="rubros">
+                      <Route index element={<RubroList />} />
+                      <Route path="create" element={<RubroCreate />} />
+                      <Route path="edit/:id" element={<RubroEdit />} />
+                    </Route>
+                    <Route path="tipos-identificacion">
+                      <Route index element={<TipoIdentificacionList />} />
+                      <Route
+                        path="create"
+                        element={<TipoIdentificacionCreate />}
+                      />
+                      <Route
+                        path="edit/:id"
+                        element={<TipoIdentificacionEdit />}
+                      />
+                    </Route>
+                    <Route path="tipos-relacion">
+                      <Route index element={<TipoRelacionList />} />
+                      <Route path="create" element={<TipoRelacionCreate />} />
+                      <Route path="edit/:id" element={<TipoRelacionEdit />} />
+                    </Route>
+                    <Route path="ciudades">
+                      <Route index element={<CiudadList />} />
+                      <Route path="create" element={<CiudadCreate />} />
+                      <Route path="edit/:id" element={<CiudadEdit />} />
+                    </Route>
                   </Route>
                   <Route
+                    path="/propietario"
                     element={
-                      <Authenticated
-                        key="authenticated-outer"
-                        fallback={<Outlet />}
-                      >
-                        <RoleBasedIndex />
-                      </Authenticated>
+                      <SectionRoute section="propietario">
+                        <CanAccess fallback={<ErrorComponent />}>
+                          <Outlet />
+                        </CanAccess>
+                      </SectionRoute>
                     }
                   >
-                    <Route path="/login" element={<Login />} />
-                    <Route
-                      path="/forgot-password"
-                      element={<ForgotPassword />}
-                    />
-                    <Route
-                      path="/update-password"
-                      element={<UpdatePassword />}
-                    />
+                    <Route path="gastos" element={<GastoAprobacionList />} />
                   </Route>
-                </Routes>
+                  <Route path="*" element={<ErrorComponent />} />
+                </Route>
+                <Route
+                  element={
+                    <Authenticated
+                      key="authenticated-outer"
+                      fallback={<Outlet />}
+                    >
+                      <RoleBasedIndex />
+                    </Authenticated>
+                  }
+                >
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/forgot-password" element={<ForgotPassword />} />
+                  <Route path="/update-password" element={<UpdatePassword />} />
+                </Route>
+              </Routes>
 
-                <RefineKbar />
-                <UnsavedChangesNotifier />
-                <DocumentTitleHandler />
-              </Refine>
-              <DevtoolsPanel />
-            </DevtoolsProvider>
+              <RefineKbar />
+              <UnsavedChangesNotifier />
+              <DocumentTitleHandler />
+            </Refine>
           </AntdApp>
         </ColorModeContextProvider>
       </RefineKbarProvider>
