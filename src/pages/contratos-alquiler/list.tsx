@@ -31,7 +31,7 @@ export const ContratoAlquilerList = () => {
   const { message, modal } = App.useApp();
   const { data: permissions } = usePermissions<string[]>({});
   const puedeCrear = permissions?.includes("contratos_alquiler.crear") ?? false;
-  const puedeRescindir = permissions?.includes("contratos_alquiler.gestionar_estado") ?? false;
+  const puedeRescindir = permissions?.includes("contratos_alquiler.rescindir") ?? false;
   const puedeAnular = permissions?.includes("contratos_alquiler.anular") ?? false;
 
   const [rescindiendo, setRescindiendo] = useState<ContratoAlquilerRow>();
