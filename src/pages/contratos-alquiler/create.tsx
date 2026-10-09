@@ -44,7 +44,7 @@ export const ContratoAlquilerCreate = () => {
         formProps={{
           ...formProps,
           initialValues: {
-            unidad_id: unidadId,
+            unidad_id: unidadId ?? contratoAnterior?.unidad_id,
             fecha_inicio: fechaInicio,
             expensas_a_cargo_de: "INQUILINO",
             mora_pct_diario: 0,
@@ -53,6 +53,7 @@ export const ContratoAlquilerCreate = () => {
           },
         }}
         mostrarMontoAlquiler
+        unidadBloqueada={!!unidadId || !!renovarId}
       />
     </Create>
   );

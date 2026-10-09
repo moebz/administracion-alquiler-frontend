@@ -1,6 +1,6 @@
 import { useSelect } from "@refinedev/antd";
 import { CalendarOutlined, ClockCircleOutlined, DollarOutlined, HomeOutlined } from "@ant-design/icons";
-import { Col, DatePicker, Form, InputNumber, Select } from "antd";
+import { Alert, Col, DatePicker, Form, InputNumber, Select } from "antd";
 import type { FormProps } from "antd";
 import dayjs from "dayjs";
 import { MontoInput } from "../../components/monto-input";
@@ -17,21 +17,30 @@ type ContratoAlquilerFormProps = {
   // no se muestra este campo (mismo patrón que mostrarRequiereAprobacion en
   // GastoForm, pages/gastos/form.tsx).
   mostrarMontoAlquiler: boolean;
+  unidadBloqueada?: boolean;
 };
 
 // Form compartido entre Crear y Editar (pages/contratos-alquiler/create.tsx
 // y edit.tsx). Sin campo de depósito de garantía: se saca del front hasta
 // que se pida explícitamente retomar ese desarrollo — ver ARQUITECTURA.md.
 // El modelo/endpoint lo siguen soportando (`deposito`, nullable).
-export const ContratoAlquilerForm = ({ formProps, mostrarMontoAlquiler }: ContratoAlquilerFormProps) => {
-  const { selectProps: unidadSelectProps } = useSelect({
+export const ContratoAlquilerForm = ({ formProps, mostrarMontoAlquiler, unidadBloqueada = false }: ContratoAlquilerFormProps) => {
+  const { selectProps: unidadSelectProps, defaultValueQuery: unidadDefaultQuery } = useSelect<{
+    id: number;
+    numero: string;
+    bloque: { nombre: string; edificio: { nombre: string } };
+  }>({
     resource: "unidades",
-    optionLabel: "numero",
+    optionLabel: (unidad) => `${unidad.bloque.edificio.nombre} · ${unidad.bloque.nombre} · ${unidad.numero}`,
     optionValue: "id",
     filters: [{ field: "is_active", operator: "eq", value: true }],
     // Sin esto, si la unidad prellenada no entra en la primera página del
     // select, aparece en blanco aunque el id ya esté seteado en el form.
     defaultValue: formProps.initialValues?.unidad_id,
+    onSearch: (value) => (value ? [{ field: "search", operator: "eq", value }] : []),
+    queryOptions: { enabled: !unidadBloqueada },
+    defaultValueQueryOptions: { enabled: true },
+    meta: { query: { limit: 20 } },
   });
 
   const { selectProps: inquilinoSelectProps } = useSelect<{ id: number; nombre: string; documento: string }>({
@@ -46,6 +55,8 @@ export const ContratoAlquilerForm = ({ formProps, mostrarMontoAlquiler }: Contra
     // después, persona desactivada) el select aparece EN BLANCO aunque el
     // dato esté (mismo gotcha documentado en CLAUDE.md).
     defaultValue: formProps.initialValues?.inquilino_id,
+    onSearch: (value) => (value ? [{ field: "search", operator: "eq", value }] : []),
+    meta: { query: { limit: 20 } },
   });
 
   return (
@@ -53,10 +64,13 @@ export const ContratoAlquilerForm = ({ formProps, mostrarMontoAlquiler }: Contra
       <SectionDivider icon={<HomeOutlined />} style={{ marginTop: 0 }}>
         Unidad e inquilino
       </SectionDivider>
+      {unidadBloqueada && unidadDefaultQuery.isSuccess && !unidadSelectProps.options?.length && (
+        <Alert type="error" showIcon message="La unidad indicada no existe." style={{ marginBottom: 16 }} />
+      )}
       <SectionRow>
         <Col xs={24} md={8}>
           <Form.Item label="Unidad" name="unidad_id" rules={[{ required: true }]}>
-            <Select {...unidadSelectProps} placeholder="Elegí una unidad" />
+            <Select {...unidadSelectProps} disabled={unidadBloqueada} placeholder="Elegí una unidad" />
           </Form.Item>
         </Col>
         <Col xs={24} md={16}>

@@ -59,6 +59,8 @@ export const UnidadForm = ({ formProps }: UnidadFormProps) => {
     // después, persona desactivada) el select aparece EN BLANCO aunque el
     // dato esté (mismo gotcha documentado en CLAUDE.md).
     defaultValue: formProps.initialValues?.propietario_id,
+    onSearch: (value) => (value ? [{ field: "search", operator: "eq", value }] : []),
+    meta: { query: { limit: 20 } },
   });
 
   return (
