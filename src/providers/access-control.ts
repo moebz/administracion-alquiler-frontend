@@ -37,7 +37,7 @@ const FIXED_PERMISSION: Record<string, string> = {
 // este chequeo extra un rol con acceso.administrador pero sin ningún permiso
 // de catálogo (ej. bancos.ver, fondos.ver) ve "Catálogos" en el menú con el
 // submenú vacío al desplegarlo.
-const CATALOGOS_CHILDREN = ["bancos", "fondos", "medios-pago", "tipos-identificacion", "tipos-relacion", "ciudades"];
+const CATALOGOS_CHILDREN = ["bancos", "fondos", "medios-pago", "conceptos", "tipos-identificacion", "tipos-relacion", "ciudades"];
 
 // Mismo criterio que CATALOGOS_CHILDREN, para el agrupador "Facturación".
 const FACTURACION_CHILDREN = ["establecimientos", "puntos-expedicion", "timbrados"];
@@ -87,6 +87,7 @@ const RESOURCES_WITH_PERMISSIONS = new Set([
   "rubros",
   "contratos-alquiler",
   "medios-pago",
+  "conceptos",
   "tipos-identificacion",
   "tipos-relacion",
   "ciudades",

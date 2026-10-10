@@ -23,6 +23,7 @@ import {
   PrinterOutlined,
   FileProtectOutlined,
   ReconciliationOutlined,
+  ProfileOutlined,
 } from "@ant-design/icons";
 import { Refine, Authenticated, CanAccess } from "@refinedev/core";
 import { RefineKbar, RefineKbarProvider } from "@refinedev/kbar";
@@ -90,6 +91,11 @@ import {
   MedioPagoCreate,
   MedioPagoEdit,
 } from "./pages/medios-pago";
+import {
+  ConceptoList,
+  ConceptoCreate,
+  ConceptoEdit,
+} from "./pages/conceptos";
 import {
   ComodidadList,
   ComodidadCreate,
@@ -307,6 +313,7 @@ function App() {
                   meta: {
                     label: "Pagos a proveedores",
                     icon: <TransactionOutlined />,
+                    parent: "proveedores",
                   },
                 },
                 {
@@ -432,6 +439,17 @@ function App() {
                   meta: {
                     label: "Medios de pago",
                     icon: <CreditCardOutlined />,
+                    parent: "catalogos",
+                  },
+                },
+                {
+                  name: "conceptos",
+                  list: "/administrador/conceptos",
+                  create: "/administrador/conceptos/create",
+                  edit: "/administrador/conceptos/edit/:id",
+                  meta: {
+                    label: "Conceptos de venta",
+                    icon: <ProfileOutlined />,
                     parent: "catalogos",
                   },
                 },
@@ -600,6 +618,11 @@ function App() {
                       <Route index element={<MedioPagoList />} />
                       <Route path="create" element={<MedioPagoCreate />} />
                       <Route path="edit/:id" element={<MedioPagoEdit />} />
+                    </Route>
+                    <Route path="conceptos">
+                      <Route index element={<ConceptoList />} />
+                      <Route path="create" element={<ConceptoCreate />} />
+                      <Route path="edit/:id" element={<ConceptoEdit />} />
                     </Route>
                     <Route path="establecimientos">
                       <Route index element={<EstablecimientoList />} />

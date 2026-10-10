@@ -133,6 +133,9 @@ const es = {
       "contratos-alquiler": "contrato de alquiler",
       titles: { list: "Contratos de alquiler" },
     },
+    conceptos: {
+      conceptos: "concepto de venta",
+    },
     "medios-pago": {
       "medios-pago": "medio de pago",
     },
