@@ -67,6 +67,27 @@ export const APROBADO_POR_OPTIONS: { label: string; value: AprobadoPor }[] = [
   { label: "Propietario", value: "PROPIETARIO" },
 ];
 
+export type CargoGasto = {
+  id: number;
+  tipo: "EXPENSA" | "OTRO";
+  monto: number | string;
+  saldo: number | string;
+  fecha_vencimiento: string;
+  estado: "PENDIENTE" | "PARCIAL" | "VENCIDO" | "PAGADO" | "ANULADO";
+  facturado: number | string;
+};
+
+// CREAR: se crea solo. CONFIRMAR: contrato terminado, solo si el usuario lo tilda. YA_TUVO: el gasto ya tuvo cargo.
+// BLOQUEADO: contrato anulado, no se puede registrar la factura.
+export type CargoPrevisto = {
+  estado: "CREAR" | "CONFIRMAR" | "YA_TUVO" | "BLOQUEADO";
+  tipo: "EXPENSA" | "OTRO";
+  monto: number | string;
+  inquilino: string;
+  fecha_vencimiento: string;
+  contrato_situacion: "FUTURO" | "VIGENTE" | "FINALIZADO" | "RESCINDIDO" | "ANULADO";
+};
+
 export type GastoRow = {
   id: number;
   unidad_id: number;
@@ -98,6 +119,8 @@ export type GastoRow = {
   documento_compra_id: number | null;
   fecha_anulacion: string | null;
   motivo_anulacion: string | null;
+  cargo: CargoGasto | null;
+  cargo_previsto: CargoPrevisto | null;
   documento_compra: {
     id: number;
     numero: string;

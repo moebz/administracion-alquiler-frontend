@@ -2,7 +2,7 @@ import { useState } from "react";
 import { List, useTable } from "@refinedev/antd";
 import { usePermissions } from "@refinedev/core";
 import { StopOutlined } from "@ant-design/icons";
-import { App, Button, Input, Space, Table, Tag, Tooltip } from "antd";
+import { Alert, App, Button, Input, Space, Table, Tag, Tooltip } from "antd";
 import dayjs from "dayjs";
 import { Link, useNavigate } from "react-router";
 import { extractErrorMessage } from "../../providers/auth";
@@ -33,14 +33,24 @@ export const CargoList = () => {
     modal.confirm({
       title: "¿Anular este cargo?",
       content: (
-        <Input.TextArea
-          rows={3}
-          maxLength={255}
-          placeholder="Motivo de la anulación"
-          onChange={(event) => {
-            motivo = event.target.value;
-          }}
-        />
+        <>
+          {cargo.gasto && (
+            <Alert
+              type="warning"
+              showIcon
+              style={{ marginBottom: 16 }}
+              message="Este cargo viene de un gasto: al anularlo, el gasto queda sin recuperar y lo absorbe la administradora."
+            />
+          )}
+          <Input.TextArea
+            rows={3}
+            maxLength={255}
+            placeholder="Motivo de la anulación"
+            onChange={(event) => {
+              motivo = event.target.value;
+            }}
+          />
+        </>
       ),
       okText: "Anular",
       okButtonProps: { danger: true },
@@ -97,7 +107,19 @@ export const CargoList = () => {
           render={(periodo: CargoRow["periodo"]) => dayjs(`${periodo}-01`).format("MM/YYYY")}
         />
         <Table.Column title="Tipo" dataIndex="tipo" render={(tipo: CargoRow["tipo"]) => CARGO_TIPO_LABEL[tipo]} />
-        <Table.Column title="Descripción" dataIndex="descripcion" />
+        <Table.Column
+          title="Descripción"
+          dataIndex="descripcion"
+          render={(descripcion: CargoRow["descripcion"], record: CargoRow) =>
+            record.gasto ? (
+              <Tooltip title="Ver el gasto de origen">
+                <Link to={`/administrador/gastos/show/${record.gasto.id}`}>{descripcion}</Link>
+              </Tooltip>
+            ) : (
+              descripcion
+            )
+          }
+        />
         <Table.Column
           title="Vencimiento"
           dataIndex="fecha_vencimiento"

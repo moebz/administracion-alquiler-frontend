@@ -9,6 +9,7 @@ import {
   FileDoneOutlined,
   HomeOutlined,
   ShopOutlined,
+  SolutionOutlined,
   StopOutlined,
   UserOutlined,
 } from "@ant-design/icons";
@@ -25,9 +26,12 @@ import {
   Statistic,
   Tag,
   theme,
+  Tooltip,
   Typography,
 } from "antd";
 import dayjs from "dayjs";
+import { Link } from "react-router";
+import { CARGO_ESTADO_COLOR, CARGO_ESTADO_LABEL, CARGO_TIPO_LABEL } from "../cargos/types";
 import { CompraDetail } from "../compras/compra-detail";
 import type { CompraRow } from "../compras/types";
 import { formatMonto } from "../../utils/monto";
@@ -75,6 +79,10 @@ export const GastoShow = () => {
 
   const puedeAnularEsteGasto =
     puedeAnularGasto && !gasto?.documento_compra_id && (gasto?.estado === "SOLICITADO" || gasto?.estado === "APROBADO");
+
+  // Un cargo ya facturado no se anula: el backend lo rechaza con 422, así que se deshabilita el botón y se explica por qué.
+  const cargoActivo = gasto?.cargo && gasto.cargo.estado !== "ANULADO" ? gasto.cargo : null;
+  const cargoFacturado = !!cargoActivo && Number(cargoActivo.facturado) > 0;
 
   return (
     <Show
@@ -138,9 +146,17 @@ export const GastoShow = () => {
                   </Flex>
                 )}
                 {puedeAnularEsteGasto && (
-                  <Button danger icon={<StopOutlined />} onClick={() => setAnularAbierto(true)}>
-                    Anular gasto
-                  </Button>
+                  <Tooltip
+                    title={
+                      cargoFacturado
+                        ? "No se puede anular: el cargo al inquilino ya está facturado. Revertí primero lo facturado."
+                        : undefined
+                    }
+                  >
+                    <Button danger icon={<StopOutlined />} disabled={cargoFacturado} onClick={() => setAnularAbierto(true)}>
+                      Anular gasto
+                    </Button>
+                  </Tooltip>
                 )}
               </Flex>
             </Flex>
@@ -222,6 +238,16 @@ export const GastoShow = () => {
             compra={compra}
             puedeAnular={puedeAnularCompra}
             onAnulada={refetchTodo}
+            avisoAnulacion={
+              gasto.cargo && gasto.cargo.estado !== "ANULADO" ? (
+                <Alert
+                  type="info"
+                  showIcon
+                  style={{ marginBottom: 16 }}
+                  message="El cargo al inquilino se mantiene. Si corresponde, anulalo desde Cargos."
+                />
+              ) : undefined
+            }
             onEditar={puedeEditarFactura ? () => setEdicionAbierta(true) : undefined}
             accionesCuotas={
               compra && compra.estado === "REGISTRADO" && Number(compra.saldo) > 0 && puedeRegistrarPago ? (
@@ -252,6 +278,42 @@ export const GastoShow = () => {
               </Empty>
             </Card>
           )
+        )}
+
+        {gasto?.cargo && (
+          <Card
+            variant="borderless"
+            style={{ borderRadius: 16, boxShadow: token.boxShadowTertiary }}
+            title={
+              <Space>
+                <SolutionOutlined />
+                Cargo al inquilino
+              </Space>
+            }
+            extra={<Link to="/administrador/cargos">Ver en Cargos</Link>}
+          >
+            <Descriptions
+              size="small"
+              column={{ xs: 1, sm: 2, lg: 5 }}
+              items={[
+                { key: "tipo", label: "Tipo", children: CARGO_TIPO_LABEL[gasto.cargo.tipo] },
+                { key: "monto", label: "Monto", children: formatMonto(gasto.cargo.monto) },
+                { key: "saldo", label: "Saldo", children: formatMonto(gasto.cargo.saldo) },
+                {
+                  key: "vencimiento",
+                  label: "Vencimiento",
+                  children: dayjs(gasto.cargo.fecha_vencimiento).format("DD/MM/YYYY"),
+                },
+                {
+                  key: "estado",
+                  label: "Estado",
+                  children: (
+                    <Tag color={CARGO_ESTADO_COLOR[gasto.cargo.estado]}>{CARGO_ESTADO_LABEL[gasto.cargo.estado]}</Tag>
+                  ),
+                },
+              ]}
+            />
+          </Card>
         )}
       </Space>
 

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Create, useForm } from "@refinedev/antd";
 import { DollarOutlined } from "@ant-design/icons";
 import { useSearchParams } from "react-router";
@@ -6,6 +7,7 @@ import { GastoForm } from "./form";
 
 export const GastoCreate = () => {
   const { formProps, saveButtonProps } = useForm({});
+  const [bloqueado, setBloqueado] = useState(false);
 
   // Prellenado desde el botón "Registrar gasto" del detalle de Unidades
   // (frontend/src/pages/unidades/show.tsx).
@@ -15,7 +17,7 @@ export const GastoCreate = () => {
 
   return (
     <Create
-      saveButtonProps={saveButtonProps}
+      saveButtonProps={{ ...saveButtonProps, disabled: saveButtonProps.disabled || bloqueado }}
       title={<PageTitle icon={<DollarOutlined />}>Registrar gasto</PageTitle>}
     >
       <GastoForm
@@ -24,6 +26,8 @@ export const GastoCreate = () => {
           initialValues: { unidad_id: unidadId, requiere_aprobacion: false, ...formProps.initialValues },
         }}
         mostrarRequiereAprobacion
+        unidadBloqueada={!!unidadId}
+        onBloqueadoChange={setBloqueado}
       />
     </Create>
   );

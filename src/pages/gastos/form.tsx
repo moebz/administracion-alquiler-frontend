@@ -2,12 +2,13 @@ import { useEffect, useState } from "react";
 import { useSelect } from "@refinedev/antd";
 import { useOne } from "@refinedev/core";
 import { FileTextOutlined, HomeOutlined, SafetyCertificateOutlined, ShopOutlined } from "@ant-design/icons";
-import { Col, DatePicker, Form, Input, Select, Switch } from "antd";
+import { Alert, Col, DatePicker, Form, Input, Select, Switch } from "antd";
 import type { FormProps } from "antd";
 import dayjs from "dayjs";
 import { MontoInput } from "../../components/monto-input";
 import { SectionDivider } from "../../components/section-divider";
 import { SectionRow } from "../../components/section-row";
+import { UnidadSelect } from "../../components/unidad-select";
 import type { ContratoAlquilerRow } from "../contratos-alquiler/types";
 import type { UnidadRow } from "../unidades/types";
 import { A_CARGO_DE_LABEL, A_CARGO_DE_OPTIONS, type ACargoDe, GASTO_TIPO_OPTIONS } from "./types";
@@ -18,6 +19,12 @@ type GastoFormProps = {
   // registrarlo (GastoService::registrar()); editarlo después no tiene
   // ningún efecto, así que el campo no se muestra en Editar.
   mostrarRequiereAprobacion: boolean;
+  // Avisa si guardar debe quedar bloqueado (gasto a cargo del inquilino en una unidad sin contrato vigente).
+  onBloqueadoChange?: (bloqueado: boolean) => void;
+  // La unidad ya viene decidida por la URL (?unidad_id=) desde el detalle de
+  // Unidades: el select se muestra deshabilitado (mismo patrón que
+  // pages/contratos-alquiler/form.tsx).
+  unidadBloqueada?: boolean;
 };
 
 // Ancho de label fijo (no en `span`/porcentaje): así todas las etiquetas del
@@ -31,15 +38,7 @@ const WRAPPER_COL = { xs: { span: 24 }, sm: { flex: 1 } };
 // mismos campos, misma sugerencia de "a cargo de". Lo que difiere entre
 // ambos (armado del useForm, prellenado por query param, estado/lectura)
 // queda en cada página.
-export const GastoForm = ({ formProps, mostrarRequiereAprobacion }: GastoFormProps) => {
-  const { selectProps: unidadSelectProps } = useSelect({
-    resource: "unidades",
-    optionLabel: "numero",
-    optionValue: "id",
-    filters: [{ field: "is_active", operator: "eq", value: true }],
-    defaultValue: formProps.initialValues?.unidad_id,
-  });
-
+export const GastoForm = ({ formProps, mostrarRequiereAprobacion, onBloqueadoChange, unidadBloqueada = false }: GastoFormProps) => {
   // Filtro de rubro para el select de Proveedor: no se guarda en el gasto,
   // solo estrecha las opciones (mismo patrón que Edificio→Bloque en
   // pages/unidades/create.tsx).
@@ -87,7 +86,7 @@ export const GastoForm = ({ formProps, mostrarRequiereAprobacion }: GastoFormPro
   const { result: unidadSeleccionada, query: unidadQuery } = useOne<UnidadRow>({
     resource: "unidades",
     id: unidadSeleccionadaId ?? "",
-    queryOptions: { enabled: esExpensa && !!unidadSeleccionadaId },
+    queryOptions: { enabled: !!unidadSeleccionadaId },
   });
   const contratoVigenteId = unidadSeleccionada?.contrato_vigente_id ?? null;
 
@@ -106,6 +105,14 @@ export const GastoForm = ({ formProps, mostrarRequiereAprobacion }: GastoFormPro
     : contratoVigenteId
       ? contratoVigente?.expensas_a_cargo_de
       : "PROPIETARIO";
+
+  // Bloquear el guardado si el gasto va al inquilino pero la unidad no tiene contrato vigente (el backend también responde 422).
+  const sinContratoVigente =
+    aCargoDe === "INQUILINO" && !!unidadSeleccionadaId && !unidadQuery.isFetching && !!unidadSeleccionada && !contratoVigenteId;
+
+  useEffect(() => {
+    onBloqueadoChange?.(sinContratoVigente);
+  }, [sinContratoVigente, onBloqueadoChange]);
 
   useEffect(() => {
     if (!aCargoDeSugerido) return;
@@ -138,9 +145,7 @@ export const GastoForm = ({ formProps, mostrarRequiereAprobacion }: GastoFormPro
       </SectionDivider>
       <SectionRow>
         <Col xs={24} md={12}>
-          <Form.Item label="Unidad" name="unidad_id" rules={[{ required: true }]}>
-            <Select {...unidadSelectProps} placeholder="Elegí una unidad" />
-          </Form.Item>
+          <UnidadSelect defaultValue={formProps.initialValues?.unidad_id} bloqueada={unidadBloqueada} />
         </Col>
         <Col xs={24} md={12}>
           <Form.Item label="Tipo" name="tipo" rules={[{ required: true }]}>
@@ -239,6 +244,14 @@ export const GastoForm = ({ formProps, mostrarRequiereAprobacion }: GastoFormPro
           >
             <Select options={A_CARGO_DE_OPTIONS} />
           </Form.Item>
+          {sinContratoVigente && (
+            <Alert
+              type="warning"
+              showIcon
+              style={{ marginBottom: 24 }}
+              message="La unidad no tiene contrato vigente: no se puede cargar un gasto al inquilino."
+            />
+          )}
         </Col>
         {mostrarRequiereAprobacion && esACargoDePropietario && (
           <Col xs={24} md={12}>

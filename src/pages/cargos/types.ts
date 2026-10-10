@@ -74,4 +74,6 @@ export type CargoRow = {
   estado: CargoEstado;
   fecha_anulacion: string | null;
   motivo_anulacion: string | null;
+  gasto_id: number | null;
+  gasto: { id: number; descripcion: string } | null;
 };

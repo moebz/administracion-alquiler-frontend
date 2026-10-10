@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { App, Form, Input, Modal } from "antd";
+import { Alert, App, Form, Input, Modal } from "antd";
 import { extractErrorMessage } from "../../providers/auth";
 import { kyInstance } from "../../providers/data";
+import { formatMonto } from "../../utils/monto";
 import type { GastoRow } from "./types";
 
 type Valores = { motivo_anulacion: string };
@@ -43,6 +44,14 @@ export const AnularGastoModal = ({
       cancelText="Cancelar"
       confirmLoading={guardando}
     >
+      {gasto.cargo && gasto.cargo.estado !== "ANULADO" && (
+        <Alert
+          type="warning"
+          showIcon
+          style={{ marginBottom: 16 }}
+          message={`También se anula el cargo al inquilino (${formatMonto(gasto.cargo.monto)}).`}
+        />
+      )}
       <Form form={form} layout="vertical" onFinish={anular}>
         <Form.Item label="Motivo" name="motivo_anulacion" rules={[{ required: true }, { max: 255 }]}>
           <Input.TextArea rows={3} />

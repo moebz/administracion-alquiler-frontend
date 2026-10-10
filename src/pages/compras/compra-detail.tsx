@@ -44,12 +44,15 @@ export const CompraDetail = ({
   onAnulada,
   onEditar,
   accionesCuotas,
+  avisoAnulacion,
 }: {
   compra: CompraRow | undefined;
   puedeAnular: boolean;
   onAnulada: () => void;
   onEditar?: () => void;
   accionesCuotas?: ReactNode;
+  // Aviso que se muestra en el modal antes de anular (ej. qué pasa con el cargo del gasto).
+  avisoAnulacion?: ReactNode;
 }) => {
   const { message } = App.useApp();
   const { token } = theme.useToken();
@@ -277,6 +280,7 @@ export const CompraDetail = ({
         cancelText="Cancelar"
         confirmLoading={guardando}
       >
+        {avisoAnulacion}
         <Form form={form} layout="vertical" onFinish={anular}>
           <Form.Item label="Motivo" name="motivo_anulacion" rules={[{ required: true }, { max: 255 }]}>
             <Input.TextArea rows={3} />

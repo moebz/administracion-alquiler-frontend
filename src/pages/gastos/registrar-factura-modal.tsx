@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { CreditCardOutlined, DeleteOutlined, FileTextOutlined, PlusOutlined, UnorderedListOutlined } from "@ant-design/icons";
-import { Alert, App, Button, Col, DatePicker, Descriptions, Form, Input, InputNumber, Modal, Select, Tooltip, Typography } from "antd";
+import { Alert, App, Button, Checkbox, Col, DatePicker, Descriptions, Form, Input, InputNumber, Modal, Select, Tooltip, Typography } from "antd";
 import dayjs from "dayjs";
 import { kyInstance } from "../../providers/data";
 import { SectionDivider } from "../../components/section-divider";
@@ -10,7 +10,7 @@ import { subtotalLinea, totalesFactura, type LineaFactura } from "../../utils/fa
 import { formatMonto } from "../../utils/monto";
 import { COMPRA_CONDICION_OPTIONS, type CompraCondicion } from "../compras/types";
 import type { CompraRow } from "../compras/types";
-import type { GastoRow } from "./types";
+import type { CargoPrevisto, GastoRow } from "./types";
 
 const TASA_IVA_OPTIONS = [
   { label: "Exenta", value: 0 },
@@ -31,6 +31,88 @@ type Valores = {
   detalles: Linea[];
   cantidad_cuotas?: number;
   fecha_primer_vencimiento?: string;
+  crear_cargo?: boolean;
+  fecha_vencimiento_cargo?: string;
+};
+
+const CARGO_TIPO_PREVISTO_LABEL = { EXPENSA: "Expensa", OTRO: "Otro" };
+
+// Avisa qué va a pasar con el cargo al inquilino antes de registrar la factura.
+const AvisoCargo = ({ previsto }: { previsto: CargoPrevisto }) => {
+  const detalle = `${CARGO_TIPO_PREVISTO_LABEL[previsto.tipo]} de ${formatMonto(previsto.monto)} a ${previsto.inquilino}`;
+
+  // Vencimiento sugerido por el contrato; el usuario lo puede cambiar (no antes de hoy).
+  const campoVencimiento = (
+    <Form.Item
+      label="Vencimiento del cargo"
+      name="fecha_vencimiento_cargo"
+      extra="Sugerido: el próximo día de vencimiento del contrato, para cobrarlo junto con el alquiler."
+      getValueProps={(value) => ({ value: value ? dayjs(value) : undefined })}
+      style={{ margin: "12px 0 0", maxWidth: 360 }}
+    >
+      <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" disabledDate={(fecha) => fecha.isBefore(dayjs(), "day")} />
+    </Form.Item>
+  );
+
+  if (previsto.estado === "BLOQUEADO") {
+    return (
+      <Alert
+        type="error"
+        showIcon
+        style={{ marginBottom: 16 }}
+        message="No se puede registrar la factura"
+        description="El contrato de este gasto fue anulado, así que no hay a quién cargarle el gasto. Anulá el gasto y registralo de nuevo."
+      />
+    );
+  }
+
+  if (previsto.estado === "YA_TUVO") {
+    return (
+      <Alert
+        type="info"
+        showIcon
+        style={{ marginBottom: 16 }}
+        message="No se crea un cargo nuevo"
+        description="Este gasto ya tuvo un cargo al inquilino (activo o anulado). Si hace falta, se gestiona desde Cargos."
+      />
+    );
+  }
+
+  if (previsto.estado === "CONFIRMAR") {
+    return (
+      <Alert
+        type="warning"
+        showIcon
+        style={{ marginBottom: 16 }}
+        message={`Estás a punto de crear un cargo para un contrato ${previsto.contrato_situacion === "RESCINDIDO" ? "rescindido" : "finalizado"}`}
+        description={
+          <>
+            <div>Cargo previsto: {detalle}.</div>
+            <div>Sin tildar, la factura se registra sin cargo y el gasto queda sin recuperar: lo absorbe la administradora.</div>
+            <Form.Item name="crear_cargo" valuePropName="checked" style={{ margin: "8px 0 0" }}>
+              <Checkbox>Crear el cargo al inquilino</Checkbox>
+            </Form.Item>
+            {campoVencimiento}
+          </>
+        }
+      />
+    );
+  }
+
+  return (
+    <Alert
+      type="info"
+      showIcon
+      style={{ marginBottom: 16 }}
+      message="Se creará un cargo al inquilino"
+      description={
+        <>
+          <div>{detalle}.</div>
+          {campoVencimiento}
+        </>
+      }
+    />
+  );
 };
 
 const valoresIniciales = (gasto: GastoRow, compra?: CompraRow) =>
@@ -52,6 +134,7 @@ const valoresIniciales = (gasto: GastoRow, compra?: CompraRow) =>
     : {
         condicion: "CONTADO",
         detalles: [{ descripcion: gasto.descripcion, cantidad: 1, precio_unitario: Number(gasto.monto), tasa_iva: 10 }],
+        fecha_vencimiento_cargo: gasto.cargo_previsto?.fecha_vencimiento,
       };
 
 // Con `compra` edita esa factura (PUT) en vez de registrar una nueva (POST).
@@ -74,6 +157,8 @@ export const RegistrarFacturaModal = ({
   const montoGasto = Number(gasto.monto);
   const totales = totalesFactura(detalles);
   const diferencia = montoGasto - totales.total;
+  // Solo al registrar: editar la factura no toca el cargo.
+  const previsto = compra ? null : gasto.cargo_previsto;
 
   const registrar = async (values: Valores) => {
     setGuardando(true);
@@ -83,6 +168,9 @@ export const RegistrarFacturaModal = ({
         fecha: dayjs(values.fecha).format("YYYY-MM-DD"),
         fecha_primer_vencimiento: values.condicion === "CREDITO" && values.fecha_primer_vencimiento
           ? dayjs(values.fecha_primer_vencimiento).format("YYYY-MM-DD")
+          : undefined,
+        fecha_vencimiento_cargo: values.fecha_vencimiento_cargo
+          ? dayjs(values.fecha_vencimiento_cargo).format("YYYY-MM-DD")
           : undefined,
       },
     });
@@ -116,6 +204,7 @@ export const RegistrarFacturaModal = ({
       okText={compra ? "Guardar" : "Registrar"}
       cancelText="Cancelar"
       confirmLoading={guardando}
+      okButtonProps={{ disabled: previsto?.estado === "BLOQUEADO" }}
       width={960}
     >
       <Descriptions column={2} size="small" style={{ marginBottom: 16 }}>
@@ -129,6 +218,7 @@ export const RegistrarFacturaModal = ({
         onFinish={registrar}
         initialValues={valoresIniciales(gasto, compra)}
       >
+        {previsto && <AvisoCargo previsto={previsto} />}
         <SectionDivider icon={<FileTextOutlined />} style={{ marginTop: 16 }}>
           Datos de la factura
         </SectionDivider>
