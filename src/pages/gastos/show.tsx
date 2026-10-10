@@ -5,7 +5,6 @@ import {
   CalendarOutlined,
   CheckCircleOutlined,
   DollarOutlined,
-  FieldTimeOutlined,
   FileDoneOutlined,
   HomeOutlined,
   ShopOutlined,
@@ -38,7 +37,7 @@ import { formatMonto } from "../../utils/monto";
 import { AnularGastoModal } from "./anular-gasto-modal";
 import { RegistrarFacturaModal } from "./registrar-factura-modal";
 import { RegistrarPagoModal } from "./registrar-pago-modal";
-import { A_CARGO_DE_LABEL, GASTO_ESTADO_COLOR, GASTO_ESTADO_LABEL, GASTO_TIPO_LABEL, type GastoRow } from "./types";
+import { A_CARGO_DE_LABEL, APROBADO_POR_LABEL, GASTO_ESTADO_COLOR, GASTO_ESTADO_LABEL, GASTO_TIPO_LABEL, type GastoRow } from "./types";
 
 // Acá vive todo lo del gasto Y de su factura (ver ARQUITECTURA.md, "Gastos"):
 // antes la factura tenía su propia pantalla en pages/compras, separada del
@@ -107,7 +106,10 @@ export const GastoShow = () => {
                   <Tag color={GASTO_ESTADO_COLOR[gasto.estado]} style={{ margin: 0 }}>
                     {GASTO_ESTADO_LABEL[gasto.estado]}
                   </Tag>
-                  <Tag style={{ margin: 0 }}>{GASTO_TIPO_LABEL[gasto.tipo]}</Tag>
+                  <Tag style={{ margin: 0 }}>
+                    {GASTO_TIPO_LABEL[gasto.tipo]}
+                    {gasto.tipo === "EXPENSA" && gasto.periodo && ` de ${dayjs(gasto.periodo, "YYYY-MM").format("MM/YYYY")}`}
+                  </Tag>
                 </Space>
                 <Typography.Title level={3} style={{ margin: 0 }}>
                   {gasto.descripcion}
@@ -199,16 +201,6 @@ export const GastoShow = () => {
                   children: dayjs(gasto.fecha).format("DD/MM/YYYY"),
                 },
                 {
-                  key: "periodo",
-                  label: (
-                    <Space>
-                      <FieldTimeOutlined />
-                      Período
-                    </Space>
-                  ),
-                  children: gasto.periodo ?? "—",
-                },
-                {
                   key: "aprobacion",
                   label: (
                     <Space>
@@ -217,6 +209,16 @@ export const GastoShow = () => {
                     </Space>
                   ),
                   children: gasto.fecha_aprobacion ? dayjs(gasto.fecha_aprobacion).format("DD/MM/YYYY HH:mm") : "—",
+                },
+                {
+                  key: "aprobado_por",
+                  label: (
+                    <Space>
+                      <UserOutlined />
+                      Aprobado por
+                    </Space>
+                  ),
+                  children: gasto.aprobado_por ? APROBADO_POR_LABEL[gasto.aprobado_por] : "—",
                 },
               ]}
             />

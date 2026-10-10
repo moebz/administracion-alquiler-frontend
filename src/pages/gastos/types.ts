@@ -88,6 +88,11 @@ export type CargoPrevisto = {
   contrato_situacion: "FUTURO" | "VIGENTE" | "FINALIZADO" | "RESCINDIDO" | "ANULADO";
 };
 
+export const APROBADO_POR_LABEL: Record<AprobadoPor, string> = {
+  ADMINISTRADORA: "Administradora",
+  PROPIETARIO: "Propietario",
+};
+
 export type GastoRow = {
   id: number;
   unidad_id: number;
