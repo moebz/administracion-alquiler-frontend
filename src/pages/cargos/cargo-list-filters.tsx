@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useSelect } from "@refinedev/antd";
 import type { CrudFilter } from "@refinedev/core";
-import { DatePicker, Select, Space } from "antd";
+import { DatePicker, Select, Space, Tag } from "antd";
 import dayjs, { type Dayjs } from "dayjs";
 import { FilterBar } from "../../components/filter-bar";
 import { buildFiltrosCargos, FILTROS_CARGOS_INICIALES, type FiltrosCargos } from "./filtros";
@@ -14,8 +14,14 @@ const filtrarPorLabel = (input: string, option?: { label?: unknown }) =>
     .toLowerCase()
     .includes(input.toLowerCase());
 
-export const CargoListFilters = ({ onChange }: { onChange: (filters: CrudFilter[]) => void }) => {
-  const [filtros, setFiltros] = useState<FiltrosCargos>(FILTROS_CARGOS_INICIALES);
+export const CargoListFilters = ({
+  inicial = FILTROS_CARGOS_INICIALES,
+  onChange,
+}: {
+  inicial?: FiltrosCargos;
+  onChange: (filters: CrudFilter[]) => void;
+}) => {
+  const [filtros, setFiltros] = useState<FiltrosCargos>(inicial);
 
   const { selectProps: inquilinoSelectProps } = useSelect<{ id: number; nombre: string; documento: string }>({
     resource: "personas",
@@ -52,6 +58,11 @@ export const CargoListFilters = ({ onChange }: { onChange: (filters: CrudFilter[
 
   return (
     <FilterBar>
+      {filtros.contratoId && (
+        <Tag closable onClose={() => applyFilters({ contratoId: undefined })}>
+          Solo el contrato #{filtros.contratoId}
+        </Tag>
+      )}
       <Space>
         <span>Inquilino</span>
         <Select

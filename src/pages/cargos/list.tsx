@@ -4,7 +4,7 @@ import { usePermissions } from "@refinedev/core";
 import { StopOutlined } from "@ant-design/icons";
 import { Alert, App, Button, Input, Space, Table, Tag, Tooltip } from "antd";
 import dayjs from "dayjs";
-import { Link, useNavigate } from "react-router";
+import { Link, useNavigate, useSearchParams } from "react-router";
 import { extractErrorMessage } from "../../providers/auth";
 import { kyInstance } from "../../providers/data";
 import { formatMonto } from "../../utils/monto";
@@ -14,9 +14,17 @@ import { GenerarCargosModal } from "./generar-cargos-modal";
 import { CARGO_ESTADO_COLOR, CARGO_ESTADO_LABEL, CARGO_TIPO_LABEL, type CargoRow } from "./types";
 
 export const CargoList = () => {
+  // Prefiltrar por contrato cuando se llega desde "Ver cargos" del detalle de la unidad.
+  const [searchParams] = useSearchParams();
+  const contratoParam = Number(searchParams.get("contrato_id"));
+  const filtrosIniciales = {
+    ...FILTROS_CARGOS_INICIALES,
+    contratoId: contratoParam > 0 ? contratoParam : undefined,
+  };
+
   const { tableProps, tableQuery, setFilters } = useTable<CargoRow>({
     syncWithLocation: true,
-    filters: { initial: buildFiltrosCargos(FILTROS_CARGOS_INICIALES) },
+    filters: { initial: buildFiltrosCargos(filtrosIniciales) },
   });
   const { message, modal } = App.useApp();
   const navigate = useNavigate();
@@ -87,18 +95,18 @@ export const CargoList = () => {
         </Space>
       )}
     >
-      <CargoListFilters onChange={(filters) => setFilters(filters, "replace")} />
+      <CargoListFilters inicial={filtrosIniciales} onChange={(filters) => setFilters(filters, "replace")} />
       <Table {...tableProps} rowKey="id" scroll={{ x: "max-content" }}>
         <Table.Column
           title="Inquilino / Unidad"
           dataIndex="contrato"
           render={(contrato: CargoRow["contrato"]) => (
-            <Link to={`/administrador/contratos-alquiler/edit/${contrato.id}`}>
+            <>
               <div>{contrato.inquilino.nombre}</div>
-              <span>
+              <Link to={`/administrador/unidades/show/${contrato.unidad.id}`}>
                 {contrato.unidad.bloque.edificio.nombre} - {contrato.unidad.bloque.nombre} - {contrato.unidad.numero}
-              </span>
-            </Link>
+              </Link>
+            </>
           )}
         />
         <Table.Column

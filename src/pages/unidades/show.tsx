@@ -89,6 +89,7 @@ export const UnidadShow = () => {
                 Crear próximo contrato
               </Button>
             )}
+            <Button onClick={() => navigate(`/administrador/cargos?contrato_id=${contrato.id}`)}>Ver cargos</Button>
             <EditButton resource="contratos-alquiler" recordItemId={contrato.id}>
               Editar contrato
             </EditButton>
