@@ -84,7 +84,11 @@ const AvisoCargo = ({ previsto }: { previsto: CargoPrevisto }) => {
         type="warning"
         showIcon
         style={{ marginBottom: 16 }}
-        message={`Estás a punto de crear un cargo para un contrato ${previsto.contrato_situacion === "RESCINDIDO" ? "rescindido" : "finalizado"}`}
+        message={
+          previsto.contrato_situacion === "VIGENTE"
+            ? `La expensa es de un período posterior al fin del contrato (${dayjs(previsto.fin_contrato).format("DD/MM/YYYY")})`
+            : `Estás a punto de crear un cargo para un contrato ${previsto.contrato_situacion === "RESCINDIDO" ? "rescindido" : "finalizado"}`
+        }
         description={
           <>
             <div>Cargo previsto: {detalle}.</div>

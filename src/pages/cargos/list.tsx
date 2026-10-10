@@ -14,12 +14,15 @@ import { GenerarCargosModal } from "./generar-cargos-modal";
 import { CARGO_ESTADO_COLOR, CARGO_ESTADO_LABEL, CARGO_TIPO_LABEL, type CargoRow } from "./types";
 
 export const CargoList = () => {
-  // Prefiltrar por contrato cuando se llega desde "Ver cargos" del detalle de la unidad.
+  // Prefiltrar por contrato cuando se llega desde "Ver cargos" del detalle de la unidad o del gasto.
   const [searchParams] = useSearchParams();
   const contratoParam = Number(searchParams.get("contrato_id"));
+  // Mostrar todos los estados (no solo pendientes) cuando se llega a ver un cargo puntual, que puede estar pagado o anulado.
+  const todosLosEstados = searchParams.get("todos_los_estados") === "1";
   const filtrosIniciales = {
     ...FILTROS_CARGOS_INICIALES,
     contratoId: contratoParam > 0 ? contratoParam : undefined,
+    ...(todosLosEstados ? { estados: [] } : {}),
   };
 
   const { tableProps, tableQuery, setFilters } = useTable<CargoRow>({

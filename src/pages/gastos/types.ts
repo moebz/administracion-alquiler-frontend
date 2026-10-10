@@ -77,7 +77,7 @@ export type CargoGasto = {
   facturado: number | string;
 };
 
-// CREAR: se crea solo. CONFIRMAR: contrato terminado, solo si el usuario lo tilda. YA_TUVO: el gasto ya tuvo cargo.
+// CREAR: se crea solo. CONFIRMAR: contrato terminado, o expensa posterior a su fin efectivo; solo si el usuario lo tilda. YA_TUVO: el gasto ya tuvo cargo.
 // BLOQUEADO: contrato anulado, no se puede registrar la factura.
 export type CargoPrevisto = {
   estado: "CREAR" | "CONFIRMAR" | "YA_TUVO" | "BLOQUEADO";
@@ -86,6 +86,7 @@ export type CargoPrevisto = {
   inquilino: string;
   fecha_vencimiento: string;
   contrato_situacion: "FUTURO" | "VIGENTE" | "FINALIZADO" | "RESCINDIDO" | "ANULADO";
+  fin_contrato: string;
 };
 
 export const APROBADO_POR_LABEL: Record<AprobadoPor, string> = {

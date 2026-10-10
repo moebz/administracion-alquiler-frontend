@@ -292,7 +292,9 @@ export const GastoShow = () => {
                 Cargo al inquilino
               </Space>
             }
-            extra={<Link to="/administrador/cargos">Ver en Cargos</Link>}
+            extra={
+              <Link to={`/administrador/cargos?contrato_id=${gasto.contrato_id}&todos_los_estados=1`}>Ver en Cargos</Link>
+            }
           >
             <Descriptions
               size="small"
