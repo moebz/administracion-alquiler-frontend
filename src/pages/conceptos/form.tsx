@@ -1,9 +1,10 @@
 import { DollarOutlined, TagOutlined } from "@ant-design/icons";
-import { Checkbox, Col, Form, Input, Select, Space } from "antd";
+import { Alert, Checkbox, Col, Form, Input, Select, Space } from "antd";
 import type { FormProps } from "antd";
 import { MontoInput } from "../../components/monto-input";
 import { SectionDivider } from "../../components/section-divider";
 import { SectionRow } from "../../components/section-row";
+import { CODIGOS_ALQUILER } from "./types";
 
 type ConceptoFormProps = {
   formProps: FormProps;
@@ -34,57 +35,73 @@ const PrecioField = ({ value, onChange }: PrecioFieldProps) => {
       >
         Sin sugerencia de precio
       </Checkbox>
-      <MontoInput
-        disabled={sinPrecio}
-        value={sinPrecio ? undefined : value}
-        onChange={(nuevo) => onChange?.(nuevo)}
-      />
+      <MontoInput disabled={sinPrecio} value={sinPrecio ? undefined : value} onChange={(nuevo) => onChange?.(nuevo)} />
     </Space>
   );
 };
 
-export const ConceptoForm = ({ formProps, codigoEditable }: ConceptoFormProps) => (
-  <Form {...formProps} layout="vertical" style={{ maxWidth: 720 }}>
-    <SectionDivider icon={<TagOutlined />}>Datos generales</SectionDivider>
-    <SectionRow>
-      <Col xs={24} md={12}>
-        <Form.Item
-          label="Código"
-          name="codigo"
-          rules={[{ required: true }, { max: 20 }]}
-          extra={codigoEditable ? "No se puede cambiar una vez creado." : undefined}
-        >
-          <Input disabled={!codigoEditable} />
-        </Form.Item>
-      </Col>
-      <Col xs={24} md={12}>
-        <Form.Item label="Descripción" name="descripcion" rules={[{ required: true }, { max: 100 }]}>
-          <Input />
-        </Form.Item>
-      </Col>
-    </SectionRow>
+export const ConceptoForm = ({ formProps, codigoEditable }: ConceptoFormProps) => {
+  const codigo = Form.useWatch("codigo", formProps.form);
+  // Los conceptos de alquiler existen desde el seeder: solo se editan, nunca se crean.
+  const esDeAlquiler = !codigoEditable && CODIGOS_ALQUILER.includes(codigo);
 
-    <SectionDivider icon={<DollarOutlined />}>Facturación</SectionDivider>
-    <SectionRow>
-      <Col xs={24} md={12}>
-        <Form.Item
-          label="Precio unitario (IVA incluido)"
-          name="precio_unitario"
-          extra="Es un precio a sugerir: se puede cambiar al armar cada línea de la factura de venta. Tildá «Sin sugerencia de precio» si ese precio se define recién en ese momento."
-        >
-          <PrecioField />
-        </Form.Item>
-      </Col>
-      <Col xs={24} md={12}>
-        <Form.Item
-          label="Tasa de IVA"
-          name="tasa_iva"
-          normalize={(value) => value ?? null}
-          extra="Vacío si la tasa la define cada línea de la factura de venta (o factura proveedor de origen, o el alquiler que generó la mora)."
-        >
-          <Select allowClear options={TASAS_IVA} placeholder="Sin tasa fija" />
-        </Form.Item>
-      </Col>
-    </SectionRow>
-  </Form>
-);
+  return (
+    <Form {...formProps} layout="vertical" style={{ maxWidth: 720 }}>
+      <SectionDivider icon={<TagOutlined />}>Datos generales</SectionDivider>
+      <SectionRow>
+        <Col xs={24} md={12}>
+          <Form.Item
+            label="Código"
+            name="codigo"
+            rules={[{ required: true }, { max: 20 }]}
+            extra={codigoEditable ? "No se puede cambiar una vez creado." : undefined}
+          >
+            <Input disabled={!codigoEditable} />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={12}>
+          <Form.Item label="Descripción" name="descripcion" rules={[{ required: true }, { max: 100 }]}>
+            <Input />
+          </Form.Item>
+        </Col>
+      </SectionRow>
+
+      <SectionDivider icon={<DollarOutlined />}>Facturación</SectionDivider>
+      {esDeAlquiler && (
+        <Alert
+          type="info"
+          showIcon
+          style={{ marginBottom: 16 }}
+          message="Concepto especial del sistema"
+          description="Su tasa de IVA se copia a cada cargo de alquiler que se genera, así que tiene que estar explícita y no se puede dejar vacía."
+        />
+      )}
+      <SectionRow>
+        <Col xs={24} md={12}>
+          <Form.Item
+            label="Precio unitario (IVA incluido)"
+            name="precio_unitario"
+            extra="Es un precio a sugerir: se puede cambiar al armar cada línea de la factura de venta. Tildá «Sin sugerencia de precio» si ese precio se define recién en ese momento."
+          >
+            <PrecioField />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={12}>
+          <Form.Item
+            label="Tasa de IVA"
+            name="tasa_iva"
+            normalize={(value) => value ?? null}
+            rules={[{ required: esDeAlquiler }]}
+            extra={
+              esDeAlquiler
+                ? undefined
+                : "Vacío si la tasa la define cada línea de la factura de venta (o factura proveedor de origen, o el alquiler que generó la mora)."
+            }
+          >
+            <Select allowClear={!esDeAlquiler} options={TASAS_IVA} placeholder="Sin tasa fija" />
+          </Form.Item>
+        </Col>
+      </SectionRow>
+    </Form>
+  );
+};

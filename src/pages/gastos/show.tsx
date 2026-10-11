@@ -23,6 +23,7 @@ import {
   Progress,
   Space,
   Statistic,
+  Table,
   Tag,
   theme,
   Tooltip,
@@ -37,7 +38,7 @@ import { formatMonto } from "../../utils/monto";
 import { AnularGastoModal } from "./anular-gasto-modal";
 import { RegistrarFacturaModal } from "./registrar-factura-modal";
 import { RegistrarPagoModal } from "./registrar-pago-modal";
-import { A_CARGO_DE_LABEL, APROBADO_POR_LABEL, GASTO_ESTADO_COLOR, GASTO_ESTADO_LABEL, GASTO_TIPO_LABEL, type GastoRow } from "./types";
+import { A_CARGO_DE_LABEL, APROBADO_POR_LABEL, GASTO_ESTADO_COLOR, GASTO_ESTADO_LABEL, GASTO_TIPO_LABEL, type CargoGasto, type GastoRow } from "./types";
 
 // Acá vive todo lo del gasto Y de su factura (ver ARQUITECTURA.md, "Gastos"):
 // antes la factura tenía su propia pantalla en pages/compras, separada del
@@ -80,8 +81,8 @@ export const GastoShow = () => {
     puedeAnularGasto && !gasto?.documento_compra_id && (gasto?.estado === "SOLICITADO" || gasto?.estado === "APROBADO");
 
   // Un cargo ya facturado no se anula: el backend lo rechaza con 422, así que se deshabilita el botón y se explica por qué.
-  const cargoActivo = gasto?.cargo && gasto.cargo.estado !== "ANULADO" ? gasto.cargo : null;
-  const cargoFacturado = !!cargoActivo && Number(cargoActivo.facturado) > 0;
+  const cargosActivos = gasto?.cargos.filter((cargo) => cargo.estado !== "ANULADO") ?? [];
+  const cargoFacturado = cargosActivos.some((cargo) => Number(cargo.facturado) > 0);
 
   return (
     <Show
@@ -151,7 +152,7 @@ export const GastoShow = () => {
                   <Tooltip
                     title={
                       cargoFacturado
-                        ? "No se puede anular: el cargo al inquilino ya está facturado. Revertí primero lo facturado."
+                        ? "No se puede anular: un cargo al inquilino ya está facturado. Revertí primero lo facturado."
                         : undefined
                     }
                   >
@@ -241,12 +242,12 @@ export const GastoShow = () => {
             puedeAnular={puedeAnularCompra}
             onAnulada={refetchTodo}
             avisoAnulacion={
-              gasto.cargo && gasto.cargo.estado !== "ANULADO" ? (
+              cargosActivos.length > 0 ? (
                 <Alert
                   type="info"
                   showIcon
                   style={{ marginBottom: 16 }}
-                  message="El cargo al inquilino se mantiene. Si corresponde, anulalo desde Cargos."
+                  message="Los cargos al inquilino se mantienen. Si corresponde, anulalos desde Cargos."
                 />
               ) : undefined
             }
@@ -282,41 +283,37 @@ export const GastoShow = () => {
           )
         )}
 
-        {gasto?.cargo && (
+        {gasto && gasto.cargos.length > 0 && (
           <Card
             variant="borderless"
             style={{ borderRadius: 16, boxShadow: token.boxShadowTertiary }}
             title={
               <Space>
                 <SolutionOutlined />
-                Cargo al inquilino
+                Cargos al inquilino
               </Space>
             }
             extra={
-              <Link to={`/administrador/cargos?contrato_id=${gasto.contrato_id}&todos_los_estados=1`}>Ver en Cargos</Link>
+              <Link to={`/administrador/cargos?gasto_id=${gasto.id}&todos_los_estados=1`}>Ver en Cargos</Link>
             }
           >
-            <Descriptions
-              size="small"
-              column={{ xs: 1, sm: 2, lg: 5 }}
-              items={[
-                { key: "tipo", label: "Tipo", children: CARGO_TIPO_LABEL[gasto.cargo.tipo] },
-                { key: "monto", label: "Monto", children: formatMonto(gasto.cargo.monto) },
-                { key: "saldo", label: "Saldo", children: formatMonto(gasto.cargo.saldo) },
-                {
-                  key: "vencimiento",
-                  label: "Vencimiento",
-                  children: dayjs(gasto.cargo.fecha_vencimiento).format("DD/MM/YYYY"),
-                },
-                {
-                  key: "estado",
-                  label: "Estado",
-                  children: (
-                    <Tag color={CARGO_ESTADO_COLOR[gasto.cargo.estado]}>{CARGO_ESTADO_LABEL[gasto.cargo.estado]}</Tag>
-                  ),
-                },
-              ]}
-            />
+            <Table<CargoGasto> dataSource={gasto.cargos} rowKey="id" size="small" pagination={false}>
+              <Table.Column title="Descripción" dataIndex="descripcion" />
+              <Table.Column title="Tipo" dataIndex="tipo" render={(tipo: CargoGasto["tipo"]) => CARGO_TIPO_LABEL[tipo]} />
+              <Table.Column title="Monto" dataIndex="monto" render={(monto: CargoGasto["monto"]) => formatMonto(monto)} />
+              <Table.Column title="IVA" dataIndex="tasa_iva" render={(tasa: CargoGasto["tasa_iva"]) => `${tasa}%`} />
+              <Table.Column title="Saldo" dataIndex="saldo" render={(saldo: CargoGasto["saldo"]) => formatMonto(saldo)} />
+              <Table.Column
+                title="Vencimiento"
+                dataIndex="fecha_vencimiento"
+                render={(fecha: CargoGasto["fecha_vencimiento"]) => dayjs(fecha).format("DD/MM/YYYY")}
+              />
+              <Table.Column
+                title="Estado"
+                dataIndex="estado"
+                render={(estado: CargoGasto["estado"]) => <Tag color={CARGO_ESTADO_COLOR[estado]}>{CARGO_ESTADO_LABEL[estado]}</Tag>}
+              />
+            </Table>
           </Card>
         )}
       </Space>

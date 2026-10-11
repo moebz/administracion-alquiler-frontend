@@ -16,6 +16,7 @@ const contrato = {
   dia_vencimiento: 5,
   dias_gracia: 2,
   expensas_a_cargo_de: "INQUILINO",
+  destino: "OTROS",
 } as unknown as ContratoAlquilerRow;
 
 describe("valoresRenovacion", () => {
@@ -38,6 +39,10 @@ describe("valoresRenovacion", () => {
       dias_gracia: 2,
       expensas_a_cargo_de: "INQUILINO",
     });
+  });
+
+  it("copia el destino del contrato anterior", () => {
+    expect(valoresRenovacion(contrato).destino).toBe("OTROS");
   });
 
   it("deja sin valor el tope de mora y el monto si el contrato no los tiene", () => {

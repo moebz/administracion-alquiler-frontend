@@ -19,6 +19,10 @@ describe("buildFiltrosCargos", () => {
     ]);
   });
 
+  it("filtra por gasto cuando se llega desde el detalle del gasto", () => {
+    expect(buildFiltrosCargos({ estados: [], gastoId: 12 })).toEqual([{ field: "gasto_id", operator: "eq", value: 12 }]);
+  });
+
   it("arma un filtro por cada campo informado", () => {
     const filters = buildFiltrosCargos({
       inquilinoId: 4,

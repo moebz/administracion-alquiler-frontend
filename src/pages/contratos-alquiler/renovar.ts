@@ -12,4 +12,5 @@ export const valoresRenovacion = (contrato: ContratoAlquilerRow) => ({
   dia_vencimiento: contrato.dia_vencimiento,
   dias_gracia: contrato.dias_gracia,
   expensas_a_cargo_de: contrato.expensas_a_cargo_de,
+  destino: contrato.destino,
 });

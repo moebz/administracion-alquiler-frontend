@@ -70,14 +70,17 @@ export const APROBADO_POR_OPTIONS: { label: string; value: AprobadoPor }[] = [
 export type CargoGasto = {
   id: number;
   tipo: "EXPENSA" | "OTRO";
+  descripcion: string;
   monto: number | string;
+  tasa_iva: 0 | 5 | 10;
   saldo: number | string;
   fecha_vencimiento: string;
   estado: "PENDIENTE" | "PARCIAL" | "VENCIDO" | "PAGADO" | "ANULADO";
   facturado: number | string;
 };
 
-// CREAR: se crea solo. CONFIRMAR: contrato terminado, o expensa posterior a su fin efectivo; solo si el usuario lo tilda. YA_TUVO: el gasto ya tuvo cargo.
+// CREAR: se crean solos, uno por línea de la factura. CONFIRMAR: contrato terminado, o expensa posterior a su fin efectivo; solo si el usuario lo tilda. YA_TUVO: el gasto ya tuvo cargos.
+// `monto` es el total del gasto, que se reparte entre los cargos según las líneas de la factura.
 // BLOQUEADO: contrato anulado, no se puede registrar la factura.
 export type CargoPrevisto = {
   estado: "CREAR" | "CONFIRMAR" | "YA_TUVO" | "BLOQUEADO";
@@ -125,7 +128,7 @@ export type GastoRow = {
   documento_compra_id: number | null;
   fecha_anulacion: string | null;
   motivo_anulacion: string | null;
-  cargo: CargoGasto | null;
+  cargos: CargoGasto[];
   cargo_previsto: CargoPrevisto | null;
   documento_compra: {
     id: number;

@@ -8,3 +8,6 @@ export type ConceptoRow = {
   is_active: boolean;
   fecha_baja: string | null;
 };
+
+// Su tasa de IVA se copia a cada cargo de alquiler, así que no puede quedar vacía (ver Concepto::CODIGOS_ALQUILER en el backend).
+export const CODIGOS_ALQUILER = ["ALQUILER_RESIDENCIAL", "ALQUILER_OTROS"];

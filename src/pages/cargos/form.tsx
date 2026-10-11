@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSelect } from "@refinedev/antd";
 import { CalendarOutlined, DollarOutlined, FileTextOutlined } from "@ant-design/icons";
 import { Col, DatePicker, Form, Input, Select } from "antd";
@@ -10,7 +10,7 @@ import { SectionRow } from "../../components/section-row";
 import { extractErrorMessage } from "../../providers/auth";
 import { kyInstance } from "../../providers/data";
 import { CONTRATO_ALQUILER_ESTADO_LABEL, type ContratoAlquilerRow } from "../contratos-alquiler/types";
-import { CARGO_TIPO_MANUAL_OPTIONS } from "./types";
+import { CARGO_TIPO_MANUAL_OPTIONS, TASA_IVA_OPTIONS } from "./types";
 
 const filtrarPorLabel = (input: string, option?: { label?: unknown }) =>
   String(option?.label ?? "")
@@ -32,6 +32,8 @@ export const CargoForm = ({ formProps }: { formProps: FormProps }) => {
   const contratoId = Form.useWatch("contrato_id", form);
   const periodo = Form.useWatch("periodo", form);
   const esAlquiler = tipo === "ALQUILER";
+  // Tasa que toma un cargo de alquiler del concepto de su contrato; se muestra sin editar.
+  const [tasaAlquiler, setTasaAlquiler] = useState<number | null>(null);
 
   // OTRO arranca con el mes actual; ALQUILER exige elegir el período.
   useEffect(() => {
@@ -53,10 +55,12 @@ export const CargoForm = ({ formProps }: { formProps: FormProps }) => {
       }
       if (!response.ok) {
         form?.setFieldsValue({ monto: undefined, fecha_vencimiento: undefined });
+        setTasaAlquiler(null);
         form?.setFields([{ name: "periodo", errors: [await extractErrorMessage(response, "No se pudo calcular el alquiler.")] }]);
         return;
       }
-      const calculo = (await response.json()) as { monto: string | null; fecha_vencimiento: string };
+      const calculo = (await response.json()) as { monto: string | null; fecha_vencimiento: string; tasa_iva: number };
+      setTasaAlquiler(calculo.tasa_iva);
       form?.setFieldsValue({
         monto: calculo.monto === null ? undefined : Number(calculo.monto),
         fecha_vencimiento: calculo.fecha_vencimiento,
@@ -120,6 +124,17 @@ export const CargoForm = ({ formProps }: { formProps: FormProps }) => {
           <Form.Item label="Monto" name="monto" rules={[{ required: true }]}>
             <MontoInput />
           </Form.Item>
+        </Col>
+        <Col xs={24} md={8}>
+          {esAlquiler ? (
+            <Form.Item label="IVA" extra="Sale del concepto de alquiler del destino del contrato.">
+              <Input disabled value={tasaAlquiler === null ? "—" : `${tasaAlquiler}%`} />
+            </Form.Item>
+          ) : (
+            <Form.Item label="IVA" name="tasa_iva" rules={[{ required: true }]}>
+              <Select options={TASA_IVA_OPTIONS} placeholder="Elegí la tasa" />
+            </Form.Item>
+          )}
         </Col>
         <Col xs={24} md={8}>
           <Form.Item

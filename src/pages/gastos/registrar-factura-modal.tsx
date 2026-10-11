@@ -37,14 +37,14 @@ type Valores = {
 
 const CARGO_TIPO_PREVISTO_LABEL = { EXPENSA: "Expensa", OTRO: "Otro" };
 
-// Avisa qué va a pasar con el cargo al inquilino antes de registrar la factura.
-const AvisoCargo = ({ previsto }: { previsto: CargoPrevisto }) => {
-  const detalle = `${CARGO_TIPO_PREVISTO_LABEL[previsto.tipo]} de ${formatMonto(previsto.monto)} a ${previsto.inquilino}`;
+// Avisa qué va a pasar con los cargos al inquilino antes de registrar la factura: uno por cada línea.
+const AvisoCargo = ({ previsto, lineas }: { previsto: CargoPrevisto; lineas: number }) => {
+  const detalle = `${lineas === 1 ? "Un cargo" : `${lineas} cargos`} de tipo ${CARGO_TIPO_PREVISTO_LABEL[previsto.tipo]} al inquilino ${previsto.inquilino}, por un total de ${formatMonto(previsto.monto)}`;
 
   // Vencimiento sugerido por el contrato; el usuario lo puede cambiar (no antes de hoy).
   const campoVencimiento = (
     <Form.Item
-      label="Vencimiento del cargo"
+      label="Vencimiento de los cargos"
       name="fecha_vencimiento_cargo"
       extra="Sugerido: el próximo día de vencimiento del contrato, para cobrarlo junto con el alquiler."
       getValueProps={(value) => ({ value: value ? dayjs(value) : undefined })}
@@ -72,8 +72,8 @@ const AvisoCargo = ({ previsto }: { previsto: CargoPrevisto }) => {
         type="info"
         showIcon
         style={{ marginBottom: 16 }}
-        message="No se crea un cargo nuevo"
-        description="Este gasto ya tuvo un cargo al inquilino (activo o anulado). Si hace falta, se gestiona desde Cargos."
+        message="No se crearán cargos nuevos al inquilino"
+        description="Este gasto ya tuvo cargos al inquilino (activos o anulados). Si hace falta, podés crearlos manualmente desde Cargos."
       />
     );
   }
@@ -87,14 +87,14 @@ const AvisoCargo = ({ previsto }: { previsto: CargoPrevisto }) => {
         message={
           previsto.contrato_situacion === "VIGENTE"
             ? `La expensa es de un período posterior al fin del contrato (${dayjs(previsto.fin_contrato).format("DD/MM/YYYY")})`
-            : `Estás a punto de crear un cargo para un contrato ${previsto.contrato_situacion === "RESCINDIDO" ? "rescindido" : "finalizado"}`
+            : `Estás a punto de crear cargos para un contrato ${previsto.contrato_situacion === "RESCINDIDO" ? "rescindido" : "finalizado"}`
         }
         description={
           <>
-            <div>Cargo previsto: {detalle}.</div>
-            <div>Sin tildar, la factura se registra sin cargo y el gasto queda sin recuperar: lo absorbe la administradora.</div>
+            <div>Cargos previstos: {detalle}.</div>
+            <div>Sin tildar, la factura se registra sin cargos y el gasto queda sin recuperar: lo absorbe la administradora.</div>
             <Form.Item name="crear_cargo" valuePropName="checked" style={{ margin: "8px 0 0" }}>
-              <Checkbox>Crear el cargo al inquilino</Checkbox>
+              <Checkbox>Crear los cargos al inquilino</Checkbox>
             </Form.Item>
             {campoVencimiento}
           </>
@@ -108,7 +108,7 @@ const AvisoCargo = ({ previsto }: { previsto: CargoPrevisto }) => {
       type="info"
       showIcon
       style={{ marginBottom: 16 }}
-      message="Se creará un cargo al inquilino"
+      message="Se creará un cargo al inquilino por cada línea de la factura"
       description={
         <>
           <div>{detalle}.</div>
@@ -161,8 +161,11 @@ export const RegistrarFacturaModal = ({
   const montoGasto = Number(gasto.monto);
   const totales = totalesFactura(detalles);
   const diferencia = montoGasto - totales.total;
-  // Solo al registrar: editar la factura no toca el cargo.
+  // Solo al registrar se crean cargos por primera vez; al editar, los activos se rehacen.
   const previsto = compra ? null : gasto.cargo_previsto;
+  const cargosActivos = compra ? gasto.cargos.filter((cargo) => cargo.estado !== "ANULADO") : [];
+  // Un cargo ya facturado no se puede rehacer: el backend rechaza la edición con 422, así que se bloquea el guardado.
+  const hayCargoFacturado = cargosActivos.some((cargo) => Number(cargo.facturado) > 0);
 
   const registrar = async (values: Valores) => {
     setGuardando(true);
@@ -208,7 +211,7 @@ export const RegistrarFacturaModal = ({
       okText={compra ? "Guardar" : "Registrar"}
       cancelText="Cancelar"
       confirmLoading={guardando}
-      okButtonProps={{ disabled: previsto?.estado === "BLOQUEADO" }}
+      okButtonProps={{ disabled: previsto?.estado === "BLOQUEADO" || hayCargoFacturado }}
       width={960}
     >
       <Descriptions column={2} size="small" style={{ marginBottom: 16 }}>
@@ -222,7 +225,25 @@ export const RegistrarFacturaModal = ({
         onFinish={registrar}
         initialValues={valoresIniciales(gasto, compra)}
       >
-        {previsto && <AvisoCargo previsto={previsto} />}
+        {previsto && <AvisoCargo previsto={previsto} lineas={detalles.length} />}
+        {cargosActivos.length > 0 && !hayCargoFacturado && (
+          <Alert
+            type="warning"
+            showIcon
+            style={{ marginBottom: 16 }}
+            message="Se rehacen los cargos al inquilino"
+            description={`${cargosActivos.length === 1 ? "Se anula el cargo actual" : `Se anulan los ${cargosActivos.length} cargos actuales`} y se crea uno por cada línea editada, con el mismo período y vencimiento.`}
+          />
+        )}
+        {hayCargoFacturado && (
+          <Alert
+            type="error"
+            showIcon
+            style={{ marginBottom: 16 }}
+            message="No se puede editar la factura"
+            description="Un cargo de este gasto ya está facturado al inquilino. Revertí primero lo facturado."
+          />
+        )}
         <SectionDivider icon={<FileTextOutlined />} style={{ marginTop: 16 }}>
           Datos de la factura
         </SectionDivider>

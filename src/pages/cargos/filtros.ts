@@ -3,6 +3,7 @@ import { CARGO_ESTADOS_PENDIENTES, type CargoEstado, type CargoTipo } from "./ty
 
 export type FiltrosCargos = {
   contratoId?: number;
+  gastoId?: number;
   inquilinoId?: number;
   edificioId?: number;
   unidadId?: number;
@@ -20,6 +21,9 @@ export const buildFiltrosCargos = (filtros: FiltrosCargos): CrudFilter[] => {
 
   if (filtros.contratoId) {
     filters.push({ field: "contrato_id", operator: "eq", value: filtros.contratoId });
+  }
+  if (filtros.gastoId) {
+    filters.push({ field: "gasto_id", operator: "eq", value: filtros.gastoId });
   }
   if (filtros.inquilinoId) {
     filters.push({ field: "inquilino_id", operator: "eq", value: filtros.inquilinoId });

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { List, useTable } from "@refinedev/antd";
 import { usePermissions } from "@refinedev/core";
 import { StopOutlined } from "@ant-design/icons";
-import { Alert, App, Button, Input, Space, Table, Tag, Tooltip } from "antd";
+import { Alert, App, Button, Input, Space, Table, Tag, Tooltip, Typography } from "antd";
 import dayjs from "dayjs";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { extractErrorMessage } from "../../providers/auth";
@@ -14,14 +14,16 @@ import { GenerarCargosModal } from "./generar-cargos-modal";
 import { CARGO_ESTADO_COLOR, CARGO_ESTADO_LABEL, CARGO_TIPO_LABEL, type CargoRow } from "./types";
 
 export const CargoList = () => {
-  // Prefiltrar por contrato cuando se llega desde "Ver cargos" del detalle de la unidad o del gasto.
+  // Prefiltrar por contrato cuando se llega desde "Ver cargos" del detalle de la unidad, o por gasto desde el detalle del gasto.
   const [searchParams] = useSearchParams();
   const contratoParam = Number(searchParams.get("contrato_id"));
+  const gastoParam = Number(searchParams.get("gasto_id"));
   // Mostrar todos los estados (no solo pendientes) cuando se llega a ver un cargo puntual, que puede estar pagado o anulado.
   const todosLosEstados = searchParams.get("todos_los_estados") === "1";
   const filtrosIniciales = {
     ...FILTROS_CARGOS_INICIALES,
     contratoId: contratoParam > 0 ? contratoParam : undefined,
+    gastoId: gastoParam > 0 ? gastoParam : undefined,
     ...(todosLosEstados ? { estados: [] } : {}),
   };
 
@@ -113,43 +115,56 @@ export const CargoList = () => {
           )}
         />
         <Table.Column
-          title="Período"
-          dataIndex="periodo"
-          render={(periodo: CargoRow["periodo"]) => dayjs(`${periodo}-01`).format("MM/YYYY")}
-        />
-        <Table.Column title="Tipo" dataIndex="tipo" render={(tipo: CargoRow["tipo"]) => CARGO_TIPO_LABEL[tipo]} />
-        <Table.Column
-          title="Descripción"
+          title="Cargo"
           dataIndex="descripcion"
-          render={(descripcion: CargoRow["descripcion"], record: CargoRow) =>
-            record.gasto ? (
-              <Tooltip title="Ver el gasto de origen">
-                <Link to={`/administrador/gastos/show/${record.gasto.id}`}>{descripcion}</Link>
-              </Tooltip>
-            ) : (
-              descripcion
-            )
-          }
+          render={(descripcion: CargoRow["descripcion"], record: CargoRow) => (
+            <>
+              <div>
+                {record.gasto ? (
+                  <Tooltip title="Ver el gasto de origen">
+                    <Link to={`/administrador/gastos/show/${record.gasto.id}`}>{descripcion}</Link>
+                  </Tooltip>
+                ) : (
+                  descripcion
+                )}
+              </div>
+              <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                Tipo: {CARGO_TIPO_LABEL[record.tipo]} · Período: {dayjs(`${record.periodo}-01`).format("MM/YYYY")}
+              </Typography.Text>
+            </>
+          )}
+        />
+        <Table.Column
+          title="Monto"
+          dataIndex="monto"
+          render={(monto: CargoRow["monto"], record: CargoRow) => (
+            <>
+              <div>{formatMonto(monto)}</div>
+              <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                IVA {record.tasa_iva}%
+              </Typography.Text>
+            </>
+          )}
+        />
+        <Table.Column
+          title="Saldo"
+          dataIndex="saldo"
+          render={(saldo: CargoRow["saldo"], record: CargoRow) => (
+            <>
+              <div>{formatMonto(saldo)}</div>
+              {/* Mostrar la mora solo si corre: es lo que se suma al saldo al cobrar. */}
+              {Number(record.mora_al_dia) > 0 && (
+                <Typography.Text type="danger" style={{ fontSize: 12 }}>
+                  + mora {formatMonto(record.mora_al_dia)} ({record.dias_atraso} días)
+                </Typography.Text>
+              )}
+            </>
+          )}
         />
         <Table.Column
           title="Vencimiento"
           dataIndex="fecha_vencimiento"
           render={(fecha: CargoRow["fecha_vencimiento"]) => dayjs(fecha).format("DD/MM/YYYY")}
-        />
-        <Table.Column title="Monto" dataIndex="monto" render={(monto: CargoRow["monto"]) => formatMonto(monto)} />
-        <Table.Column title="Saldo" dataIndex="saldo" render={(saldo: CargoRow["saldo"]) => formatMonto(saldo)} />
-        <Table.Column
-          title="Mora al día"
-          dataIndex="mora_al_dia"
-          render={(mora: CargoRow["mora_al_dia"], record: CargoRow) =>
-            Number(mora) > 0 ? (
-              <Tooltip title={`${record.dias_atraso} días de atraso`}>
-                <span>{formatMonto(mora)}</span>
-              </Tooltip>
-            ) : (
-              "—"
-            )
-          }
         />
         <Table.Column
           title="Estado"

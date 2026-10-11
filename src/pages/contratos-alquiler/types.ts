@@ -36,6 +36,13 @@ export const EXPENSAS_A_CARGO_LABEL: Record<ExpensasACargo, string> = {
   INQUILINO: "Inquilino",
 };
 
+export type ContratoDestino = "RESIDENCIAL" | "OTROS";
+
+export const CONTRATO_DESTINO_OPTIONS: { label: string; value: ContratoDestino }[] = [
+  { label: "Residencial", value: "RESIDENCIAL" },
+  { label: "Otros usos", value: "OTROS" },
+];
+
 export type ContratoAlquilerRow = {
   id: number;
   unidad_id: number;
@@ -69,6 +76,7 @@ export type ContratoAlquilerRow = {
   dia_vencimiento: number;
   dias_gracia: number;
   expensas_a_cargo_de: ExpensasACargo;
+  destino: ContratoDestino;
   // Derivado de las fechas en el backend (no se guarda).
   estado: ContratoAlquilerEstado;
   fecha_fin_efectiva: string;

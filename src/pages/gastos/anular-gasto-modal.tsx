@@ -19,6 +19,9 @@ export const AnularGastoModal = ({
   const { message } = App.useApp();
   const [guardando, setGuardando] = useState(false);
   const [form] = Form.useForm<Valores>();
+  // Solo los cargos activos se anulan con el gasto.
+  const cargosActivos = gasto.cargos.filter((cargo) => cargo.estado !== "ANULADO");
+  const totalCargos = cargosActivos.reduce((total, cargo) => total + Number(cargo.monto), 0);
 
   const anular = async (values: Valores) => {
     setGuardando(true);
@@ -44,12 +47,16 @@ export const AnularGastoModal = ({
       cancelText="Cancelar"
       confirmLoading={guardando}
     >
-      {gasto.cargo && gasto.cargo.estado !== "ANULADO" && (
+      {cargosActivos.length > 0 && (
         <Alert
           type="warning"
           showIcon
           style={{ marginBottom: 16 }}
-          message={`También se anula el cargo al inquilino (${formatMonto(gasto.cargo.monto)}).`}
+          message={
+            cargosActivos.length === 1
+              ? `También se anula el cargo al inquilino (${formatMonto(totalCargos)}).`
+              : `También se anulan ${cargosActivos.length} cargos al inquilino por ${formatMonto(totalCargos)}.`
+          }
         />
       )}
       <Form form={form} layout="vertical" onFinish={anular}>

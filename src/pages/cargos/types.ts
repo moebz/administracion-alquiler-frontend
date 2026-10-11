@@ -19,6 +19,12 @@ export const CARGO_TIPO_MANUAL_OPTIONS = CARGO_TIPO_OPTIONS.filter(
   (option) => option.value === "ALQUILER" || option.value === "OTRO",
 );
 
+export const TASA_IVA_OPTIONS = [
+  { label: "Exenta", value: 0 },
+  { label: "5%", value: 5 },
+  { label: "10%", value: 10 },
+];
+
 export type CargoEstado = "PENDIENTE" | "PARCIAL" | "VENCIDO" | "PAGADO" | "ANULADO";
 
 export const CARGO_ESTADO_OPTIONS: { label: string; value: CargoEstado }[] = [
@@ -66,6 +72,7 @@ export type CargoRow = {
   fecha_vencimiento: string;
   // Serializados como string: cast `decimal:4` (App\Models\Cargo).
   monto: number | string;
+  tasa_iva: 0 | 5 | 10;
   monto_descontado: number | string;
   facturado: number | string;
   saldo: number | string;

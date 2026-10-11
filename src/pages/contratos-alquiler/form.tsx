@@ -8,7 +8,7 @@ import { PorcentajeInput } from "../../components/porcentaje-input";
 import { SectionDivider } from "../../components/section-divider";
 import { SectionRow } from "../../components/section-row";
 import { UnidadSelect } from "../../components/unidad-select";
-import { EXPENSAS_A_CARGO_OPTIONS } from "./types";
+import { CONTRATO_DESTINO_OPTIONS, EXPENSAS_A_CARGO_OPTIONS } from "./types";
 
 type ContratoAlquilerFormProps = {
   formProps: FormProps;
@@ -91,6 +91,16 @@ export const ContratoAlquilerForm = ({ formProps, mostrarMontoAlquiler, unidadBl
 
       <SectionDivider icon={<DollarOutlined />}>Alquiler y expensas</SectionDivider>
       <SectionRow>
+        <Col xs={24} md={8}>
+          <Form.Item
+            label="Destino"
+            name="destino"
+            rules={[{ required: true }]}
+            extra="5% de IVA solo si es vivienda de manera exclusiva; uso mixto va como Otros usos (Ley 6380, art. 90)."
+          >
+            <Select options={CONTRATO_DESTINO_OPTIONS} placeholder="Elegí el destino" />
+          </Form.Item>
+        </Col>
         {mostrarMontoAlquiler && (
           <Col xs={24} md={8}>
             <Form.Item label="Monto de alquiler mensual" name="monto_alquiler" rules={[{ required: true }]}>

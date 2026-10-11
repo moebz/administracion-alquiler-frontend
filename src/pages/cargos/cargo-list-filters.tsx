@@ -63,6 +63,11 @@ export const CargoListFilters = ({
           Solo el contrato #{filtros.contratoId}
         </Tag>
       )}
+      {filtros.gastoId && (
+        <Tag closable onClose={() => applyFilters({ gastoId: undefined })}>
+          Solo el gasto #{filtros.gastoId}
+        </Tag>
+      )}
       <Space>
         <span>Inquilino</span>
         <Select
