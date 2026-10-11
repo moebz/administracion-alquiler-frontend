@@ -70,7 +70,7 @@ export const ConceptoForm = ({ formProps, codigoEditable }: ConceptoFormProps) =
         <Form.Item
           label="Precio unitario (IVA incluido)"
           name="precio_unitario"
-          extra="Es un precio a sugerir: se puede cambiar al armar cada línea de la factura de venta. Tildá «Sin sugerencia ee precio» si ese precio se define recién en ese momento."
+          extra="Es un precio a sugerir: se puede cambiar al armar cada línea de la factura de venta. Tildá «Sin sugerencia de precio» si ese precio se define recién en ese momento."
         >
           <PrecioField />
         </Form.Item>
