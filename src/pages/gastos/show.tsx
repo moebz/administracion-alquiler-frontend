@@ -31,7 +31,7 @@ import {
 } from "antd";
 import dayjs from "dayjs";
 import { Link } from "react-router";
-import { CARGO_ESTADO_COLOR, CARGO_ESTADO_LABEL, CARGO_TIPO_LABEL } from "../cargos/types";
+import { CARGO_DEUDOR_AL, CARGO_ESTADO_COLOR, CARGO_ESTADO_LABEL, CARGO_TIPO_LABEL, type CargoDeudor } from "../cargos/types";
 import { CompraDetail } from "../compras/compra-detail";
 import type { CompraRow } from "../compras/types";
 import { formatMonto } from "../../utils/monto";
@@ -83,6 +83,8 @@ export const GastoShow = () => {
   // Un cargo ya facturado no se anula: el backend lo rechaza con 422, así que se deshabilita el botón y se explica por qué.
   const cargosActivos = gasto?.cargos.filter((cargo) => cargo.estado !== "ANULADO") ?? [];
   const cargoFacturado = cargosActivos.some((cargo) => Number(cargo.facturado) > 0);
+  // Los cargos de un gasto son al propietario o al inquilino según a cargo de quién esté.
+  const deudor: CargoDeudor = gasto?.a_cargo_de === "PROPIETARIO" ? "PROPIETARIO" : "INQUILINO";
 
   return (
     <Show
@@ -152,7 +154,7 @@ export const GastoShow = () => {
                   <Tooltip
                     title={
                       cargoFacturado
-                        ? "No se puede anular: un cargo al inquilino ya está facturado. Revertí primero lo facturado."
+                        ? `No se puede anular: un cargo ${CARGO_DEUDOR_AL[deudor]} ya está facturado. Revertí primero lo facturado.`
                         : undefined
                     }
                   >
@@ -247,7 +249,7 @@ export const GastoShow = () => {
                   type="info"
                   showIcon
                   style={{ marginBottom: 16 }}
-                  message="Los cargos al inquilino se mantienen. Si corresponde, anulalos desde Cargos."
+                  message={`Los cargos ${CARGO_DEUDOR_AL[deudor]} se mantienen. Si corresponde, anulalos desde Cargos.`}
                 />
               ) : undefined
             }
@@ -290,7 +292,7 @@ export const GastoShow = () => {
             title={
               <Space>
                 <SolutionOutlined />
-                Cargos al inquilino
+                Cargos {CARGO_DEUDOR_AL[deudor]}
               </Space>
             }
             extra={
@@ -303,11 +305,14 @@ export const GastoShow = () => {
               <Table.Column title="Monto" dataIndex="monto" render={(monto: CargoGasto["monto"]) => formatMonto(monto)} />
               <Table.Column title="IVA" dataIndex="tasa_iva" render={(tasa: CargoGasto["tasa_iva"]) => `${tasa}%`} />
               <Table.Column title="Saldo" dataIndex="saldo" render={(saldo: CargoGasto["saldo"]) => formatMonto(saldo)} />
-              <Table.Column
-                title="Vencimiento"
-                dataIndex="fecha_vencimiento"
-                render={(fecha: CargoGasto["fecha_vencimiento"]) => dayjs(fecha).format("DD/MM/YYYY")}
-              />
+              {/* El cargo al propietario no tiene vencimiento. */}
+              {deudor === "INQUILINO" && (
+                <Table.Column
+                  title="Vencimiento"
+                  dataIndex="fecha_vencimiento"
+                  render={(fecha: CargoGasto["fecha_vencimiento"]) => (fecha ? dayjs(fecha).format("DD/MM/YYYY") : "—")}
+                />
+              )}
               <Table.Column
                 title="Estado"
                 dataIndex="estado"

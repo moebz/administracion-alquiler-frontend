@@ -1,3 +1,5 @@
+import type { CargoDeudor } from "../cargos/types";
+
 export type GastoTipo = "EXPENSA" | "REPARACION" | "SERVICIO" | "OTRO";
 
 export const GASTO_TIPO_OPTIONS: { label: string; value: GastoTipo }[] = [
@@ -14,14 +16,13 @@ export const GASTO_TIPO_LABEL: Record<GastoTipo, string> = {
   OTRO: "Otro",
 };
 
-export type GastoEstado = "SOLICITADO" | "APROBADO" | "RECHAZADO" | "PAGADO" | "RECUPERADO" | "ANULADO";
+export type GastoEstado = "SOLICITADO" | "APROBADO" | "RECHAZADO" | "PAGADO" | "ANULADO";
 
 export const GASTO_ESTADO_OPTIONS: { label: string; value: GastoEstado }[] = [
   { label: "Solicitado", value: "SOLICITADO" },
   { label: "Aprobado", value: "APROBADO" },
   { label: "Rechazado", value: "RECHAZADO" },
   { label: "Pagado", value: "PAGADO" },
-  { label: "Recuperado", value: "RECUPERADO" },
   { label: "Anulado", value: "ANULADO" },
 ];
 
@@ -30,7 +31,6 @@ export const GASTO_ESTADO_LABEL: Record<GastoEstado, string> = {
   APROBADO: "Aprobado",
   RECHAZADO: "Rechazado",
   PAGADO: "Pagado",
-  RECUPERADO: "Recuperado",
   ANULADO: "Anulado",
 };
 
@@ -39,7 +39,6 @@ export const GASTO_ESTADO_COLOR: Record<GastoEstado, string> = {
   APROBADO: "green",
   RECHAZADO: "red",
   PAGADO: "blue",
-  RECUPERADO: "cyan",
   ANULADO: "default",
 };
 
@@ -69,27 +68,31 @@ export const APROBADO_POR_OPTIONS: { label: string; value: AprobadoPor }[] = [
 
 export type CargoGasto = {
   id: number;
+  deudor: CargoDeudor;
   tipo: "EXPENSA" | "OTRO";
   descripcion: string;
   monto: number | string;
   tasa_iva: 0 | 5 | 10;
   saldo: number | string;
-  fecha_vencimiento: string;
+  // Null en el cargo al propietario: no se le reclama el pago.
+  fecha_vencimiento: string | null;
   estado: "PENDIENTE" | "PARCIAL" | "VENCIDO" | "PAGADO" | "ANULADO";
   facturado: number | string;
 };
 
-// CREAR: se crean solos, uno por línea de la factura. CONFIRMAR: contrato terminado, o expensa posterior a su fin efectivo; solo si el usuario lo tilda. YA_TUVO: el gasto ya tuvo cargos.
+// CREAR: se crean solos, uno por línea de la factura. YA_TUVO: el gasto ya tuvo cargos.
 // `monto` es el total del gasto, que se reparte entre los cargos según las líneas de la factura.
-// BLOQUEADO: contrato anulado, no se puede registrar la factura.
+// BLOQUEADO: contrato anulado (solo al inquilino), no se puede registrar la factura.
+// `contrato_terminado` es la fecha de fin del contrato del gasto si ya terminó: los cargos se crean igual, solo se avisa.
+// Al propietario no le aplica el vencimiento ni el contrato.
 export type CargoPrevisto = {
-  estado: "CREAR" | "CONFIRMAR" | "YA_TUVO" | "BLOQUEADO";
+  estado: "CREAR" | "YA_TUVO" | "BLOQUEADO";
   tipo: "EXPENSA" | "OTRO";
   monto: number | string;
-  inquilino: string;
-  fecha_vencimiento: string;
-  contrato_situacion: "FUTURO" | "VIGENTE" | "FINALIZADO" | "RESCINDIDO" | "ANULADO";
-  fin_contrato: string;
+  deudor: CargoDeudor;
+  deudor_nombre: string;
+  fecha_vencimiento: string | null;
+  contrato_terminado: string | null;
 };
 
 export const APROBADO_POR_LABEL: Record<AprobadoPor, string> = {

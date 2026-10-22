@@ -19,6 +19,29 @@ export const CARGO_TIPO_MANUAL_OPTIONS = CARGO_TIPO_OPTIONS.filter(
   (option) => option.value === "ALQUILER" || option.value === "OTRO",
 );
 
+export type CargoDeudor = "INQUILINO" | "PROPIETARIO";
+
+export const CARGO_DEUDOR_LABEL: Record<CargoDeudor, string> = {
+  INQUILINO: "Inquilino",
+  PROPIETARIO: "Propietario",
+};
+
+// Para frases como "Cargos al propietario" o "facturado al inquilino".
+export const CARGO_DEUDOR_AL: Record<CargoDeudor, string> = {
+  INQUILINO: "al inquilino",
+  PROPIETARIO: "al propietario",
+};
+
+export const CARGO_DEUDOR_COLOR: Record<CargoDeudor, string> = {
+  INQUILINO: "geekblue",
+  PROPIETARIO: "purple",
+};
+
+export const CARGO_DEUDOR_OPTIONS: { label: string; value: CargoDeudor }[] = [
+  { label: "Inquilino", value: "INQUILINO" },
+  { label: "Propietario", value: "PROPIETARIO" },
+];
+
 export const TASA_IVA_OPTIONS = [
   { label: "Exenta", value: 0 },
   { label: "5%", value: 5 },
@@ -55,21 +78,24 @@ export const CARGO_ESTADOS_PENDIENTES: CargoEstado[] = ["PENDIENTE", "PARCIAL", 
 
 export type CargoRow = {
   id: number;
-  contrato_id: number;
-  contrato: {
+  deudor: CargoDeudor;
+  persona_id: number;
+  persona: { id: number; nombre: string };
+  unidad_id: number;
+  unidad: {
     id: number;
-    unidad: {
-      id: number;
-      numero: string;
-      bloque: { id: number; nombre: string; edificio: { id: number; nombre: string } };
-    };
-    inquilino: { id: number; nombre: string };
+    numero: string;
+    bloque: { id: number; nombre: string; edificio: { id: number; nombre: string } };
   };
+  // Solo el cargo al inquilino tiene contrato.
+  contrato_id: number | null;
+  contrato: { id: number } | null;
   tipo: CargoTipo;
   periodo: string;
   descripcion: string;
   fecha_emision: string;
-  fecha_vencimiento: string;
+  // Null en el cargo al propietario: no se le reclama el pago.
+  fecha_vencimiento: string | null;
   // Serializados como string: cast `decimal:4` (App\Models\Cargo).
   monto: number | string;
   tasa_iva: 0 | 5 | 10;

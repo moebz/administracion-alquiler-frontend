@@ -11,7 +11,14 @@ import { formatMonto } from "../../utils/monto";
 import { CargoListFilters } from "./cargo-list-filters";
 import { buildFiltrosCargos, FILTROS_CARGOS_INICIALES } from "./filtros";
 import { GenerarCargosModal } from "./generar-cargos-modal";
-import { CARGO_ESTADO_COLOR, CARGO_ESTADO_LABEL, CARGO_TIPO_LABEL, type CargoRow } from "./types";
+import {
+  CARGO_DEUDOR_COLOR,
+  CARGO_DEUDOR_LABEL,
+  CARGO_ESTADO_COLOR,
+  CARGO_ESTADO_LABEL,
+  CARGO_TIPO_LABEL,
+  type CargoRow,
+} from "./types";
 
 export const CargoList = () => {
   // Prefiltrar por contrato cuando se llega desde "Ver cargos" del detalle de la unidad, o por gasto desde el detalle del gasto.
@@ -103,15 +110,22 @@ export const CargoList = () => {
       <CargoListFilters inicial={filtrosIniciales} onChange={(filters) => setFilters(filters, "replace")} />
       <Table {...tableProps} rowKey="id" scroll={{ x: "max-content" }}>
         <Table.Column
-          title="Inquilino / Unidad"
-          dataIndex="contrato"
-          render={(contrato: CargoRow["contrato"]) => (
+          title="Deudor"
+          dataIndex="persona"
+          render={(persona: CargoRow["persona"], record: CargoRow) => (
             <>
-              <div>{contrato.inquilino.nombre}</div>
-              <Link to={`/administrador/unidades/show/${contrato.unidad.id}`}>
-                {contrato.unidad.bloque.edificio.nombre} - {contrato.unidad.bloque.nombre} - {contrato.unidad.numero}
-              </Link>
+              <Tag color={CARGO_DEUDOR_COLOR[record.deudor]}>{CARGO_DEUDOR_LABEL[record.deudor]}</Tag>
+              <div>{persona.nombre}</div>
             </>
+          )}
+        />
+        <Table.Column
+          title="Unidad"
+          dataIndex="unidad"
+          render={(unidad: CargoRow["unidad"]) => (
+            <Link to={`/administrador/unidades/show/${unidad.id}`}>
+              {unidad.bloque.edificio.nombre} - {unidad.bloque.nombre} - {unidad.numero}
+            </Link>
           )}
         />
         <Table.Column
@@ -164,7 +178,7 @@ export const CargoList = () => {
         <Table.Column
           title="Vencimiento"
           dataIndex="fecha_vencimiento"
-          render={(fecha: CargoRow["fecha_vencimiento"]) => dayjs(fecha).format("DD/MM/YYYY")}
+          render={(fecha: CargoRow["fecha_vencimiento"]) => (fecha ? dayjs(fecha).format("DD/MM/YYYY") : "—")}
         />
         <Table.Column
           title="Estado"

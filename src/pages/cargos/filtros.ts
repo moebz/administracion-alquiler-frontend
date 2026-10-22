@@ -1,10 +1,11 @@
 import type { CrudFilter } from "@refinedev/core";
-import { CARGO_ESTADOS_PENDIENTES, type CargoEstado, type CargoTipo } from "./types";
+import { CARGO_ESTADOS_PENDIENTES, type CargoDeudor, type CargoEstado, type CargoTipo } from "./types";
 
 export type FiltrosCargos = {
   contratoId?: number;
   gastoId?: number;
-  inquilinoId?: number;
+  deudor?: CargoDeudor;
+  personaId?: number;
   edificioId?: number;
   unidadId?: number;
   tipo?: CargoTipo;
@@ -25,8 +26,11 @@ export const buildFiltrosCargos = (filtros: FiltrosCargos): CrudFilter[] => {
   if (filtros.gastoId) {
     filters.push({ field: "gasto_id", operator: "eq", value: filtros.gastoId });
   }
-  if (filtros.inquilinoId) {
-    filters.push({ field: "inquilino_id", operator: "eq", value: filtros.inquilinoId });
+  if (filtros.deudor) {
+    filters.push({ field: "deudor", operator: "eq", value: filtros.deudor });
+  }
+  if (filtros.personaId) {
+    filters.push({ field: "persona_id", operator: "eq", value: filtros.personaId });
   }
   if (filtros.edificioId) {
     filters.push({ field: "edificio_id", operator: "eq", value: filtros.edificioId });

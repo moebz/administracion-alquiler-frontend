@@ -3,6 +3,7 @@ import { Alert, App, Form, Input, Modal } from "antd";
 import { extractErrorMessage } from "../../providers/auth";
 import { kyInstance } from "../../providers/data";
 import { formatMonto } from "../../utils/monto";
+import { CARGO_DEUDOR_AL } from "../cargos/types";
 import type { GastoRow } from "./types";
 
 type Valores = { motivo_anulacion: string };
@@ -21,6 +22,7 @@ export const AnularGastoModal = ({
   const [form] = Form.useForm<Valores>();
   // Solo los cargos activos se anulan con el gasto.
   const cargosActivos = gasto.cargos.filter((cargo) => cargo.estado !== "ANULADO");
+  const alDeudor = CARGO_DEUDOR_AL[gasto.a_cargo_de === "PROPIETARIO" ? "PROPIETARIO" : "INQUILINO"];
   const totalCargos = cargosActivos.reduce((total, cargo) => total + Number(cargo.monto), 0);
 
   const anular = async (values: Valores) => {
@@ -54,8 +56,8 @@ export const AnularGastoModal = ({
           style={{ marginBottom: 16 }}
           message={
             cargosActivos.length === 1
-              ? `También se anula el cargo al inquilino (${formatMonto(totalCargos)}).`
-              : `También se anulan ${cargosActivos.length} cargos al inquilino por ${formatMonto(totalCargos)}.`
+              ? `También se anula el cargo ${alDeudor} (${formatMonto(totalCargos)}).`
+              : `También se anulan ${cargosActivos.length} cargos ${alDeudor} por ${formatMonto(totalCargos)}.`
           }
         />
       )}

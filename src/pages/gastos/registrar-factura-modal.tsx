@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { CreditCardOutlined, DeleteOutlined, FileTextOutlined, PlusOutlined, UnorderedListOutlined } from "@ant-design/icons";
-import { Alert, App, Button, Checkbox, Col, DatePicker, Descriptions, Form, Input, InputNumber, Modal, Select, Tooltip, Typography } from "antd";
+import { Alert, App, Button, Col, DatePicker, Descriptions, Form, Input, InputNumber, Modal, Select, Tooltip, Typography } from "antd";
 import dayjs from "dayjs";
 import { kyInstance } from "../../providers/data";
 import { SectionDivider } from "../../components/section-divider";
@@ -10,6 +10,7 @@ import { subtotalLinea, totalesFactura, type LineaFactura } from "../../utils/fa
 import { formatMonto } from "../../utils/monto";
 import { COMPRA_CONDICION_OPTIONS, type CompraCondicion } from "../compras/types";
 import type { CompraRow } from "../compras/types";
+import { CARGO_DEUDOR_AL } from "../cargos/types";
 import type { CargoPrevisto, GastoRow } from "./types";
 
 const TASA_IVA_OPTIONS = [
@@ -31,28 +32,29 @@ type Valores = {
   detalles: Linea[];
   cantidad_cuotas?: number;
   fecha_primer_vencimiento?: string;
-  crear_cargo?: boolean;
   fecha_vencimiento_cargo?: string;
 };
 
 const CARGO_TIPO_PREVISTO_LABEL = { EXPENSA: "Expensa", OTRO: "Otro" };
 
-// Avisa qué va a pasar con los cargos al inquilino antes de registrar la factura: uno por cada línea.
+// Avisa qué va a pasar con los cargos antes de registrar la factura: uno por cada línea, al inquilino o al propietario.
 const AvisoCargo = ({ previsto, lineas }: { previsto: CargoPrevisto; lineas: number }) => {
-  const detalle = `${lineas === 1 ? "Un cargo" : `${lineas} cargos`} de tipo ${CARGO_TIPO_PREVISTO_LABEL[previsto.tipo]} al inquilino ${previsto.inquilino}, por un total de ${formatMonto(previsto.monto)}`;
+  const alDeudor = CARGO_DEUDOR_AL[previsto.deudor];
+  const detalle = `${lineas === 1 ? "Un cargo" : `${lineas} cargos`} de tipo ${CARGO_TIPO_PREVISTO_LABEL[previsto.tipo]} ${alDeudor} ${previsto.deudor_nombre}, por un total de ${formatMonto(previsto.monto)}`;
 
-  // Vencimiento sugerido por el contrato; el usuario lo puede cambiar (no antes de hoy).
-  const campoVencimiento = (
-    <Form.Item
-      label="Vencimiento de los cargos"
-      name="fecha_vencimiento_cargo"
-      extra="Sugerido: el próximo día de vencimiento del contrato, para cobrarlo junto con el alquiler."
-      getValueProps={(value) => ({ value: value ? dayjs(value) : undefined })}
-      style={{ margin: "12px 0 0", maxWidth: 360 }}
-    >
-      <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" disabledDate={(fecha) => fecha.isBefore(dayjs(), "day")} />
-    </Form.Item>
-  );
+  // Vencimiento sugerido por el contrato; el usuario lo puede cambiar (no antes de hoy). El propietario no tiene.
+  const campoVencimiento =
+    previsto.deudor === "INQUILINO" ? (
+      <Form.Item
+        label="Vencimiento de los cargos"
+        name="fecha_vencimiento_cargo"
+        extra="Sugerido: el próximo día de vencimiento del contrato, para cobrarlo junto con el alquiler."
+        getValueProps={(value) => ({ value: value ? dayjs(value) : undefined })}
+        style={{ margin: "12px 0 0", maxWidth: 360 }}
+      >
+        <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" disabledDate={(fecha) => fecha.isBefore(dayjs(), "day")} />
+      </Form.Item>
+    ) : null;
 
   if (previsto.estado === "BLOQUEADO") {
     return (
@@ -72,50 +74,35 @@ const AvisoCargo = ({ previsto, lineas }: { previsto: CargoPrevisto; lineas: num
         type="info"
         showIcon
         style={{ marginBottom: 16 }}
-        message="No se crearán cargos nuevos al inquilino"
-        description="Este gasto ya tuvo cargos al inquilino (activos o anulados). Si hace falta, podés crearlos manualmente desde Cargos."
-      />
-    );
-  }
-
-  if (previsto.estado === "CONFIRMAR") {
-    return (
-      <Alert
-        type="warning"
-        showIcon
-        style={{ marginBottom: 16 }}
-        message={
-          previsto.contrato_situacion === "VIGENTE"
-            ? `La expensa es de un período posterior al fin del contrato (${dayjs(previsto.fin_contrato).format("DD/MM/YYYY")})`
-            : `Estás a punto de crear cargos para un contrato ${previsto.contrato_situacion === "RESCINDIDO" ? "rescindido" : "finalizado"}`
-        }
-        description={
-          <>
-            <div>Cargos previstos: {detalle}.</div>
-            <div>Sin tildar, la factura se registra sin cargos y el gasto queda sin recuperar: lo absorbe la administradora.</div>
-            <Form.Item name="crear_cargo" valuePropName="checked" style={{ margin: "8px 0 0" }}>
-              <Checkbox>Crear los cargos al inquilino</Checkbox>
-            </Form.Item>
-            {campoVencimiento}
-          </>
-        }
+        message={`No se crearán cargos nuevos ${alDeudor}`}
+        description={`Este gasto ya tuvo cargos ${alDeudor} (activos o anulados). Si hace falta, podés crearlos manualmente desde Cargos.`}
       />
     );
   }
 
   return (
-    <Alert
-      type="info"
-      showIcon
-      style={{ marginBottom: 16 }}
-      message="Se creará un cargo al inquilino por cada línea de la factura"
-      description={
-        <>
-          <div>{detalle}.</div>
-          {campoVencimiento}
-        </>
-      }
-    />
+    <>
+      {previsto.contrato_terminado && (
+        <Alert
+          type="warning"
+          showIcon
+          style={{ marginBottom: 16 }}
+          message={`El contrato de este gasto terminó el ${dayjs(previsto.contrato_terminado).format("DD/MM/YYYY")}: los cargos se crean igual al inquilino de ese contrato. Si no corresponde, anulalos desde Cargos.`}
+        />
+      )}
+      <Alert
+        type="info"
+        showIcon
+        style={{ marginBottom: 16 }}
+        message={`Se creará un cargo ${alDeudor} por cada línea de la factura`}
+        description={
+          <>
+            <div>{detalle}.</div>
+            {campoVencimiento}
+          </>
+        }
+      />
+    </>
   );
 };
 
@@ -138,7 +125,7 @@ const valoresIniciales = (gasto: GastoRow, compra?: CompraRow) =>
     : {
         condicion: "CONTADO",
         detalles: [{ descripcion: gasto.descripcion, cantidad: 1, precio_unitario: Number(gasto.monto), tasa_iva: 10 }],
-        fecha_vencimiento_cargo: gasto.cargo_previsto?.fecha_vencimiento,
+        fecha_vencimiento_cargo: gasto.cargo_previsto?.fecha_vencimiento ?? undefined,
       };
 
 // Con `compra` edita esa factura (PUT) en vez de registrar una nueva (POST).
@@ -166,6 +153,7 @@ export const RegistrarFacturaModal = ({
   const cargosActivos = compra ? gasto.cargos.filter((cargo) => cargo.estado !== "ANULADO") : [];
   // Un cargo ya facturado no se puede rehacer: el backend rechaza la edición con 422, así que se bloquea el guardado.
   const hayCargoFacturado = cargosActivos.some((cargo) => Number(cargo.facturado) > 0);
+  const alDeudorDelGasto = CARGO_DEUDOR_AL[gasto.a_cargo_de === "PROPIETARIO" ? "PROPIETARIO" : "INQUILINO"];
 
   const registrar = async (values: Valores) => {
     setGuardando(true);
@@ -231,8 +219,8 @@ export const RegistrarFacturaModal = ({
             type="warning"
             showIcon
             style={{ marginBottom: 16 }}
-            message="Se rehacen los cargos al inquilino"
-            description={`${cargosActivos.length === 1 ? "Se anula el cargo actual" : `Se anulan los ${cargosActivos.length} cargos actuales`} y se crea uno por cada línea editada, con el mismo período y vencimiento.`}
+            message={`Se rehacen los cargos ${alDeudorDelGasto}`}
+            description={`${cargosActivos.length === 1 ? "Se anula el cargo actual" : `Se anulan los ${cargosActivos.length} cargos actuales`} y se crea uno por cada línea editada, con el mismo período${gasto.a_cargo_de === "PROPIETARIO" ? "" : " y vencimiento"}.`}
           />
         )}
         {hayCargoFacturado && (
@@ -241,7 +229,7 @@ export const RegistrarFacturaModal = ({
             showIcon
             style={{ marginBottom: 16 }}
             message="No se puede editar la factura"
-            description="Un cargo de este gasto ya está facturado al inquilino. Revertí primero lo facturado."
+            description={`Un cargo de este gasto ya está facturado ${alDeudorDelGasto}. Revertí primero lo facturado.`}
           />
         )}
         <SectionDivider icon={<FileTextOutlined />} style={{ marginTop: 16 }}>

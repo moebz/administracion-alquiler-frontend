@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSelect } from "@refinedev/antd";
 import { CalendarOutlined, DollarOutlined, FileTextOutlined } from "@ant-design/icons";
-import { Col, DatePicker, Form, Input, Select } from "antd";
+import { Col, DatePicker, Form, Input, Radio, Select } from "antd";
 import type { FormProps } from "antd";
 import dayjs from "dayjs";
 import { MontoInput } from "../../components/monto-input";
@@ -10,7 +10,7 @@ import { SectionRow } from "../../components/section-row";
 import { extractErrorMessage } from "../../providers/auth";
 import { kyInstance } from "../../providers/data";
 import { CONTRATO_ALQUILER_ESTADO_LABEL, type ContratoAlquilerRow } from "../contratos-alquiler/types";
-import { CARGO_TIPO_MANUAL_OPTIONS, TASA_IVA_OPTIONS } from "./types";
+import { CARGO_DEUDOR_OPTIONS, CARGO_TIPO_MANUAL_OPTIONS, TASA_IVA_OPTIONS } from "./types";
 
 const filtrarPorLabel = (input: string, option?: { label?: unknown }) =>
   String(option?.label ?? "")
@@ -28,12 +28,37 @@ export const CargoForm = ({ formProps }: { formProps: FormProps }) => {
     optionValue: "id",
   });
 
+  // Al propietario se le carga en una unidad (no en un contrato): el select muestra de quién es.
+  const { selectProps: unidadSelectProps } = useSelect<{
+    id: number;
+    numero: string;
+    bloque: { nombre: string; edificio: { nombre: string } };
+    propietario: { nombre: string };
+  }>({
+    resource: "unidades",
+    optionLabel: (unidad) =>
+      `${unidad.bloque.edificio.nombre} · ${unidad.bloque.nombre} · ${unidad.numero} — Propietario: ${unidad.propietario.nombre}`,
+    optionValue: "id",
+    filters: [{ field: "is_active", operator: "eq", value: true }],
+  });
+
+  const deudor = Form.useWatch("deudor", form);
+  const alPropietario = deudor === "PROPIETARIO";
   const tipo = Form.useWatch("tipo", form);
   const contratoId = Form.useWatch("contrato_id", form);
   const periodo = Form.useWatch("periodo", form);
   const esAlquiler = tipo === "ALQUILER";
   // Tasa que toma un cargo de alquiler del concepto de su contrato; se muestra sin editar.
   const [tasaAlquiler, setTasaAlquiler] = useState<number | null>(null);
+
+  // Al propietario solo se le carga un cargo OTRO, sin contrato ni vencimiento; al cambiar de deudor se limpia lo del otro.
+  useEffect(() => {
+    if (alPropietario) {
+      form?.setFieldsValue({ tipo: "OTRO", contrato_id: undefined, fecha_vencimiento: undefined });
+    } else {
+      form?.setFieldValue("unidad_id", undefined);
+    }
+  }, [alPropietario, form]);
 
   // OTRO arranca con el mes actual; ALQUILER exige elegir el período.
   useEffect(() => {
@@ -75,19 +100,36 @@ export const CargoForm = ({ formProps }: { formProps: FormProps }) => {
   return (
     <Form {...formProps} layout="vertical">
       <SectionDivider icon={<FileTextOutlined />} style={{ marginTop: 0 }}>
-        Contrato
+        Deudor
       </SectionDivider>
       <SectionRow>
-        <Col xs={24} md={16}>
-          <Form.Item label="Contrato" name="contrato_id" rules={[{ required: true }]}>
-            <Select
-              {...contratoSelectProps}
-              onSearch={undefined}
-              filterOption={filtrarPorLabel}
-              showSearch
-              placeholder="Elegí un contrato"
-            />
+        <Col xs={24} md={8}>
+          <Form.Item label="Deudor" name="deudor" rules={[{ required: true }]}>
+            <Radio.Group options={CARGO_DEUDOR_OPTIONS} optionType="button" buttonStyle="solid" />
           </Form.Item>
+        </Col>
+        <Col xs={24} md={16}>
+          {alPropietario ? (
+            <Form.Item label="Unidad" name="unidad_id" rules={[{ required: true }]}>
+              <Select
+                {...unidadSelectProps}
+                onSearch={undefined}
+                filterOption={filtrarPorLabel}
+                showSearch
+                placeholder="Elegí una unidad"
+              />
+            </Form.Item>
+          ) : (
+            <Form.Item label="Contrato" name="contrato_id" rules={[{ required: true }]}>
+              <Select
+                {...contratoSelectProps}
+                onSearch={undefined}
+                filterOption={filtrarPorLabel}
+                showSearch
+                placeholder="Elegí un contrato"
+              />
+            </Form.Item>
+          )}
         </Col>
       </SectionRow>
 
@@ -95,7 +137,10 @@ export const CargoForm = ({ formProps }: { formProps: FormProps }) => {
       <SectionRow>
         <Col xs={24} md={8}>
           <Form.Item label="Tipo" name="tipo" rules={[{ required: true }]}>
-            <Select options={CARGO_TIPO_MANUAL_OPTIONS} />
+            <Select
+              options={alPropietario ? CARGO_TIPO_MANUAL_OPTIONS.filter((option) => option.value === "OTRO") : CARGO_TIPO_MANUAL_OPTIONS}
+              disabled={alPropietario}
+            />
           </Form.Item>
         </Col>
         <Col xs={24} md={8}>
@@ -118,7 +163,7 @@ export const CargoForm = ({ formProps }: { formProps: FormProps }) => {
         )}
       </SectionRow>
 
-      <SectionDivider icon={<DollarOutlined />}>Importe y vencimiento</SectionDivider>
+      <SectionDivider icon={<DollarOutlined />}>{alPropietario ? "Importe" : "Importe y vencimiento"}</SectionDivider>
       <SectionRow>
         <Col xs={24} md={8}>
           <Form.Item label="Monto" name="monto" rules={[{ required: true }]}>
@@ -136,17 +181,20 @@ export const CargoForm = ({ formProps }: { formProps: FormProps }) => {
             </Form.Item>
           )}
         </Col>
-        <Col xs={24} md={8}>
-          <Form.Item
-            label="Vencimiento"
-            name="fecha_vencimiento"
-            rules={[{ required: !esAlquiler }]}
-            getValueProps={(value) => ({ value: value ? dayjs(value) : undefined })}
-            normalize={(value) => (value ? dayjs(value).format("YYYY-MM-DD") : value)}
-          >
-            <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />
-          </Form.Item>
-        </Col>
+        {/* El cargo al propietario no tiene vencimiento: no se le reclama el pago, se le descuenta en la liquidación. */}
+        {!alPropietario && (
+          <Col xs={24} md={8}>
+            <Form.Item
+              label="Vencimiento"
+              name="fecha_vencimiento"
+              rules={[{ required: !esAlquiler }]}
+              getValueProps={(value) => ({ value: value ? dayjs(value) : undefined })}
+              normalize={(value) => (value ? dayjs(value).format("YYYY-MM-DD") : value)}
+            >
+              <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />
+            </Form.Item>
+          </Col>
+        )}
       </SectionRow>
     </Form>
   );

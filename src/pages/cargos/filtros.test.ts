@@ -25,7 +25,8 @@ describe("buildFiltrosCargos", () => {
 
   it("arma un filtro por cada campo informado", () => {
     const filters = buildFiltrosCargos({
-      inquilinoId: 4,
+      deudor: "PROPIETARIO",
+      personaId: 4,
       edificioId: 2,
       unidadId: 9,
       tipo: "OTRO",
@@ -33,7 +34,8 @@ describe("buildFiltrosCargos", () => {
     });
 
     expect(filters).toEqual([
-      { field: "inquilino_id", operator: "eq", value: 4 },
+      { field: "deudor", operator: "eq", value: "PROPIETARIO" },
+      { field: "persona_id", operator: "eq", value: 4 },
       { field: "edificio_id", operator: "eq", value: 2 },
       { field: "unidad_id", operator: "eq", value: 9 },
       { field: "tipo", operator: "eq", value: "OTRO" },

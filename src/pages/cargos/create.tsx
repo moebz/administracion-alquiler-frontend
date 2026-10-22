@@ -11,7 +11,7 @@ export const CargoCreate = () => {
       saveButtonProps={saveButtonProps}
       title={<PageTitle icon={<ReconciliationOutlined />}>Nuevo cargo</PageTitle>}
     >
-      <CargoForm formProps={{ ...formProps, initialValues: { tipo: "ALQUILER", ...formProps.initialValues } }} />
+      <CargoForm formProps={{ ...formProps, initialValues: { deudor: "INQUILINO", tipo: "ALQUILER", ...formProps.initialValues } }} />
     </Create>
   );
 };

@@ -5,7 +5,7 @@ import { DatePicker, Select, Space, Tag } from "antd";
 import dayjs, { type Dayjs } from "dayjs";
 import { FilterBar } from "../../components/filter-bar";
 import { buildFiltrosCargos, FILTROS_CARGOS_INICIALES, type FiltrosCargos } from "./filtros";
-import { CARGO_ESTADO_OPTIONS, CARGO_TIPO_OPTIONS } from "./types";
+import { CARGO_DEUDOR_OPTIONS, CARGO_ESTADO_OPTIONS, CARGO_TIPO_OPTIONS } from "./types";
 
 const { RangePicker } = DatePicker;
 
@@ -23,11 +23,18 @@ export const CargoListFilters = ({
 }) => {
   const [filtros, setFiltros] = useState<FiltrosCargos>(inicial);
 
-  const { selectProps: inquilinoSelectProps } = useSelect<{ id: number; nombre: string; documento: string }>({
+  // La persona deudora puede ser inquilino o propietario, así que se filtra por el rol del deudor elegido (o por ambos si no hay).
+  const { selectProps: personaSelectProps } = useSelect<{ id: number; nombre: string; documento: string }>({
     resource: "personas",
     optionLabel: (persona) => `${persona.nombre} (${persona.documento})`,
     optionValue: "id",
-    filters: [{ field: "roles", operator: "in", value: ["inquilino"] }],
+    filters: [
+      {
+        field: "roles",
+        operator: "in",
+        value: filtros.deudor ? [filtros.deudor.toLowerCase()] : ["inquilino", "propietario"],
+      },
+    ],
     onSearch: (value) => (value ? [{ field: "search", operator: "eq", value }] : []),
   });
 
@@ -69,18 +76,29 @@ export const CargoListFilters = ({
         </Tag>
       )}
       <Space>
-        <span>Inquilino</span>
+        <span>Deudor</span>
+        <Select
+          style={{ minWidth: 140 }}
+          allowClear
+          placeholder="Todos"
+          options={CARGO_DEUDOR_OPTIONS}
+          value={filtros.deudor}
+          onChange={(value) => applyFilters({ deudor: value, personaId: undefined })}
+        />
+      </Space>
+      <Space>
+        <span>Persona</span>
         <Select
           showSearch
-          options={inquilinoSelectProps.options}
-          loading={inquilinoSelectProps.loading}
-          onSearch={inquilinoSelectProps.onSearch}
+          options={personaSelectProps.options}
+          loading={personaSelectProps.loading}
+          onSearch={personaSelectProps.onSearch}
           filterOption={false}
           style={{ minWidth: 240 }}
           allowClear
-          placeholder="Todos"
-          value={filtros.inquilinoId}
-          onChange={(value) => applyFilters({ inquilinoId: value })}
+          placeholder="Todas"
+          value={filtros.personaId}
+          onChange={(value) => applyFilters({ personaId: value })}
         />
       </Space>
       <Space>
