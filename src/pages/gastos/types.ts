@@ -81,19 +81,23 @@ export type CargoGasto = {
   marca: CargoMarca | null;
 };
 
-// CREAR: se crean solos, uno por línea de la factura. YA_TUVO: el gasto ya tuvo cargos.
-// `monto` es el total del gasto, que se reparte entre los cargos según las líneas de la factura.
+// CREAR: el gasto nunca tuvo cargos, se crean solos, uno por línea de la factura. `monto` es el total del gasto,
+// que se reparte entre los cargos según las líneas de la factura.
+// REHACER: tiene `cargos_activos` sin facturar (p. ej. tras anular la factura del proveedor): se anulan y se crea uno por línea nueva.
+// REVISAR_FACTURA: algún cargo activo ya está facturado, no se toca ninguno.
+// YA_TUVO: todos sus cargos se anularon, no se crean otros.
 // BLOQUEADO: contrato anulado (solo al inquilino), no se puede registrar la factura.
 // `contrato_terminado` es la fecha de fin del contrato del gasto si ya terminó: los cargos se crean igual, solo se avisa.
 // Al propietario no le aplica el vencimiento ni el contrato.
 export type CargoPrevisto = {
-  estado: "CREAR" | "YA_TUVO" | "BLOQUEADO";
+  estado: "CREAR" | "REHACER" | "REVISAR_FACTURA" | "YA_TUVO" | "BLOQUEADO";
   tipo: "EXPENSA" | "OTRO";
   monto: number | string;
   deudor: CargoDeudor;
   deudor_nombre: string;
   fecha_vencimiento: string | null;
   contrato_terminado: string | null;
+  cargos_activos: number;
 };
 
 export const APROBADO_POR_LABEL: Record<AprobadoPor, string> = {

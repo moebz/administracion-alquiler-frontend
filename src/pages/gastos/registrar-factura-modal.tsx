@@ -42,13 +42,19 @@ const AvisoCargo = ({ previsto, lineas }: { previsto: CargoPrevisto; lineas: num
   const alDeudor = CARGO_DEUDOR_AL[previsto.deudor];
   const detalle = `${lineas === 1 ? "Un cargo" : `${lineas} cargos`} de tipo ${CARGO_TIPO_PREVISTO_LABEL[previsto.tipo]} ${alDeudor} ${previsto.deudor_nombre}, por un total de ${formatMonto(previsto.monto)}`;
 
-  // Vencimiento sugerido por el contrato; el usuario lo puede cambiar (no antes de hoy). El propietario no tiene.
+  // Explicar de dónde sale el vencimiento sugerido: al rehacer, el de los cargos actuales si todavía no pasó.
+  let ayudaVencimiento = "Sugerido: el próximo día de vencimiento del contrato, para cobrarlo junto con el alquiler.";
+  if (previsto.estado === "REHACER") {
+    ayudaVencimiento = "Sugerido: el vencimiento de los cargos actuales, o el próximo día de vencimiento del contrato si ya pasó.";
+  }
+
+  // Vencimiento sugerido; el usuario lo puede cambiar (no antes de hoy). El propietario no tiene.
   const campoVencimiento =
     previsto.deudor === "INQUILINO" ? (
       <Form.Item
         label="Vencimiento de los cargos"
         name="fecha_vencimiento_cargo"
-        extra="Sugerido: el próximo día de vencimiento del contrato, para cobrarlo junto con el alquiler."
+        extra={ayudaVencimiento}
         getValueProps={(value) => ({ value: value ? dayjs(value) : undefined })}
         style={{ margin: "12px 0 0", maxWidth: 360 }}
       >
@@ -80,16 +86,51 @@ const AvisoCargo = ({ previsto, lineas }: { previsto: CargoPrevisto; lineas: num
     );
   }
 
-  return (
-    <>
-      {previsto.contrato_terminado && (
+  // Avisar que el contrato terminó: los cargos se crean igual en ese contrato.
+  const avisoContratoTerminado = previsto.contrato_terminado && (
+    <Alert
+      type="warning"
+      showIcon
+      style={{ marginBottom: 16 }}
+      message={`El contrato de este gasto terminó el ${dayjs(previsto.contrato_terminado).format("DD/MM/YYYY")}: los cargos se crean igual al inquilino de ese contrato. Si no corresponde, anulalos desde Cargos.`}
+    />
+  );
+
+  if (previsto.estado === "REVISAR_FACTURA") {
+    return (
+      <Alert
+        type="warning"
+        showIcon
+        style={{ marginBottom: 16 }}
+        message={`Hay cargos ya facturados ${alDeudor}: ningún cargo se va a tocar`}
+        description={`Si vas a corregir la factura ${alDeudor}, anulala antes de registrar esta factura del proveedor, así los cargos se rehacen solos.`}
+      />
+    );
+  }
+
+  if (previsto.estado === "REHACER") {
+    return (
+      <>
+        {avisoContratoTerminado}
         <Alert
           type="warning"
           showIcon
           style={{ marginBottom: 16 }}
-          message={`El contrato de este gasto terminó el ${dayjs(previsto.contrato_terminado).format("DD/MM/YYYY")}: los cargos se crean igual al inquilino de ese contrato. Si no corresponde, anulalos desde Cargos.`}
+          message={`${previsto.cargos_activos === 1 ? "Se anula el cargo actual" : `Se anulan los ${previsto.cargos_activos} cargos actuales`} y se crea uno por cada línea de esta factura`}
+          description={
+            <>
+              <div>{detalle}.</div>
+              {campoVencimiento}
+            </>
+          }
         />
-      )}
+      </>
+    );
+  }
+
+  return (
+    <>
+      {avisoContratoTerminado}
       <Alert
         type="info"
         showIcon
@@ -150,7 +191,8 @@ export const RegistrarFacturaModal = ({
   const diferencia = montoGasto - totales.total;
   // Solo al registrar se crean cargos por primera vez; al editar, los activos se rehacen.
   const previsto = compra ? null : gasto.cargo_previsto;
-  const cargosActivos = compra ? gasto.cargos.filter((cargo) => cargo.estado !== "ANULADO") : [];
+  // Solo cuentan los cargos de la factura vigente: los marcados vienen de una factura anulada y no se rehacen.
+  const cargosActivos = compra ? gasto.cargos.filter((cargo) => cargo.estado !== "ANULADO" && !cargo.marca) : [];
   // Un cargo ya facturado no se puede rehacer: el backend rechaza la edición con 422, así que se bloquea el guardado.
   const hayCargoFacturado = cargosActivos.some((cargo) => Number(cargo.facturado) > 0);
   const alDeudorDelGasto = CARGO_DEUDOR_AL[gasto.a_cargo_de === "PROPIETARIO" ? "PROPIETARIO" : "INQUILINO"];
