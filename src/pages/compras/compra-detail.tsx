@@ -75,6 +75,8 @@ export const CompraDetail = ({
     message.error(await extractErrorMessage(response, "No se pudo anular la compra."));
   };
 
+  // Los pagos con aplicaciones activas no se anulan con la factura: quedan como anticipo al proveedor.
+  const tienePagosActivos = compra?.cuotas.some((cuota) => cuota.pagos.some((pago) => pago.estado === "ACTIVA")) ?? false;
   const total = Number(compra?.total ?? 0);
   const hoy = dayjs().startOf("day");
 
@@ -280,6 +282,14 @@ export const CompraDetail = ({
         cancelText="Cancelar"
         confirmLoading={guardando}
       >
+        {tienePagosActivos && (
+          <Alert
+            type="info"
+            showIcon
+            style={{ marginBottom: 16 }}
+            message="Los pagos aplicados no se anulan: quedan como anticipo al proveedor, para aplicarlos a otra factura."
+          />
+        )}
         {avisoAnulacion}
         <Form form={form} layout="vertical" onFinish={anular}>
           <Form.Item label="Motivo" name="motivo_anulacion" rules={[{ required: true }, { max: 255 }]}>
