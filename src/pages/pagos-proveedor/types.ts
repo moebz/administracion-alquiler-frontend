@@ -35,6 +35,8 @@ export type PagoProveedorAplicacionRow = {
   monto_aplicado: number | string;
   estado: "ACTIVA" | "ANULADA";
   valor_anulado_id: number | null;
+  // Gasto que registró la factura a la que se aplicó, aunque esté anulada; null si la factura no vino de un gasto.
+  gasto: { id: number; descripcion: string; unidad: string } | null;
 };
 
 export type PagoProveedorRow = {

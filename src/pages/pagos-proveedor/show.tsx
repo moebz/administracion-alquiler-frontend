@@ -147,6 +147,19 @@ export const PagoProveedorShow = () => {
             <Link to={`/administrador/compras/show/${record.documento_compra_id}`}>{numero}</Link>
           )}
         />
+        <Table.Column
+          title="Gasto"
+          dataIndex="gasto"
+          render={(gasto: PagoProveedorAplicacionRow["gasto"]) =>
+            gasto ? (
+              <Link to={`/administrador/gastos/show/${gasto.id}`}>
+                {gasto.unidad} · {gasto.descripcion}
+              </Link>
+            ) : (
+              "—"
+            )
+          }
+        />
         <Table.Column title="N° cuota" dataIndex="numero_cuota" />
         <Table.Column
           title="Monto aplicado"
