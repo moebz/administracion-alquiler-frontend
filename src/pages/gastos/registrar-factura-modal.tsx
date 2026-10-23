@@ -1,7 +1,9 @@
 import { useState } from "react";
-import { CreditCardOutlined, DeleteOutlined, FileTextOutlined, PlusOutlined, UnorderedListOutlined } from "@ant-design/icons";
-import { Alert, App, Button, Col, DatePicker, Descriptions, Form, Input, InputNumber, Modal, Select, Tooltip, Typography } from "antd";
+import { CreditCardOutlined, DeleteOutlined, FileTextOutlined, PlusOutlined, UnorderedListOutlined, WalletOutlined } from "@ant-design/icons";
+import { usePermissions } from "@refinedev/core";
+import { Alert, App, Button, Checkbox, Col, DatePicker, Descriptions, Flex, Form, Input, InputNumber, Modal, Select, Tooltip, Typography } from "antd";
 import dayjs from "dayjs";
+import { Link } from "react-router";
 import { kyInstance } from "../../providers/data";
 import { SectionDivider } from "../../components/section-divider";
 import { SectionRow } from "../../components/section-row";
@@ -11,7 +13,7 @@ import { formatMonto } from "../../utils/monto";
 import { COMPRA_CONDICION_OPTIONS, type CompraCondicion } from "../compras/types";
 import type { CompraRow } from "../compras/types";
 import { CARGO_DEUDOR_AL } from "../cargos/types";
-import type { CargoPrevisto, GastoRow } from "./types";
+import type { AnticipoOrigenSituacion, AnticipoProveedor, CargoPrevisto, GastoRow } from "./types";
 
 const TASA_IVA_OPTIONS = [
   { label: "Exenta", value: 0 },
@@ -33,9 +35,41 @@ type Valores = {
   cantidad_cuotas?: number;
   fecha_primer_vencimiento?: string;
   fecha_vencimiento_cargo?: string;
+  anticipos?: number[];
 };
 
 const CARGO_TIPO_PREVISTO_LABEL = { EXPENSA: "Expensa", OTRO: "Otro" };
+
+const ANTICIPO_ORIGEN_LABEL: Record<AnticipoOrigenSituacion, string> = {
+  ESPERA_REEMPLAZO: "factura del proveedor anulada, espera reemplazo",
+  ANULADO: "gasto anulado",
+  REEMPLAZADA: "ya tiene su factura de reemplazo",
+};
+
+// Describe un anticipo para elegirlo: el pago, su saldo y los gastos por los que pasó; avisa si usarlo obliga a pagar de nuevo otra factura.
+const AnticipoOpcion = ({ anticipo }: { anticipo: AnticipoProveedor }) => {
+  const historial = anticipo.historial
+    .map((origen) => `${origen.descripcion} · ${origen.unidad} (${ANTICIPO_ORIGEN_LABEL[origen.situacion]})`)
+    .join(" → ");
+  const esperando = anticipo.historial.filter((origen) => origen.situacion === "ESPERA_REEMPLAZO").map((origen) => origen.descripcion);
+
+  return (
+    <Flex vertical>
+      <span>
+        Pago #{anticipo.numero} · {formatMonto(anticipo.saldo)}
+        {historial && ` · ${historial}`}{" "}
+        <Link to={`/administrador/pagos-proveedor/show/${anticipo.id}`} target="_blank" onClick={(event) => event.stopPropagation()}>
+          Ver pago
+        </Link>
+      </span>
+      {anticipo.aviso && (
+        <Typography.Text type="warning">
+          Si lo usás, la factura de reemplazo de {esperando.join(", ")} se va a tener que pagar de nuevo.
+        </Typography.Text>
+      )}
+    </Flex>
+  );
+};
 
 // Avisa qué va a pasar con los cargos antes de registrar la factura: uno por cada línea, al inquilino o al propietario.
 const AvisoCargo = ({ previsto, lineas }: { previsto: CargoPrevisto; lineas: number }) => {
@@ -167,6 +201,7 @@ const valoresIniciales = (gasto: GastoRow, compra?: CompraRow) =>
         condicion: "CONTADO",
         detalles: [{ descripcion: gasto.descripcion, cantidad: 1, precio_unitario: Number(gasto.monto), tasa_iva: 10 }],
         fecha_vencimiento_cargo: gasto.cargo_previsto?.fecha_vencimiento ?? undefined,
+        anticipos: gasto.anticipos_proveedor.filter((anticipo) => anticipo.tildado).map((anticipo) => anticipo.id),
       };
 
 // Con `compra` edita esa factura (PUT) en vez de registrar una nueva (POST).
@@ -182,6 +217,7 @@ export const RegistrarFacturaModal = ({
   onSuccess: () => void;
 }) => {
   const { message } = App.useApp();
+  const { data: permissions } = usePermissions<string[]>({});
   const [guardando, setGuardando] = useState(false);
   const [form] = Form.useForm<Valores>();
   const condicion = Form.useWatch("condicion", form);
@@ -195,13 +231,20 @@ export const RegistrarFacturaModal = ({
   const cargosActivos = compra ? gasto.cargos.filter((cargo) => cargo.estado !== "ANULADO" && !cargo.marca) : [];
   // Un cargo ya facturado no se puede rehacer: el backend rechaza la edición con 422, así que se bloquea el guardado.
   const hayCargoFacturado = cargosActivos.some((cargo) => Number(cargo.facturado) > 0);
+  // Los anticipos se ofrecen solo al registrar, y a quien puede aplicarlos (sin ese permiso el backend rechaza mandarlos).
+  const mostrarAnticipos = !compra && (permissions?.includes("pagos.aplicar") ?? false) && gasto.anticipos_proveedor.length > 0;
   const alDeudorDelGasto = CARGO_DEUDOR_AL[gasto.a_cargo_de === "PROPIETARIO" ? "PROPIETARIO" : "INQUILINO"];
 
   const registrar = async (values: Valores) => {
     setGuardando(true);
+    // Mandar los anticipos elegidos en el orden de la lista, y solo si se ofrecieron.
+    const anticiposElegidos = mostrarAnticipos
+      ? gasto.anticipos_proveedor.filter((anticipo) => values.anticipos?.includes(anticipo.id)).map((anticipo) => anticipo.id)
+      : [];
     const response = await kyInstance[compra ? "put" : "post"](`gastos/${gasto.id}/factura`, {
       json: {
         ...values,
+        anticipos: anticiposElegidos.length > 0 ? anticiposElegidos : undefined,
         fecha: dayjs(values.fecha).format("YYYY-MM-DD"),
         fecha_primer_vencimiento: values.condicion === "CREDITO" && values.fecha_primer_vencimiento
           ? dayjs(values.fecha_primer_vencimiento).format("YYYY-MM-DD")
@@ -381,6 +424,18 @@ export const RegistrarFacturaModal = ({
             </Typography.Text>
           </Descriptions.Item>
         </Descriptions>
+
+        {mostrarAnticipos && (
+          <>
+            <SectionDivider icon={<WalletOutlined />}>Anticipos al proveedor</SectionDivider>
+            <Form.Item name="anticipos" extra="Pagos ya hechos a este proveedor que se aplican a esta factura. Lo que no se elija sigue disponible como anticipo.">
+              <Checkbox.Group
+                style={{ display: "flex", flexDirection: "column", gap: 8 }}
+                options={gasto.anticipos_proveedor.map((anticipo) => ({ value: anticipo.id, label: <AnticipoOpcion anticipo={anticipo} /> }))}
+              />
+            </Form.Item>
+          </>
+        )}
 
         <SectionDivider icon={<CreditCardOutlined />}>Condición de pago</SectionDivider>
         <SectionRow gutter={FORM_GUTTER} style={ROW_STYLE}>

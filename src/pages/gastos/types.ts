@@ -105,6 +105,21 @@ export const APROBADO_POR_LABEL: Record<AprobadoPor, string> = {
   PROPIETARIO: "Propietario",
 };
 
+// Gasto por el que pasó un anticipo: su factura del proveedor se anuló y espera reemplazo, el gasto se anuló, o ya tiene el reemplazo.
+export type AnticipoOrigenSituacion = "ESPERA_REEMPLAZO" | "ANULADO" | "REEMPLAZADA";
+
+// Pago ya hecho al proveedor del gasto con saldo sin aplicar. `tildado` dice si se ofrece elegido al registrar la factura;
+// `aviso` es que usarlo obligaría a pagar de nuevo la factura de reemplazo de otro gasto que la espera.
+export type AnticipoProveedor = {
+  id: number;
+  numero: number;
+  fecha: string;
+  saldo: number | string;
+  historial: { gasto_id: number; descripcion: string; unidad: string; situacion: AnticipoOrigenSituacion }[];
+  tildado: boolean;
+  aviso: boolean;
+};
+
 export type GastoRow = {
   id: number;
   unidad_id: number;
@@ -138,6 +153,8 @@ export type GastoRow = {
   motivo_anulacion: string | null;
   cargos: CargoGasto[];
   cargo_previsto: CargoPrevisto | null;
+  // Solo mientras el gasto está aprobado y sin factura; [] en el resto.
+  anticipos_proveedor: AnticipoProveedor[];
   documento_compra: {
     id: number;
     numero: string;
