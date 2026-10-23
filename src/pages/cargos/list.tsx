@@ -9,6 +9,7 @@ import { extractErrorMessage } from "../../providers/auth";
 import { kyInstance } from "../../providers/data";
 import { formatMonto } from "../../utils/monto";
 import { CargoListFilters } from "./cargo-list-filters";
+import { CargoMarcaTag } from "./cargo-marca-tag";
 import { buildFiltrosCargos, FILTROS_CARGOS_INICIALES } from "./filtros";
 import { GenerarCargosModal } from "./generar-cargos-modal";
 import {
@@ -188,6 +189,7 @@ export const CargoList = () => {
               <Tooltip title={record.motivo_anulacion}>
                 <Tag color={CARGO_ESTADO_COLOR[estado]}>{CARGO_ESTADO_LABEL[estado]}</Tag>
               </Tooltip>
+              {record.marca && <CargoMarcaTag marca={record.marca} deudor={record.deudor} />}
               {puedeAnular && estado !== "ANULADO" && (
                 <Tooltip title="Anular cargo">
                   <Button size="small" danger icon={<StopOutlined />} onClick={() => anular(record)} />

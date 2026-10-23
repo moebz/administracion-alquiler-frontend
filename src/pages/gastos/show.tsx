@@ -31,6 +31,7 @@ import {
 } from "antd";
 import dayjs from "dayjs";
 import { Link } from "react-router";
+import { CargoMarcaTag } from "../cargos/cargo-marca-tag";
 import { CARGO_DEUDOR_AL, CARGO_ESTADO_COLOR, CARGO_ESTADO_LABEL, CARGO_TIPO_LABEL, type CargoDeudor } from "../cargos/types";
 import { CompraDetail } from "../compras/compra-detail";
 import type { CompraRow } from "../compras/types";
@@ -249,7 +250,7 @@ export const GastoShow = () => {
                   type="info"
                   showIcon
                   style={{ marginBottom: 16 }}
-                  message={`Los cargos ${CARGO_DEUDOR_AL[deudor]} se mantienen. Si corresponde, anulalos desde Cargos.`}
+                  message={`Los cargos ${CARGO_DEUDOR_AL[deudor]} quedan activos con la marca "Factura anulada" hasta que registres la factura de reemplazo.`}
                 />
               ) : undefined
             }
@@ -316,7 +317,14 @@ export const GastoShow = () => {
               <Table.Column
                 title="Estado"
                 dataIndex="estado"
-                render={(estado: CargoGasto["estado"]) => <Tag color={CARGO_ESTADO_COLOR[estado]}>{CARGO_ESTADO_LABEL[estado]}</Tag>}
+                render={(estado: CargoGasto["estado"], cargo: CargoGasto) => (
+                  <Space size={4} wrap>
+                    <Tag color={CARGO_ESTADO_COLOR[estado]} style={{ margin: 0 }}>
+                      {CARGO_ESTADO_LABEL[estado]}
+                    </Tag>
+                    {cargo.marca && <CargoMarcaTag marca={cargo.marca} deudor={cargo.deudor} />}
+                  </Space>
+                )}
               />
             </Table>
           </Card>

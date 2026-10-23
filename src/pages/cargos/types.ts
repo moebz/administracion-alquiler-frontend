@@ -32,6 +32,23 @@ export const CARGO_DEUDOR_AL: Record<CargoDeudor, string> = {
   PROPIETARIO: "al propietario",
 };
 
+// Marca calculada de un cargo activo cuya factura del proveedor se anuló.
+export type CargoMarca = "REVISAR_FACTURA" | "FACTURA_ANULADA";
+
+export const cargoMarcaLabel = (marca: CargoMarca, deudor: CargoDeudor): string => {
+  if (marca === "FACTURA_ANULADA") {
+    return "Factura anulada";
+  }
+  return `Revisar factura ${CARGO_DEUDOR_AL[deudor]}`;
+};
+
+export const cargoMarcaTooltip = (marca: CargoMarca, deudor: CargoDeudor): string => {
+  if (marca === "FACTURA_ANULADA") {
+    return "Registrá la factura de reemplazo del proveedor, que rehace el cargo, o anulalo desde Cargos.";
+  }
+  return `La factura del proveedor de este cargo se reemplazó después de facturárselo ${CARGO_DEUDOR_AL[deudor]}. Si el monto subió, falta cobrarle la diferencia; si bajó por debajo de lo facturado o cambió la tasa, anulá la factura ${CARGO_DEUDOR_AL[deudor]} (si está en plazo) o emití una NC.`;
+};
+
 export const CARGO_DEUDOR_COLOR: Record<CargoDeudor, string> = {
   INQUILINO: "geekblue",
   PROPIETARIO: "purple",
@@ -105,6 +122,8 @@ export type CargoRow = {
   dias_atraso: number;
   mora_al_dia: number | string;
   estado: CargoEstado;
+  // Solo un cargo activo cuya factura del proveedor se anuló.
+  marca: CargoMarca | null;
   fecha_anulacion: string | null;
   motivo_anulacion: string | null;
   gasto_id: number | null;

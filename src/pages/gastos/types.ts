@@ -1,4 +1,4 @@
-import type { CargoDeudor } from "../cargos/types";
+import type { CargoDeudor, CargoMarca } from "../cargos/types";
 
 export type GastoTipo = "EXPENSA" | "REPARACION" | "SERVICIO" | "OTRO";
 
@@ -78,6 +78,7 @@ export type CargoGasto = {
   fecha_vencimiento: string | null;
   estado: "PENDIENTE" | "PARCIAL" | "VENCIDO" | "PAGADO" | "ANULADO";
   facturado: number | string;
+  marca: CargoMarca | null;
 };
 
 // CREAR: se crean solos, uno por línea de la factura. YA_TUVO: el gasto ya tuvo cargos.
