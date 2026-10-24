@@ -191,7 +191,7 @@ export const CobrarModal = ({ contratoId, onClose }: { contratoId: number; onClo
 
       <Form form={form} layout="vertical" onFinish={cobrar} initialValues={{ fecha: dayjs(), valores: [{}] }}>
         <SectionDivider icon={<CalendarOutlined />}>Datos del cobro</SectionDivider>
-        <SectionRow gutter={24} style={{ paddingLeft: 0 }}>
+        <SectionRow gutter={24}>
           <Col xs={24} md={8}>
             <Form.Item
               label="Fecha"

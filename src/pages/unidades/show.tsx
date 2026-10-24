@@ -62,7 +62,7 @@ export const UnidadShow = () => {
       )}
 
       <SectionDivider icon={<HomeOutlined />}>Datos de la unidad</SectionDivider>
-      <Descriptions column={{ xs: 1, md: 2, xl: 3 }} size="small" style={{ paddingLeft: 24 }}>
+      <Descriptions column={{ xs: 1, md: 2, xl: 3 }} size="small">
         <Descriptions.Item label="Propietario">{unidad?.propietario.nombre}</Descriptions.Item>
         <Descriptions.Item label="Piso">{unidad?.piso ?? "—"}</Descriptions.Item>
         <Descriptions.Item label="Superficie">
@@ -112,7 +112,7 @@ export const UnidadShow = () => {
       </Flex>
       <Skeleton active loading={cargandoContrato}>
         {contrato ? (
-          <Descriptions column={{ xs: 1, md: 2, xl: 3 }} size="small" style={{ paddingLeft: 24 }}>
+          <Descriptions column={{ xs: 1, md: 2, xl: 3 }} size="small">
             <Descriptions.Item label="Inquilino">{contrato.inquilino.nombre}</Descriptions.Item>
             <Descriptions.Item label="Inicio">{dayjs(contrato.fecha_inicio).format("DD/MM/YYYY")}</Descriptions.Item>
             <Descriptions.Item label="Fin">{dayjs(contrato.fecha_fin).format("DD/MM/YYYY")}</Descriptions.Item>
@@ -143,7 +143,7 @@ export const UnidadShow = () => {
           </SectionDivider>
           <Skeleton active loading={cargandoFuturo}>
             {contratoFuturo && (
-              <Descriptions column={{ xs: 1, md: 2, xl: 3 }} size="small" style={{ paddingLeft: 24 }}>
+              <Descriptions column={{ xs: 1, md: 2, xl: 3 }} size="small">
                 <Descriptions.Item label="Inquilino">{contratoFuturo.inquilino.nombre}</Descriptions.Item>
                 <Descriptions.Item label="Inicio">
                   {dayjs(contratoFuturo.fecha_inicio).format("DD/MM/YYYY")}

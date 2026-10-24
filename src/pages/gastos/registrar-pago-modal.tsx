@@ -155,7 +155,7 @@ export const RegistrarPagoModal = ({
 
       <Form form={form} layout="vertical" onFinish={registrar} initialValues={{ fecha: dayjs() }}>
         <SectionDivider icon={<FileTextOutlined />}>Datos del pago</SectionDivider>
-        <SectionRow gutter={24} style={{ paddingLeft: 0 }}>
+        <SectionRow gutter={24}>
           <Col xs={24} md={8}>
             <Form.Item
               label="Fecha"

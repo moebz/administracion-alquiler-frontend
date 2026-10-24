@@ -85,7 +85,7 @@ export const PagoProveedorShow = () => {
       </Flex>
 
       <SectionDivider icon={<FileTextOutlined />}>Datos del pago</SectionDivider>
-      <Descriptions column={{ xs: 1, md: 2, xl: 3 }} size="small" style={{ paddingLeft: 24 }}>
+      <Descriptions column={{ xs: 1, md: 2, xl: 3 }} size="small">
         <Descriptions.Item label="Proveedor">{pago?.persona.nombre}</Descriptions.Item>
         <Descriptions.Item label="Fecha">{pago ? dayjs(pago.fecha).format("DD/MM/YYYY") : "—"}</Descriptions.Item>
         {pago?.concepto && <Descriptions.Item label="Concepto">{pago.concepto}</Descriptions.Item>}

@@ -34,7 +34,7 @@ export const CobroShow = () => {
       </Flex>
 
       <SectionDivider icon={<FileTextOutlined />}>Datos del cobro</SectionDivider>
-      <Descriptions column={{ xs: 1, md: 2, xl: 3 }} size="small" style={{ paddingLeft: 24 }}>
+      <Descriptions column={{ xs: 1, md: 2, xl: 3 }} size="small">
         <Descriptions.Item label="Inquilino">{cobro?.persona.nombre}</Descriptions.Item>
         <Descriptions.Item label="Unidad">{cobro?.unidad ?? "—"}</Descriptions.Item>
         <Descriptions.Item label="Fecha">{cobro ? dayjs(cobro.fecha).format("DD/MM/YYYY") : "—"}</Descriptions.Item>
@@ -47,7 +47,7 @@ export const CobroShow = () => {
       {factura && (
         <>
           <SectionDivider icon={<FileDoneOutlined />}>Factura emitida</SectionDivider>
-          <Descriptions column={{ xs: 1, md: 2, xl: 3 }} size="small" style={{ paddingLeft: 24 }}>
+          <Descriptions column={{ xs: 1, md: 2, xl: 3 }} size="small">
             <Descriptions.Item label="Número">{factura.numero ?? "—"}</Descriptions.Item>
             <Descriptions.Item label="Fecha">{dayjs(factura.fecha).format("DD/MM/YYYY")}</Descriptions.Item>
             <Descriptions.Item label="Condición">Contado</Descriptions.Item>
@@ -73,7 +73,7 @@ export const CobroShow = () => {
               }
             />
           </Table>
-          <Descriptions column={{ xs: 1, md: 3 }} size="small" style={{ marginTop: 16, paddingLeft: 24 }}>
+          <Descriptions column={{ xs: 1, md: 3 }} size="small" style={{ marginTop: 16 }}>
             <Descriptions.Item label="Exentas">{formatMonto(factura.exentas)}</Descriptions.Item>
             <Descriptions.Item label="Gravadas 5%">{formatMonto(factura.gravadas_5)}</Descriptions.Item>
             <Descriptions.Item label="IVA 5%">{formatMonto(factura.iva_5)}</Descriptions.Item>

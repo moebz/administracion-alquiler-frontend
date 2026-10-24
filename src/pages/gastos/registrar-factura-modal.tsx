@@ -22,7 +22,6 @@ const TASA_IVA_OPTIONS = [
 ];
 
 const FORM_GUTTER = 24;
-const ROW_STYLE = { paddingLeft: 0 };
 
 type Linea = LineaFactura & { descripcion: string };
 
@@ -320,7 +319,7 @@ export const RegistrarFacturaModal = ({
         <SectionDivider icon={<FileTextOutlined />} style={{ marginTop: 16 }}>
           Datos de la factura
         </SectionDivider>
-        <SectionRow gutter={FORM_GUTTER} style={ROW_STYLE}>
+        <SectionRow gutter={FORM_GUTTER}>
           <Col xs={24} md={12}>
             <Form.Item label="Timbrado del proveedor" name="timbrado_proveedor" rules={[{ required: true }, { max: 20 }]}>
               <Input />
@@ -358,7 +357,7 @@ export const RegistrarFacturaModal = ({
           {(fields, { add, remove }, { errors }) => (
             <>
               {fields.map(({ key, name }) => (
-                <SectionRow key={key} gutter={12} style={ROW_STYLE} align="top">
+                <SectionRow key={key} gutter={12} align="top">
                   <Col xs={24} md={8}>
                     <Form.Item label={name === 0 ? "Descripción" : undefined} name={[name, "descripcion"]} rules={[{ required: true }, { max: 255 }]}>
                       <Input />
@@ -438,7 +437,7 @@ export const RegistrarFacturaModal = ({
         )}
 
         <SectionDivider icon={<CreditCardOutlined />}>Condición de pago</SectionDivider>
-        <SectionRow gutter={FORM_GUTTER} style={ROW_STYLE}>
+        <SectionRow gutter={FORM_GUTTER}>
           <Col xs={24} md={12}>
             <Form.Item label="Condición" name="condicion" rules={[{ required: true }]}>
               <Select options={COMPRA_CONDICION_OPTIONS} />
