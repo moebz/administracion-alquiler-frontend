@@ -1,7 +1,7 @@
 import { Show } from "@refinedev/antd";
-import { useShow } from "@refinedev/core";
+import { useGo, useShow } from "@refinedev/core";
 import { UserOutlined } from "@ant-design/icons";
-import { Card, Descriptions, Space, Tag } from "antd";
+import { Button, Card, Descriptions, Space, Tag } from "antd";
 import { PageTitle } from "../../components/page-title";
 import { RolesTags } from "../../components/roles-tags";
 import { PersonaCuentasBancarias } from "./cuentas-bancarias";
@@ -10,13 +10,28 @@ import { TIPO_PERSONA_LABEL, type PersonaRow } from "./types";
 export const PersonaShow = () => {
   const { query, result: persona } = useShow<PersonaRow>();
 
+  const go = useGo();
+  const verContratos = () =>
+    go({
+      to: { resource: "contratos-alquiler", action: "list" },
+      query: { filters: [{ field: "inquilino_id", operator: "eq", value: persona?.id }] },
+    });
+
   return (
     <Show
       isLoading={query.isLoading}
       title={<PageTitle icon={<UserOutlined />}>Detalle de la persona</PageTitle>}
     >
       <Space direction="vertical" size="large" style={{ width: "100%" }}>
-        <Card title="Datos de la persona" size="small">
+        <Card
+          title="Datos de la persona"
+          size="small"
+          extra={
+            <Button size="small" onClick={verContratos}>
+              Ver contratos como inquilino
+            </Button>
+          }
+        >
           <Descriptions column={2} size="small">
             <Descriptions.Item label="Nombre">{persona?.nombre}</Descriptions.Item>
             <Descriptions.Item label="Documento">

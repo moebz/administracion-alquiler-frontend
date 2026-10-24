@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { EditButton, List, useTable } from "@refinedev/antd";
-import { usePermissions, type CrudFilter } from "@refinedev/core";
+import { useOne, usePermissions, type CrudFilter } from "@refinedev/core";
 import { App, Button, DatePicker, Input, Select, Space, Table, Tag, Tooltip } from "antd";
 import dayjs, { type Dayjs } from "dayjs";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { FilterBar } from "../../components/filter-bar";
 import { extractErrorMessage } from "../../providers/auth";
 import { kyInstance } from "../../providers/data";
@@ -24,7 +24,7 @@ const { RangePicker } = DatePicker;
 type RangoFechas = [Dayjs, Dayjs] | null;
 
 export const ContratoAlquilerList = () => {
-  const { tableProps, tableQuery, setFilters } = useTable<ContratoAlquilerRow>({
+  const { tableProps, tableQuery, filters: tableFilters, setFilters } = useTable<ContratoAlquilerRow>({
     syncWithLocation: true,
     sorters: { initial: [{ field: "fecha_inicio", order: "desc" }] },
   });
@@ -42,15 +42,32 @@ export const ContratoAlquilerList = () => {
   const [estado, setEstado] = useState<ContratoAlquilerEstado>();
   const [venceEntre, setVenceEntre] = useState<RangoFechas>(null);
 
+  // Leer el inquilino por el que se llegó filtrado desde el detalle de la persona (pages/personas/show.tsx).
+  const inquilinoFilter = tableFilters.find((filter) => "field" in filter && filter.field === "inquilino_id");
+  const inquilinoId = inquilinoFilter?.value as number | undefined;
+  const { result: inquilino } = useOne<{ id: number; nombre: string }>({
+    resource: "personas",
+    id: inquilinoId ?? "",
+    queryOptions: { enabled: !!inquilinoId },
+  });
+
   // Mismo criterio que pages/personas/list.tsx: recalcula el array completo de filtros en cada cambio.
-  const applyFilters = (overrides: { estado?: ContratoAlquilerEstado; venceEntre?: RangoFechas }) => {
+  const applyFilters = (overrides: {
+    estado?: ContratoAlquilerEstado;
+    venceEntre?: RangoFechas;
+    inquilinoId?: number;
+  }) => {
     const nextEstado = "estado" in overrides ? overrides.estado : estado;
     const nextVenceEntre = "venceEntre" in overrides ? overrides.venceEntre : venceEntre;
+    const nextInquilinoId = "inquilinoId" in overrides ? overrides.inquilinoId : inquilinoId;
 
     setEstado(nextEstado);
     setVenceEntre(nextVenceEntre ?? null);
 
     const filters: CrudFilter[] = [];
+    if (nextInquilinoId) {
+      filters.push({ field: "inquilino_id", operator: "eq", value: nextInquilinoId });
+    }
     if (nextEstado) {
       filters.push({ field: "estado", operator: "eq", value: nextEstado });
     }
@@ -113,6 +130,14 @@ export const ContratoAlquilerList = () => {
     // alquilers" (mismo motivo por el que Create/Edit ya lo hacen).
     <List headerButtons={() => null} title="Contratos de alquiler">
       <FilterBar>
+        {inquilinoId && (
+          <Space>
+            <span>Inquilino</span>
+            <Tag closable onClose={() => applyFilters({ inquilinoId: undefined })}>
+              {inquilino?.nombre ?? "…"}
+            </Tag>
+          </Space>
+        )}
         <Space>
           <span>Estado</span>
           <Select
@@ -137,9 +162,11 @@ export const ContratoAlquilerList = () => {
         <Table.Column
           title="Unidad"
           dataIndex="unidad"
-          render={(unidad: ContratoAlquilerRow["unidad"]) =>
-            `${unidad.bloque.edificio.nombre} - ${unidad.bloque.nombre} - ${unidad.numero}`
-          }
+          render={(unidad: ContratoAlquilerRow["unidad"]) => (
+            <Link to={`/administrador/unidades/show/${unidad.id}`}>
+              {`${unidad.bloque.edificio.nombre} - ${unidad.bloque.nombre} - ${unidad.numero}`}
+            </Link>
+          )}
         />
         <Table.Column
           title="Propietario"
