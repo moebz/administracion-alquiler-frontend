@@ -26,11 +26,21 @@ type Valor = {
 type Valores = { fecha: Dayjs; punto_expedicion_id?: number; valores: Valor[] };
 type Fila = CobroVistaPreviaItem & { key: number };
 
+// Muestra la tasa de una fila; la factura abierta no tiene una sola tasa.
+const etiquetaTasa = (tasa: Fila["tasa_iva"]) => {
+  if (tasa === null) {
+    return "—";
+  }
+
+  return tasa === 0 ? "Exenta" : `${tasa}%`;
+};
+
 const mensajeDeError = (error: unknown, porDefecto: string) =>
   typeof (error as { message?: unknown })?.message === "string" ? (error as { message: string }).message : porDefecto;
 
-// Cobra al inquilino cargos enteros de un contrato: el usuario elige hasta qué fila cubre el cobro (el orden de
-// imputación lo fija el sistema, ver ARQUITECTURA.md, "Cargos de alquiler") y el total a cobrar es ese acumulado.
+// Cobra al inquilino cargos enteros y facturas abiertas de un contrato: el usuario elige hasta qué fila cubre el cobro
+// (el orden de imputación lo fija el sistema, ver ARQUITECTURA.md, "Cargos de alquiler") y el total a cobrar es ese
+// acumulado. Solo se emite factura si el cobro cubre algún cargo por facturar.
 export const CobrarModal = ({ contratoId, onClose }: { contratoId: number; onClose: () => void }) => {
   const { message } = App.useApp();
   const navigate = useNavigate();
@@ -96,6 +106,21 @@ export const CobrarModal = ({ contratoId, onClose }: { contratoId: number; onClo
 
   const filas: Fila[] = useMemo(() => (vistaPrevia?.items ?? []).map((item, key) => ({ ...item, key })), [vistaPrevia]);
   const total = filas[hasta] ? Number(filas[hasta].acumulado) : 0;
+  // Emitir factura solo si el cobro cubre alguna fila que no es una factura abierta.
+  const emiteFactura = filas.slice(0, hasta + 1).some((fila) => fila.documento_venta_id === null);
+
+  // Explica bajo el punto de expedición por qué no hace falta o por qué no hay ninguno para elegir.
+  const ayudaPunto = () => {
+    if (!emiteFactura) {
+      return "Este cobro no emite factura: solo salda facturas ya emitidas.";
+    }
+
+    if (!cargando && puntos.length === 0) {
+      return "No hay un punto con un timbrado vigente y números disponibles para facturar a esta fecha.";
+    }
+
+    return undefined;
+  };
   const sumaValores = (valores ?? []).reduce((acum, valor) => acum + (Number(valor?.monto) || 0), 0);
 
   // Con un solo medio de pago, el monto acompaña al total elegido.
@@ -142,7 +167,7 @@ export const CobrarModal = ({ contratoId, onClose }: { contratoId: number; onClo
       json: {
         contrato_id: contratoId,
         fecha: values.fecha.format("YYYY-MM-DD"),
-        punto_expedicion_id: values.punto_expedicion_id,
+        punto_expedicion_id: emiteFactura ? values.punto_expedicion_id : undefined,
         valores: values.valores,
       },
     });
@@ -211,17 +236,14 @@ export const CobrarModal = ({ contratoId, onClose }: { contratoId: number; onClo
             <Form.Item
               label="Punto de expedición"
               name="punto_expedicion_id"
-              rules={[{ required: true, message: "Elegí el punto de expedición" }]}
-              extra={
-                !cargando && puntos.length === 0
-                  ? "No hay un punto con un timbrado vigente y números disponibles para facturar a esta fecha."
-                  : undefined
-              }
+              rules={[{ required: emiteFactura, message: "Elegí el punto de expedición" }]}
+              extra={ayudaPunto()}
             >
               <Select
                 options={puntos.map((punto) => ({ label: punto.etiqueta, value: punto.id }))}
                 placeholder="Punto con rango de facturas usable"
                 loading={cargando}
+                disabled={!emiteFactura}
               />
             </Form.Item>
           </Col>
@@ -229,13 +251,13 @@ export const CobrarModal = ({ contratoId, onClose }: { contratoId: number; onClo
 
         <SectionDivider icon={<UnorderedListOutlined />}>Cargos a cobrar</SectionDivider>
         {!cargando && filas.length === 0 && !errorVistaPrevia && (
-          <Alert type="info" showIcon message="Este contrato no tiene cargos con saldo para cobrar." style={{ marginBottom: 12 }} />
+          <Alert type="info" showIcon message="Este contrato no tiene nada pendiente para cobrar." style={{ marginBottom: 12 }} />
         )}
         {filas.length > 0 && (
           <>
             <Typography.Paragraph type="secondary">
-              Los cargos se cobran enteros y en un orden fijo (mora, alquileres y el resto, lo vencido antes que lo que
-              todavía no vence). Elegí hasta qué fila cubre el cobro.
+              Los cargos se cobran enteros y en un orden fijo (mora, facturas abiertas, alquileres y el resto, lo vencido
+              antes que lo que todavía no vence). Elegí hasta qué fila cubre el cobro.
             </Typography.Paragraph>
             <Table<Fila>
               dataSource={filas}
@@ -256,7 +278,12 @@ export const CobrarModal = ({ contratoId, onClose }: { contratoId: number; onClo
                 render={(descripcion: string, fila: Fila) => (
                   <Space size={4} wrap>
                     <span>{descripcion}</span>
-                    {fila.cargo_id === null && (
+                    {fila.documento_venta_id !== null && (
+                      <Tooltip title="Ya facturada y todavía impaga (por ejemplo, por un cobro anulado): se cobra sin volver a facturar.">
+                        <Tag color="blue">Factura abierta</Tag>
+                      </Tooltip>
+                    )}
+                    {fila.cargo_id === null && fila.documento_venta_id === null && (
                       <Tooltip title="Mora calculada a la fecha del cobro: se guarda como cargo al cobrar.">
                         <Tag color="orange">Mora del día</Tag>
                       </Tooltip>
@@ -264,7 +291,7 @@ export const CobrarModal = ({ contratoId, onClose }: { contratoId: number; onClo
                   </Space>
                 )}
               />
-              <Table.Column title="Tipo" dataIndex="tipo" render={(tipo: Fila["tipo"]) => CARGO_TIPO_LABEL[tipo]} />
+              <Table.Column title="Tipo" dataIndex="tipo" render={(tipo: Fila["tipo"]) => (tipo ? CARGO_TIPO_LABEL[tipo] : "Factura")} />
               <Table.Column
                 title="Vence"
                 dataIndex="fecha_vencimiento"
@@ -272,7 +299,7 @@ export const CobrarModal = ({ contratoId, onClose }: { contratoId: number; onClo
                   <Typography.Text type={fila.vencido ? "danger" : undefined}>{dayjs(vence).format("DD/MM/YYYY")}</Typography.Text>
                 )}
               />
-              <Table.Column title="IVA" dataIndex="tasa_iva" render={(tasa: Fila["tasa_iva"]) => (tasa === 0 ? "Exenta" : `${tasa}%`)} />
+              <Table.Column title="IVA" dataIndex="tasa_iva" render={etiquetaTasa} />
               <Table.Column title="Saldo" dataIndex="saldo" align="right" render={(saldo: string) => formatMonto(saldo)} />
               <Table.Column
                 title="Acumulado"

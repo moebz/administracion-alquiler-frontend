@@ -88,18 +88,23 @@ export type CobroRow = {
   aplicaciones: CobroAplicacionRow[];
 };
 
-// Fila de la vista previa del cobro: un cargo con saldo, o la mora del día de un alquiler vencido (cargo_id null, todavía sin guardar).
+// Fila de la vista previa del cobro: un cargo por facturar, la mora del día de un alquiler vencido (cargo_id null,
+// todavía sin guardar) o una factura al inquilino abierta (documento_venta_id, sin tipo, período ni tasa).
 export type CobroVistaPreviaItem = {
   cargo_id: number | null;
-  tipo: CargoTipo;
+  tipo: CargoTipo | null;
   descripcion: string;
-  periodo: string;
+  periodo: string | null;
   fecha_vencimiento: string;
   vencido: boolean;
-  tasa_iva: 0 | 5 | 10;
+  tasa_iva: 0 | 5 | 10 | null;
+  // Lo que falta facturar del cargo, o el saldo de la cuota de la factura abierta.
   saldo: string;
   // Total que cubre el cobro si llega hasta esta fila.
   acumulado: string;
+  documento_venta_id: number | null;
+  // Número impreso de la factura abierta.
+  numero_factura: string | null;
 };
 
 export type CobroVistaPreviaExcluido = {
