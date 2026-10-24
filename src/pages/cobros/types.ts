@@ -1,0 +1,113 @@
+import type { CargoTipo } from "../cargos/types";
+
+export type CobroEstado = "ACTIVO" | "ANULADO";
+
+export const COBRO_ESTADO_LABEL: Record<CobroEstado, string> = {
+  ACTIVO: "Activo",
+  ANULADO: "Anulado",
+};
+
+export const COBRO_ESTADO_COLOR: Record<CobroEstado, string> = {
+  ACTIVO: "green",
+  ANULADO: "default",
+};
+
+export const COBRO_ESTADO_OPTIONS: { label: string; value: CobroEstado }[] = [
+  { label: "Activo", value: "ACTIVO" },
+  { label: "Anulado", value: "ANULADO" },
+];
+
+export type CobroValorRow = {
+  id: number;
+  medio_pago: { id: number; nombre: string };
+  fondo: { id: number; nombre: string };
+  monto: number | string;
+  nro_comprobante: string | null;
+  estado: "ACTIVO" | "ANULADO";
+  fecha_anulacion: string | null;
+  motivo_anulacion: string | null;
+};
+
+export type CobroAplicacionRow = {
+  id: number;
+  cuota_id: number;
+  documento_venta_id: number;
+  numero_cuota: number;
+  monto_aplicado: number | string;
+  estado: "ACTIVA" | "ANULADA";
+  valor_anulado_id: number | null;
+};
+
+export type CobroFacturaDetalleRow = {
+  id: number;
+  descripcion: string;
+  cantidad: number | string;
+  precio_unitario: number | string;
+  tasa_iva: 0 | 5 | 10;
+  subtotal: number | string;
+  cargo_id: number | null;
+};
+
+export type CobroFacturaRow = {
+  id: number;
+  // Número impreso (001-001-0000001).
+  numero: string | null;
+  fecha: string;
+  estado: "BORRADOR" | "EMITIDO" | "ANULADO";
+  exentas: number | string;
+  gravadas_5: number | string;
+  gravadas_10: number | string;
+  iva_5: number | string;
+  iva_10: number | string;
+  total: number | string;
+  detalles: CobroFacturaDetalleRow[];
+};
+
+export type CobroRow = {
+  id: number;
+  numero: number;
+  persona_id: number;
+  persona: { id: number; nombre: string };
+  fecha: string;
+  concepto: string | null;
+  monto_total: number | string;
+  estado: CobroEstado;
+  fecha_anulacion: string | null;
+  motivo_anulacion: string | null;
+  // Unidad de los cargos cubiertos; null si la factura no tiene cargos.
+  unidad: string | null;
+  factura: CobroFacturaRow | null;
+  valores: CobroValorRow[];
+  aplicaciones: CobroAplicacionRow[];
+};
+
+// Fila de la vista previa del cobro: un cargo con saldo, o la mora del día de un alquiler vencido (cargo_id null, todavía sin guardar).
+export type CobroVistaPreviaItem = {
+  cargo_id: number | null;
+  tipo: CargoTipo;
+  descripcion: string;
+  periodo: string;
+  fecha_vencimiento: string;
+  vencido: boolean;
+  tasa_iva: 0 | 5 | 10;
+  saldo: string;
+  // Total que cubre el cobro si llega hasta esta fila.
+  acumulado: string;
+};
+
+export type CobroVistaPreviaExcluido = {
+  cargo_id: number;
+  tipo: CargoTipo;
+  descripcion: string;
+  periodo: string;
+  saldo: string;
+};
+
+export type CobroVistaPrevia = {
+  contrato: { id: number; inquilino: { id: number; nombre: string }; unidad: string };
+  fecha: string;
+  items: CobroVistaPreviaItem[];
+  excluidos: CobroVistaPreviaExcluido[];
+};
+
+export type PuntoExpedicionOpcion = { id: number; etiqueta: string };

@@ -1,4 +1,5 @@
 import {
+  AccountBookOutlined,
   UserOutlined,
   SafetyCertificateOutlined,
   ApartmentOutlined,
@@ -84,6 +85,7 @@ import { CargoList, CargoCreate } from "./pages/cargos";
 import { GastoList, GastoCreate, GastoEdit, GastoShow } from "./pages/gastos";
 import { CompraShow } from "./pages/compras";
 import { PagoProveedorList, PagoProveedorShow } from "./pages/pagos-proveedor";
+import { CobroList, CobroShow } from "./pages/cobros";
 import { BancoList, BancoCreate, BancoEdit } from "./pages/bancos";
 import { FondoList, FondoCreate, FondoEdit } from "./pages/fondos";
 import {
@@ -290,6 +292,17 @@ function App() {
                   meta: {
                     label: "Gastos",
                     icon: <DollarOutlined />,
+                    parent: "edificios",
+                  },
+                },
+                {
+                  // Sin `create`: todo cobro nace desde un contrato (botón "Cobrar").
+                  name: "cobros",
+                  list: "/administrador/cobros",
+                  show: "/administrador/cobros/show/:id",
+                  meta: {
+                    label: "Cobros",
+                    icon: <AccountBookOutlined />,
                     parent: "edificios",
                   },
                 },
@@ -596,6 +609,10 @@ function App() {
                       <Route path="create" element={<GastoCreate />} />
                       <Route path="edit/:id" element={<GastoEdit />} />
                       <Route path="show/:id" element={<GastoShow />} />
+                    </Route>
+                    <Route path="cobros">
+                      <Route index element={<CobroList />} />
+                      <Route path="show/:id" element={<CobroShow />} />
                     </Route>
                     <Route path="compras">
                       <Route path="show/:id" element={<CompraShow />} />

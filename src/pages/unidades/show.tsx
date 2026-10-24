@@ -1,10 +1,12 @@
 import { EditButton, Show } from "@refinedev/antd";
-import { useGo, useOne, useShow } from "@refinedev/core";
+import { useGo, useOne, usePermissions, useShow } from "@refinedev/core";
 import { CalendarOutlined, DollarOutlined, FileTextOutlined, HomeOutlined } from "@ant-design/icons";
 import { Button, Descriptions, Empty, Flex, Skeleton, Space, Tag, Typography } from "antd";
+import { useState } from "react";
 import dayjs from "dayjs";
 import { useNavigate } from "react-router";
 import { SectionDivider } from "../../components/section-divider";
+import { CobrarModal } from "../cobros/cobrar-modal";
 import {
   CONTRATO_ALQUILER_ESTADO_COLOR,
   CONTRATO_ALQUILER_ESTADO_LABEL,
@@ -18,6 +20,10 @@ import { UNIDAD_ESTADO_COLOR, UNIDAD_ESTADO_LABEL, type UnidadRow } from "./type
 export const UnidadShow = () => {
   const { query: unidadQuery, result: unidad } = useShow<UnidadRow>();
   const navigate = useNavigate();
+  const { data: permissions } = usePermissions<string[]>({});
+  // Cobrar emite la factura (consume numeración del timbrado), así que exige los dos permisos.
+  const puedeCobrar = (permissions?.includes("cobros.registrar") && permissions?.includes("facturas.emitir")) ?? false;
+  const [cobrando, setCobrando] = useState(false);
 
   const { query: contratoQuery, result: contrato } = useOne<ContratoAlquilerRow>({
     resource: "contratos-alquiler",
@@ -89,6 +95,7 @@ export const UnidadShow = () => {
                 Crear próximo contrato
               </Button>
             )}
+            {puedeCobrar && <Button onClick={() => setCobrando(true)}>Cobrar</Button>}
             <Button onClick={() => navigate(`/administrador/cargos?contrato_id=${contrato.id}`)}>Ver cargos</Button>
             <EditButton resource="contratos-alquiler" recordItemId={contrato.id}>
               Editar contrato
@@ -161,6 +168,7 @@ export const UnidadShow = () => {
           </Button>
         </Space>
       </Flex>
+      {cobrando && contrato && <CobrarModal contratoId={contrato.id} onClose={() => setCobrando(false)} />}
     </Show>
   );
 };

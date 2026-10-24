@@ -11,6 +11,7 @@ import { formatMonto } from "../../utils/monto";
 import { CargoListFilters } from "./cargo-list-filters";
 import { CargoMarcaTag } from "./cargo-marca-tag";
 import { buildFiltrosCargos, FILTROS_CARGOS_INICIALES } from "./filtros";
+import { CobrarModal } from "../cobros/cobrar-modal";
 import { GenerarCargosModal } from "./generar-cargos-modal";
 import {
   CARGO_DEUDOR_COLOR,
@@ -22,14 +23,16 @@ import {
 } from "./types";
 
 export const CargoList = () => {
-  // Prefiltrar por contrato cuando se llega desde "Ver cargos" del detalle de la unidad, o por gasto desde el detalle del gasto.
+  // Prefiltrar por contrato cuando se llega desde "Ver cargos" del detalle de la unidad, por gasto desde el detalle del gasto, o por cargo desde una línea de factura.
   const [searchParams] = useSearchParams();
   const contratoParam = Number(searchParams.get("contrato_id"));
   const gastoParam = Number(searchParams.get("gasto_id"));
+  const cargoParam = Number(searchParams.get("cargo_id"));
   // Mostrar todos los estados (no solo pendientes) cuando se llega a ver un cargo puntual, que puede estar pagado o anulado.
   const todosLosEstados = searchParams.get("todos_los_estados") === "1";
   const filtrosIniciales = {
     ...FILTROS_CARGOS_INICIALES,
+    cargoId: cargoParam > 0 ? cargoParam : undefined,
     contratoId: contratoParam > 0 ? contratoParam : undefined,
     gastoId: gastoParam > 0 ? gastoParam : undefined,
     ...(todosLosEstados ? { estados: [] } : {}),
@@ -45,8 +48,11 @@ export const CargoList = () => {
   const puedeGenerar = permissions?.includes("cargos.generar") ?? false;
   const puedeCrear = permissions?.includes("cargos.crear") ?? false;
   const puedeAnular = permissions?.includes("cargos.anular") ?? false;
+  // Cobrar emite la factura (consume numeración del timbrado), así que exige los dos permisos.
+  const puedeCobrar = (permissions?.includes("cobros.registrar") && permissions?.includes("facturas.emitir")) ?? false;
 
   const [generando, setGenerando] = useState(false);
+  const [cobrando, setCobrando] = useState(false);
 
   const anular = (cargo: CargoRow) => {
     let motivo = "";
@@ -99,6 +105,8 @@ export const CargoList = () => {
       title="Cargos"
       headerButtons={() => (
         <Space>
+          {/* Cobrar es de un solo contrato: el botón aparece cuando la lista está filtrada por uno. */}
+          {puedeCobrar && contratoParam > 0 && <Button onClick={() => setCobrando(true)}>Cobrar</Button>}
           {puedeGenerar && <Button onClick={() => setGenerando(true)}>Generar cargos</Button>}
           {puedeCrear && (
             <Button type="primary" onClick={() => navigate("/administrador/cargos/create")}>
@@ -199,6 +207,7 @@ export const CargoList = () => {
           )}
         />
       </Table>
+      {cobrando && contratoParam > 0 && <CobrarModal contratoId={contratoParam} onClose={() => setCobrando(false)} />}
       {generando && (
         <GenerarCargosModal
           onClose={() => setGenerando(false)}

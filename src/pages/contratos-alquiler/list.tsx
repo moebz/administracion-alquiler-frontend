@@ -16,6 +16,7 @@ import {
   type ContratoAlquilerEstado,
   type ContratoAlquilerRow,
 } from "./types";
+import { CobrarModal } from "../cobros/cobrar-modal";
 import { RescindirContratoModal } from "./rescindir-contrato-modal";
 
 const { RangePicker } = DatePicker;
@@ -33,8 +34,11 @@ export const ContratoAlquilerList = () => {
   const puedeCrear = permissions?.includes("contratos_alquiler.crear") ?? false;
   const puedeRescindir = permissions?.includes("contratos_alquiler.rescindir") ?? false;
   const puedeAnular = permissions?.includes("contratos_alquiler.anular") ?? false;
+  // Cobrar emite la factura (consume numeración del timbrado), así que exige los dos permisos.
+  const puedeCobrar = (permissions?.includes("cobros.registrar") && permissions?.includes("facturas.emitir")) ?? false;
 
   const [rescindiendo, setRescindiendo] = useState<ContratoAlquilerRow>();
+  const [cobrandoContratoId, setCobrandoContratoId] = useState<number>();
   const [estado, setEstado] = useState<ContratoAlquilerEstado>();
   const [venceEntre, setVenceEntre] = useState<RangoFechas>(null);
 
@@ -194,6 +198,11 @@ export const ContratoAlquilerList = () => {
           render={(_, record: ContratoAlquilerRow) => (
             <Space>
               {record.estado !== "ANULADO" && <EditButton hideText size="small" recordItemId={record.id} />}
+              {puedeCobrar && record.estado !== "ANULADO" && (
+                <Button size="small" onClick={() => setCobrandoContratoId(record.id)}>
+                  Cobrar
+                </Button>
+              )}
               {puedeCrear && record.estado !== "FUTURO" && record.estado !== "ANULADO" && (
                 <Button
                   size="small"
@@ -216,6 +225,7 @@ export const ContratoAlquilerList = () => {
           )}
         />
       </Table>
+      {cobrandoContratoId && <CobrarModal contratoId={cobrandoContratoId} onClose={() => setCobrandoContratoId(undefined)} />}
       {rescindiendo && (
         <RescindirContratoModal
           contrato={rescindiendo}
