@@ -170,6 +170,11 @@ export const CargoList = () => {
           )}
         />
         <Table.Column
+          title="Cobrado"
+          dataIndex="cobrado"
+          render={(cobrado: CargoRow["cobrado"]) => formatMonto(cobrado)}
+        />
+        <Table.Column
           title="Saldo"
           dataIndex="saldo"
           render={(saldo: CargoRow["saldo"], record: CargoRow) => (

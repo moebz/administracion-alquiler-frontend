@@ -78,6 +78,7 @@ export type CargoGasto = {
   fecha_vencimiento: string | null;
   estado: "PENDIENTE" | "PARCIAL" | "VENCIDO" | "PAGADO" | "ANULADO";
   facturado: number | string;
+  cobrado: number | string;
   marca: CargoMarca | null;
 };
 

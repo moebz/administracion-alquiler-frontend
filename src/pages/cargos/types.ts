@@ -118,6 +118,9 @@ export type CargoRow = {
   tasa_iva: 0 | 5 | 10;
   monto_descontado: number | string;
   facturado: number | string;
+  // Lo facturado menos lo que sigue impago en la cuota de su factura al inquilino.
+  cobrado: number | string;
+  // Lo que debe el deudor: monto − cobrado − descontado.
   saldo: number | string;
   dias_atraso: number;
   mora_al_dia: number | string;
