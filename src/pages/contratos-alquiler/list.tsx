@@ -23,6 +23,8 @@ const { RangePicker } = DatePicker;
 
 type RangoFechas = [Dayjs, Dayjs] | null;
 
+type PersonaFilter = { field: "inquilino_id" | "propietario_id"; operator: "eq"; value: number };
+
 export const ContratoAlquilerList = () => {
   const { tableProps, tableQuery, filters: tableFilters, setFilters } = useTable<ContratoAlquilerRow>({
     syncWithLocation: true,
@@ -42,31 +44,33 @@ export const ContratoAlquilerList = () => {
   const [estado, setEstado] = useState<ContratoAlquilerEstado>();
   const [venceEntre, setVenceEntre] = useState<RangoFechas>(null);
 
-  // Leer el inquilino por el que se llegó filtrado desde el detalle de la persona (pages/personas/show.tsx).
-  const inquilinoFilter = tableFilters.find((filter) => "field" in filter && filter.field === "inquilino_id");
-  const inquilinoId = inquilinoFilter?.value as number | undefined;
-  const { result: inquilino } = useOne<{ id: number; nombre: string }>({
+  // Leer la persona (inquilino o propietario) por la que se llegó filtrado desde su detalle (pages/personas/show.tsx).
+  const personaFilter = tableFilters.find(
+    (filter): filter is PersonaFilter =>
+      "field" in filter && (filter.field === "inquilino_id" || filter.field === "propietario_id"),
+  );
+  const { result: persona } = useOne<{ id: number; nombre: string }>({
     resource: "personas",
-    id: inquilinoId ?? "",
-    queryOptions: { enabled: !!inquilinoId },
+    id: personaFilter?.value ?? "",
+    queryOptions: { enabled: !!personaFilter },
   });
 
   // Mismo criterio que pages/personas/list.tsx: recalcula el array completo de filtros en cada cambio.
   const applyFilters = (overrides: {
     estado?: ContratoAlquilerEstado;
     venceEntre?: RangoFechas;
-    inquilinoId?: number;
+    personaFilter?: PersonaFilter;
   }) => {
     const nextEstado = "estado" in overrides ? overrides.estado : estado;
     const nextVenceEntre = "venceEntre" in overrides ? overrides.venceEntre : venceEntre;
-    const nextInquilinoId = "inquilinoId" in overrides ? overrides.inquilinoId : inquilinoId;
+    const nextPersonaFilter = "personaFilter" in overrides ? overrides.personaFilter : personaFilter;
 
     setEstado(nextEstado);
     setVenceEntre(nextVenceEntre ?? null);
 
     const filters: CrudFilter[] = [];
-    if (nextInquilinoId) {
-      filters.push({ field: "inquilino_id", operator: "eq", value: nextInquilinoId });
+    if (nextPersonaFilter) {
+      filters.push(nextPersonaFilter);
     }
     if (nextEstado) {
       filters.push({ field: "estado", operator: "eq", value: nextEstado });
@@ -130,11 +134,11 @@ export const ContratoAlquilerList = () => {
     // alquilers" (mismo motivo por el que Create/Edit ya lo hacen).
     <List headerButtons={() => null} title="Contratos de alquiler">
       <FilterBar>
-        {inquilinoId && (
+        {personaFilter && (
           <Space>
-            <span>Inquilino</span>
-            <Tag closable onClose={() => applyFilters({ inquilinoId: undefined })}>
-              {inquilino?.nombre ?? "…"}
+            <span>{personaFilter.field === "inquilino_id" ? "Inquilino" : "Propietario"}</span>
+            <Tag closable onClose={() => applyFilters({ personaFilter: undefined })}>
+              {persona?.nombre ?? "…"}
             </Tag>
           </Space>
         )}

@@ -11,10 +11,10 @@ export const PersonaShow = () => {
   const { query, result: persona } = useShow<PersonaRow>();
 
   const go = useGo();
-  const verContratos = () =>
+  const verContratos = (field: "inquilino_id" | "propietario_id") =>
     go({
       to: { resource: "contratos-alquiler", action: "list" },
-      query: { filters: [{ field: "inquilino_id", operator: "eq", value: persona?.id }] },
+      query: { filters: [{ field, operator: "eq", value: persona?.id }] },
     });
 
   return (
@@ -27,9 +27,14 @@ export const PersonaShow = () => {
           title="Datos de la persona"
           size="small"
           extra={
-            <Button size="small" onClick={verContratos}>
-              Ver contratos como inquilino
-            </Button>
+            <Space size={4} wrap>
+              <Button size="small" onClick={() => verContratos("inquilino_id")}>
+                Ver contratos como inquilino
+              </Button>
+              <Button size="small" onClick={() => verContratos("propietario_id")}>
+                Ver contratos como propietario
+              </Button>
+            </Space>
           }
         >
           <Descriptions column={2} size="small">
