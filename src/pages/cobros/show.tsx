@@ -1,6 +1,5 @@
 import { useState } from "react";
 import {
-  FileDoneOutlined,
   FileTextOutlined,
   LinkOutlined,
   WalletOutlined,
@@ -22,37 +21,23 @@ import {
   Typography,
 } from "antd";
 import dayjs from "dayjs";
-import { Link } from "react-router";
 import { SectionDivider } from "../../components/section-divider";
 import { extractErrorMessage } from "../../providers/auth";
 import { kyInstance } from "../../providers/data";
 import { formatMonto } from "../../utils/monto";
+import { FacturaCobro } from "./factura-cobro";
 import {
   COBRO_ESTADO_COLOR,
   COBRO_ESTADO_LABEL,
   type CobroAplicacionRow,
-  type CobroFacturaDetalleRow,
   type CobroRow,
   type CobroValorRow,
 } from "./types";
 
 const PERMISO_ANULAR = "cobros.anular";
 
-// Líneas de totales de la factura, en el orden en que se leen en una factura impresa.
-const TOTALES_FACTURA: {
-  label: string;
-  key: "exentas" | "gravadas_5" | "iva_5" | "gravadas_10" | "iva_10";
-}[] = [
-  { label: "Exentas", key: "exentas" },
-  { label: "Gravadas 5%", key: "gravadas_5" },
-  { label: "IVA 5%", key: "iva_5" },
-  { label: "Gravadas 10%", key: "gravadas_10" },
-  { label: "IVA 10%", key: "iva_10" },
-];
-
 export const CobroShow = () => {
   const { query, result: cobro } = useShow<CobroRow>();
-  const factura = cobro?.factura ?? null;
   const { message } = App.useApp();
   const { data: permissions } = usePermissions<string[]>({});
   const puedeAnular = permissions?.includes(PERMISO_ANULAR) ?? false;
@@ -146,96 +131,9 @@ export const CobroShow = () => {
         )}
       </Descriptions>
 
-      {factura && (
-        <>
-          <SectionDivider icon={<FileDoneOutlined />}>
-            Factura emitida
-          </SectionDivider>
-          <Descriptions
-            column={{ xs: 1, md: 2, xl: 3 }}
-            size="small"
-            style={{ marginBottom: 16 }}
-          >
-            <Descriptions.Item label="Número">
-              {factura.numero ?? "—"}
-            </Descriptions.Item>
-            <Descriptions.Item label="Fecha">
-              {dayjs(factura.fecha).format("DD/MM/YYYY")}
-            </Descriptions.Item>
-            <Descriptions.Item label="Condición">Contado</Descriptions.Item>
-          </Descriptions>
-          <Table
-            dataSource={factura.detalles}
-            rowKey="id"
-            pagination={false}
-            size="small"
-            summary={() => (
-              <Table.Summary>
-                {TOTALES_FACTURA.filter(
-                  ({ key }) => Number(factura[key]) !== 0
-                ).map(({ label, key }) => (
-                  <Table.Summary.Row key={key}>
-                    <Table.Summary.Cell index={0} colSpan={2} align="right">
-                      <Typography.Text type="secondary">
-                        {label}
-                      </Typography.Text>
-                    </Table.Summary.Cell>
-                    <Table.Summary.Cell index={2} align="right">
-                      {formatMonto(factura[key])}
-                    </Table.Summary.Cell>
-                  </Table.Summary.Row>
-                ))}
-                <Table.Summary.Row>
-                  <Table.Summary.Cell index={0} colSpan={2} align="right">
-                    <Typography.Text strong>Total</Typography.Text>
-                  </Table.Summary.Cell>
-                  <Table.Summary.Cell index={2} align="right">
-                    <Typography.Text strong>
-                      {formatMonto(factura.total)}
-                    </Typography.Text>
-                  </Table.Summary.Cell>
-                </Table.Summary.Row>
-              </Table.Summary>
-            )}
-          >
-            <Table.Column
-              title="Descripción"
-              dataIndex="descripcion"
-              render={(
-                descripcion: CobroFacturaDetalleRow["descripcion"],
-                record: CobroFacturaDetalleRow
-              ) =>
-                record.cargo_id ? (
-                  <Tooltip title="Ver cargo">
-                    <Link
-                      to={`/administrador/cargos?cargo_id=${record.cargo_id}&todos_los_estados=1`}
-                    >
-                      {descripcion}
-                    </Link>
-                  </Tooltip>
-                ) : (
-                  descripcion
-                )
-              }
-            />
-            <Table.Column
-              title="IVA"
-              dataIndex="tasa_iva"
-              render={(tasa: CobroFacturaDetalleRow["tasa_iva"]) =>
-                tasa === 0 ? "Exenta" : `${tasa}%`
-              }
-            />
-            <Table.Column
-              title="Subtotal"
-              dataIndex="subtotal"
-              align="right"
-              render={(subtotal: CobroFacturaDetalleRow["subtotal"]) =>
-                formatMonto(subtotal)
-              }
-            />
-          </Table>
-        </>
-      )}
+      {cobro?.facturas.map((factura) => (
+        <FacturaCobro key={factura.id} factura={factura} />
+      ))}
 
       <SectionDivider icon={<WalletOutlined />}>Medios de cobro</SectionDivider>
       <Table
@@ -295,7 +193,10 @@ export const CobroShow = () => {
         <Table.Column
           title="Factura"
           dataIndex="documento_venta_id"
-          render={() => factura?.numero ?? "—"}
+          render={(
+            _: CobroAplicacionRow["documento_venta_id"],
+            record: CobroAplicacionRow
+          ) => record.numero_factura ?? "—"}
         />
         <Table.Column
           title="Monto aplicado"

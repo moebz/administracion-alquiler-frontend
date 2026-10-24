@@ -32,6 +32,7 @@ export type CobroAplicacionRow = {
   id: number;
   cuota_id: number;
   documento_venta_id: number;
+  numero_factura: string | null;
   numero_cuota: number;
   monto_aplicado: number | string;
   estado: "ACTIVA" | "ANULADA";
@@ -54,6 +55,11 @@ export type CobroFacturaRow = {
   numero: string | null;
   fecha: string;
   estado: "BORRADOR" | "EMITIDO" | "ANULADO";
+  // False en una factura que ya estaba abierta (por ejemplo, la de un cobro anulado) y este cobro solo saldó.
+  emitida_por_este_cobro: boolean;
+  saldo: number | string;
+  fecha_anulacion: string | null;
+  motivo_anulacion: string | null;
   exentas: number | string;
   gravadas_5: number | string;
   gravadas_10: number | string;
@@ -74,9 +80,10 @@ export type CobroRow = {
   estado: CobroEstado;
   fecha_anulacion: string | null;
   motivo_anulacion: string | null;
-  // Unidad de los cargos cubiertos; null si la factura no tiene cargos.
+  // Unidad de los cargos cubiertos; null si ninguna factura tiene cargos.
   unidad: string | null;
-  factura: CobroFacturaRow | null;
+  // Facturas a las que se aplica el cobro, en el orden de sus aplicaciones.
+  facturas: CobroFacturaRow[];
   valores: CobroValorRow[];
   aplicaciones: CobroAplicacionRow[];
 };

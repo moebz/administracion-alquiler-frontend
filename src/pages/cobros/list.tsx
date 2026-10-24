@@ -70,9 +70,11 @@ export const CobroList = () => {
         <Table.Column title="Inquilino" dataIndex="persona" render={(persona: CobroRow["persona"]) => persona.nombre} />
         <Table.Column title="Unidad" dataIndex="unidad" render={(unidad: CobroRow["unidad"]) => unidad ?? "—"} />
         <Table.Column
-          title="Factura"
-          dataIndex="factura"
-          render={(factura: CobroRow["factura"]) => factura?.numero ?? "—"}
+          title="Facturas"
+          dataIndex="facturas"
+          render={(facturas: CobroRow["facturas"]) =>
+            facturas.length > 0 ? facturas.map((factura) => <div key={factura.id}>{factura.numero ?? "—"}</div>) : "—"
+          }
         />
         <Table.Column dataIndex="fecha" title="Fecha" render={(fecha: string) => dayjs(fecha).format("DD/MM/YYYY")} />
         <Table.Column
