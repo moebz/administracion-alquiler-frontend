@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   FileDoneOutlined,
   FileTextOutlined,
@@ -5,10 +6,15 @@ import {
   WalletOutlined,
 } from "@ant-design/icons";
 import { Show } from "@refinedev/antd";
-import { useShow } from "@refinedev/core";
+import { usePermissions, useShow } from "@refinedev/core";
 import {
+  App,
+  Button,
   Descriptions,
   Flex,
+  Form,
+  Input,
+  Modal,
   Space,
   Table,
   Tag,
@@ -18,6 +24,8 @@ import {
 import dayjs from "dayjs";
 import { Link } from "react-router";
 import { SectionDivider } from "../../components/section-divider";
+import { extractErrorMessage } from "../../providers/auth";
+import { kyInstance } from "../../providers/data";
 import { formatMonto } from "../../utils/monto";
 import {
   COBRO_ESTADO_COLOR,
@@ -27,6 +35,8 @@ import {
   type CobroRow,
   type CobroValorRow,
 } from "./types";
+
+const PERMISO_ANULAR = "cobros.anular";
 
 // Líneas de totales de la factura, en el orden en que se leen en una factura impresa.
 const TOTALES_FACTURA: {
@@ -43,6 +53,35 @@ const TOTALES_FACTURA: {
 export const CobroShow = () => {
   const { query, result: cobro } = useShow<CobroRow>();
   const factura = cobro?.factura ?? null;
+  const { message } = App.useApp();
+  const { data: permissions } = usePermissions<string[]>({});
+  const puedeAnular = permissions?.includes(PERMISO_ANULAR) ?? false;
+
+  const [modalAbierto, setModalAbierto] = useState(false);
+  const [guardando, setGuardando] = useState(false);
+  const [form] = Form.useForm<{ motivo_anulacion: string }>();
+
+  const anular = async (values: { motivo_anulacion: string }) => {
+    if (!cobro) return;
+    setGuardando(true);
+    const response = await kyInstance.patch(`cobros/${cobro.id}/anular`, {
+      json: values,
+    });
+    setGuardando(false);
+
+    // Cerrar el modal y recargar el cobro, que ya viene ANULADO.
+    if (response.ok) {
+      message.success("Cobro anulado.");
+      setModalAbierto(false);
+      query.refetch();
+      return;
+    }
+
+    // Mostrar el motivo del rechazo (por ejemplo, un cobro ya anulado).
+    message.error(
+      await extractErrorMessage(response, "No se pudo anular el cobro.")
+    );
+  };
 
   // Mostrar el estado de medios y aplicaciones solo si alguno difiere del estado del cobro:
   // si todos coinciden, el Tag del encabezado ya lo dice.
@@ -58,7 +97,13 @@ export const CobroShow = () => {
     <Show
       title="Detalle del cobro"
       isLoading={query.isLoading}
-      headerButtons={() => null}
+      headerButtons={() =>
+        puedeAnular && cobroActivo ? (
+          <Button danger onClick={() => setModalAbierto(true)}>
+            Anular
+          </Button>
+        ) : null
+      }
     >
       <Flex justify="space-between" align="center" wrap gap={16}>
         <Space size="middle" align="center">
@@ -285,6 +330,32 @@ export const CobroShow = () => {
           />
         )}
       </Table>
+
+      <Modal
+        title="Anular cobro"
+        open={modalAbierto}
+        onCancel={() => setModalAbierto(false)}
+        afterClose={() => form.resetFields()}
+        onOk={() => form.submit()}
+        okText="Anular"
+        okButtonProps={{ danger: true }}
+        cancelText="Cancelar"
+        confirmLoading={guardando}
+      >
+        <Form form={form} layout="vertical" onFinish={anular}>
+          <p>
+            Los medios de cobro dejan de contar en sus fondos. La factura al
+            inquilino sigue emitida y queda pendiente de cobro.
+          </p>
+          <Form.Item
+            label="Motivo"
+            name="motivo_anulacion"
+            rules={[{ required: true }, { max: 255 }]}
+          >
+            <Input.TextArea rows={3} />
+          </Form.Item>
+        </Form>
+      </Modal>
     </Show>
   );
 };
