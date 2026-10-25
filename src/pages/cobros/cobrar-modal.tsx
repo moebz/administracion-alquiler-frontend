@@ -12,6 +12,7 @@ import { extractErrorMessage } from "../../providers/auth";
 import { kyInstance } from "../../providers/data";
 import { formatMonto } from "../../utils/monto";
 import { CARGO_TIPO_LABEL } from "../cargos/types";
+import { cubiertoPorFila } from "./imputacion";
 import type { MedioPagoRow } from "../medios-pago/types";
 import type { PersonaCuentaBancariaRow } from "../personas/types";
 import type { CobroVistaPrevia, CobroVistaPreviaItem, PuntoExpedicionOpcion } from "./types";
@@ -38,9 +39,11 @@ const etiquetaTasa = (tasa: Fila["tasa_iva"]) => {
 const mensajeDeError = (error: unknown, porDefecto: string) =>
   typeof (error as { message?: unknown })?.message === "string" ? (error as { message: string }).message : porDefecto;
 
-// Cobra al inquilino cargos enteros y facturas abiertas de un contrato: el usuario elige hasta qué fila cubre el cobro
-// (el orden de imputación lo fija el sistema, ver ARQUITECTURA.md, "Cargos de alquiler") y el total a cobrar es ese
-// acumulado. Solo se emite factura si el cobro cubre algún cargo por facturar.
+// Cobra al inquilino cargos y facturas abiertas de un contrato, con el mismo esquema que el pago al proveedor
+// (gastos/registrar-pago-modal.tsx): el total a cobrar es la suma de los valores, y elegir una fila o "Cobrar todo"
+// cargan su acumulado en el primer valor. El total cubre las filas en el orden de imputación que fija el sistema (ver
+// ARQUITECTURA.md, "Cargos de alquiler") y la última puede quedar cubierta en parte. Solo se emite factura si el cobro
+// cubre algún cargo por facturar.
 export const CobrarModal = ({ contratoId, onClose }: { contratoId: number; onClose: () => void }) => {
   const { message } = App.useApp();
   const navigate = useNavigate();
@@ -51,8 +54,6 @@ export const CobrarModal = ({ contratoId, onClose }: { contratoId: number; onClo
   const [errorVistaPrevia, setErrorVistaPrevia] = useState<string>();
   const [vistaPrevia, setVistaPrevia] = useState<CobroVistaPrevia>();
   const [puntos, setPuntos] = useState<PuntoExpedicionOpcion[]>([]);
-  // Índice de la última fila que cubre el cobro.
-  const [hasta, setHasta] = useState(0);
 
   const fecha = Form.useWatch("fecha", form) as Dayjs | undefined;
   const fechaIso = fecha?.format("YYYY-MM-DD");
@@ -77,7 +78,6 @@ export const CobrarModal = ({ contratoId, onClose }: { contratoId: number; onClo
           return;
         }
         setVistaPrevia(previa);
-        setHasta(0);
         setPuntos(opciones);
 
         // Precargar el punto si hay uno solo, y soltar el elegido si ya no tiene un rango usable a esta fecha.
@@ -105,9 +105,14 @@ export const CobrarModal = ({ contratoId, onClose }: { contratoId: number; onClo
   }, [contratoId, fechaIso, form]);
 
   const filas: Fila[] = useMemo(() => (vistaPrevia?.items ?? []).map((item, key) => ({ ...item, key })), [vistaPrevia]);
-  const total = filas[hasta] ? Number(filas[hasta].acumulado) : 0;
-  // Emitir factura solo si el cobro cubre alguna fila que no es una factura abierta.
-  const emiteFactura = filas.slice(0, hasta + 1).some((fila) => fila.documento_venta_id === null);
+  const sumaValores = (valores ?? []).reduce((acum, valor) => acum + (Number(valor?.monto) || 0), 0);
+  // Tomar como máximo el acumulado de la última fila: más que eso no se cobra (no se deja saldo a favor).
+  const maximo = filas.length > 0 ? Number(filas[filas.length - 1].acumulado) : 0;
+  const cubiertos = cubiertoPorFila(filas.map((fila) => fila.saldo), sumaValores);
+  // Marcar en el radio la fila cuyo acumulado coincide con el total, si hay una.
+  const filaElegida = filas.find((fila) => Number(fila.acumulado) === sumaValores);
+  // Emitir factura solo si el cobro cubre, entera o en parte, alguna fila que no es una factura abierta.
+  const emiteFactura = filas.some((fila, indice) => cubiertos[indice] > 0 && fila.documento_venta_id === null);
 
   // Explica bajo el punto de expedición por qué no hace falta o por qué no hay ninguno para elegir.
   const ayudaPunto = () => {
@@ -121,15 +126,16 @@ export const CobrarModal = ({ contratoId, onClose }: { contratoId: number; onClo
 
     return undefined;
   };
-  const sumaValores = (valores ?? []).reduce((acum, valor) => acum + (Number(valor?.monto) || 0), 0);
 
-  // Con un solo medio de pago, el monto acompaña al total elegido.
-  useEffect(() => {
-    const actuales = form.getFieldValue("valores") as Valor[] | undefined;
-    if (total > 0 && actuales?.length === 1) {
-      form.setFieldValue(["valores", 0, "monto"], total);
+  // Cargar el monto en el primer medio de cobro, como los atajos del pago al proveedor.
+  const setMontoPrimerMedio = (monto: number) => {
+    const actuales = (form.getFieldValue("valores") as Valor[] | undefined) ?? [];
+    if (actuales.length === 0) {
+      form.setFieldValue("valores", [{ monto }]);
+      return;
     }
-  }, [total, form]);
+    form.setFieldValue("valores", actuales.map((valor, index) => (index === 0 ? { ...valor, monto } : valor)));
+  };
 
   const { selectProps: medioPagoSelectProps, query: medioPagoQuery } = useSelect<MedioPagoRow>({
     resource: "medios-pago",
@@ -193,7 +199,7 @@ export const CobrarModal = ({ contratoId, onClose }: { contratoId: number; onClo
     message.error(await extractErrorMessage(response, "No se pudo registrar el cobro."));
   };
 
-  const valoresCoincidenConElTotal = total > 0 && sumaValores === total;
+  const totalCobrable = sumaValores > 0 && sumaValores <= maximo;
 
   return (
     <Modal
@@ -204,7 +210,7 @@ export const CobrarModal = ({ contratoId, onClose }: { contratoId: number; onClo
       okText="Cobrar"
       cancelText="Cancelar"
       confirmLoading={guardando}
-      okButtonProps={{ disabled: cargando || !valoresCoincidenConElTotal }}
+      okButtonProps={{ disabled: cargando || !totalCobrable }}
       width={820}
     >
       <Descriptions column={2} size="small" style={{ marginBottom: 16 }}>
@@ -256,8 +262,9 @@ export const CobrarModal = ({ contratoId, onClose }: { contratoId: number; onClo
         {filas.length > 0 && (
           <>
             <Typography.Paragraph type="secondary">
-              Los cargos se cobran enteros y en un orden fijo (mora, facturas abiertas, alquileres y el resto, lo vencido
-              antes que lo que todavía no vence). Elegí hasta qué fila cubre el cobro.
+              El cobro cubre las filas en este orden (mora, facturas abiertas, alquileres y el resto, lo vencido antes
+              que lo que todavía no vence); la última puede quedar cubierta en parte. Elegir una fila carga su
+              acumulado como monto.
             </Typography.Paragraph>
             <Table<Fila>
               dataSource={filas}
@@ -268,8 +275,8 @@ export const CobrarModal = ({ contratoId, onClose }: { contratoId: number; onClo
               rowSelection={{
                 type: "radio",
                 columnTitle: "Hasta",
-                selectedRowKeys: [hasta],
-                onChange: (keys) => setHasta(Number(keys[0])),
+                selectedRowKeys: filaElegida ? [filaElegida.key] : [],
+                onChange: (_, seleccion) => seleccion[0] && setMontoPrimerMedio(Number(seleccion[0].acumulado)),
               }}
             >
               <Table.Column
@@ -315,9 +322,24 @@ export const CobrarModal = ({ contratoId, onClose }: { contratoId: number; onClo
               <Table.Column
                 title=""
                 dataIndex="key"
-                render={(key: number) => (key <= hasta ? <Tag color="green">Incluido</Tag> : null)}
+                render={(key: number, fila: Fila) => {
+                  // Marcar la fila cubierta entera.
+                  if (cubiertos[key] >= Number(fila.saldo)) {
+                    return <Tag color="green">Incluido</Tag>;
+                  }
+
+                  // Marcar la fila cubierta en parte, con lo que cubre.
+                  if (cubiertos[key] > 0) {
+                    return <Tag color="gold">Parcial · {formatMonto(cubiertos[key])}</Tag>;
+                  }
+
+                  return null;
+                }}
               />
             </Table>
+            <Space style={{ marginTop: 12 }}>
+              <Button onClick={() => setMontoPrimerMedio(maximo)}>Cobrar todo</Button>
+            </Space>
           </>
         )}
         {(vistaPrevia?.excluidos.length ?? 0) > 0 && (
@@ -412,11 +434,11 @@ export const CobrarModal = ({ contratoId, onClose }: { contratoId: number; onClo
         </Form.List>
 
         <Flex justify="flex-end" gap={8} style={{ marginTop: 16 }}>
-          <Typography.Text type="secondary">Total cobrado:</Typography.Text>
-          <Typography.Text strong type={sumaValores === total ? undefined : "danger"}>
+          <Typography.Text type="secondary">Total a cobrar:</Typography.Text>
+          <Typography.Text strong type={sumaValores > maximo ? "danger" : undefined}>
             {formatMonto(sumaValores)}
           </Typography.Text>
-          <Typography.Text type="secondary">de {formatMonto(total)} a cobrar</Typography.Text>
+          <Typography.Text type="secondary">de {formatMonto(maximo)}</Typography.Text>
         </Flex>
       </Form>
     </Modal>
