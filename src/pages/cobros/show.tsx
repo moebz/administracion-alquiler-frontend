@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
   FileTextOutlined,
   LinkOutlined,
+  StopOutlined,
   WalletOutlined,
 } from "@ant-design/icons";
 import { Show } from "@refinedev/antd";
@@ -43,37 +44,58 @@ export const CobroShow = () => {
   const puedeAnular = permissions?.includes(PERMISO_ANULAR) ?? false;
 
   const [modalAbierto, setModalAbierto] = useState(false);
+  // Valor que se anula con el modal; null si se anula el cobro entero.
+  const [valorAAnular, setValorAAnular] = useState<CobroValorRow | null>(null);
   const [guardando, setGuardando] = useState(false);
   const [form] = Form.useForm<{ motivo_anulacion: string }>();
+
+  const abrirAnulacion = (valor: CobroValorRow | null) => {
+    setValorAAnular(valor);
+    setModalAbierto(true);
+  };
 
   const anular = async (values: { motivo_anulacion: string }) => {
     if (!cobro) return;
     setGuardando(true);
-    const response = await kyInstance.patch(`cobros/${cobro.id}/anular`, {
-      json: values,
-    });
+    const url = valorAAnular
+      ? `cobros/${cobro.id}/valores/${valorAAnular.id}/anular`
+      : `cobros/${cobro.id}/anular`;
+    const response = await kyInstance.patch(url, { json: values });
     setGuardando(false);
 
-    // Cerrar el modal y recargar el cobro, que ya viene ANULADO.
+    // Cerrar el modal y recargar el cobro, que ya viene ANULADO o con el medio anulado.
     if (response.ok) {
-      message.success("Cobro anulado.");
+      message.success(
+        valorAAnular ? "Medio de cobro anulado." : "Cobro anulado."
+      );
       setModalAbierto(false);
       query.refetch();
       return;
     }
 
-    // Mostrar el motivo del rechazo (por ejemplo, un cobro ya anulado).
+    // Mostrar el motivo del rechazo (por ejemplo, el único medio de cobro activo).
     message.error(
-      await extractErrorMessage(response, "No se pudo anular el cobro.")
+      await extractErrorMessage(
+        response,
+        valorAAnular
+          ? "No se pudo anular el medio de cobro."
+          : "No se pudo anular el cobro."
+      )
     );
   };
 
   // Mostrar el estado de medios y aplicaciones solo si alguno difiere del estado del cobro:
   // si todos coinciden, el Tag del encabezado ya lo dice.
+  // Mostrarlo también si se puede anular algún medio, porque el botón va en esa columna.
   const cobroActivo = cobro?.estado === "ACTIVO";
-  const mostrarEstadoValores = (cobro?.valores ?? []).some(
-    (valor) => (valor.estado === "ACTIVO") !== cobroActivo
-  );
+  const valoresActivos =
+    cobro?.valores.filter((valor) => valor.estado === "ACTIVO").length ?? 0;
+  const puedeAnularValores = puedeAnular && cobroActivo;
+  const mostrarEstadoValores =
+    puedeAnularValores ||
+    (cobro?.valores ?? []).some(
+      (valor) => (valor.estado === "ACTIVO") !== cobroActivo
+    );
   const mostrarEstadoAplicaciones = (cobro?.aplicaciones ?? []).some(
     (aplicacion) => (aplicacion.estado === "ACTIVA") !== cobroActivo
   );
@@ -84,7 +106,7 @@ export const CobroShow = () => {
       isLoading={query.isLoading}
       headerButtons={() =>
         puedeAnular && cobroActivo ? (
-          <Button danger onClick={() => setModalAbierto(true)}>
+          <Button danger onClick={() => abrirAnulacion(null)}>
             Anular
           </Button>
         ) : null
@@ -176,7 +198,26 @@ export const CobroShow = () => {
               record: CobroValorRow
             ) =>
               estadoValor === "ACTIVO" ? (
-                <Tag color="green">Activo</Tag>
+                <Space size={4} wrap>
+                  <Tag color="green">Activo</Tag>
+                  {puedeAnularValores && (
+                    <Tooltip
+                      title={
+                        valoresActivos > 1
+                          ? "Anular medio de cobro"
+                          : "Es el único medio de cobro activo: anulá el cobro entero"
+                      }
+                    >
+                      <Button
+                        size="small"
+                        danger
+                        icon={<StopOutlined />}
+                        disabled={valoresActivos <= 1}
+                        onClick={() => abrirAnulacion(record)}
+                      />
+                    </Tooltip>
+                  )}
+                </Space>
               ) : (
                 <Tooltip title={record.motivo_anulacion}>
                   <Tag color="default">Anulado</Tag>
@@ -237,7 +278,7 @@ export const CobroShow = () => {
       </Table>
 
       <Modal
-        title="Anular cobro"
+        title={valorAAnular ? "Anular medio de cobro" : "Anular cobro"}
         open={modalAbierto}
         onCancel={() => setModalAbierto(false)}
         afterClose={() => form.resetFields()}
@@ -248,10 +289,20 @@ export const CobroShow = () => {
         confirmLoading={guardando}
       >
         <Form form={form} layout="vertical" onFinish={anular}>
-          <p>
-            Los medios de cobro dejan de contar en sus fondos. La factura al
-            inquilino sigue emitida y queda pendiente de cobro.
-          </p>
+          {valorAAnular ? (
+            <p>
+              {valorAAnular.medio_pago.nombre} por{" "}
+              {formatMonto(valorAAnular.monto)}. Usalo solo si el dinero de este
+              medio no entró o se cargó por error: deja de contar en su fondo y
+              se anula lo aplicado a las facturas por ese importe, empezando por
+              la última.
+            </p>
+          ) : (
+            <p>
+              Los medios de cobro dejan de contar en sus fondos. La factura al
+              inquilino sigue emitida y queda pendiente de cobro.
+            </p>
+          )}
           <Form.Item
             label="Motivo"
             name="motivo_anulacion"
