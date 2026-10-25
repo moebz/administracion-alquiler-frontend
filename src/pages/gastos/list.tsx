@@ -10,8 +10,12 @@ import {
   GASTO_ESTADO_LABEL,
   GASTO_ESTADO_OPTIONS,
   GASTO_TIPO_LABEL,
+  REINTEGRO_COLOR,
+  REINTEGRO_LABEL,
+  REINTEGRO_OPTIONS,
   type GastoEstado,
   type GastoRow,
+  type ReintegroEstado,
 } from "./types";
 
 // Lista de solo lectura: Registrar factura/pago, Anular y Editar viven en el
@@ -24,14 +28,19 @@ export const GastoList = () => {
   });
 
   const [estado, setEstado] = useState<GastoEstado>();
+  const [reintegro, setReintegro] = useState<ReintegroEstado>();
 
   // Mismo criterio que pages/contratos-alquiler/list.tsx: recalcula el array completo de filtros en cada cambio.
-  const applyFilters = (nextEstado: GastoEstado | undefined) => {
+  const applyFilters = (nextEstado: GastoEstado | undefined, nextReintegro: ReintegroEstado | undefined) => {
     setEstado(nextEstado);
+    setReintegro(nextReintegro);
 
     const filters: CrudFilter[] = [];
     if (nextEstado) {
       filters.push({ field: "estado", operator: "eq", value: nextEstado });
+    }
+    if (nextReintegro) {
+      filters.push({ field: "reintegro", operator: "eq", value: nextReintegro });
     }
     setFilters(filters, "replace");
   };
@@ -47,7 +56,18 @@ export const GastoList = () => {
             placeholder="Todos"
             options={GASTO_ESTADO_OPTIONS}
             value={estado}
-            onChange={applyFilters}
+            onChange={(nextEstado) => applyFilters(nextEstado, reintegro)}
+          />
+        </Space>
+        <Space>
+          <span>Reintegro</span>
+          <Select
+            style={{ minWidth: 200 }}
+            allowClear
+            placeholder="Todos"
+            options={REINTEGRO_OPTIONS}
+            value={reintegro}
+            onChange={(nextReintegro) => applyFilters(estado, nextReintegro)}
           />
         </Space>
       </FilterBar>
@@ -93,6 +113,13 @@ export const GastoList = () => {
               </Space>
             );
           }}
+        />
+        <Table.Column
+          title="Reintegro"
+          dataIndex="reintegro"
+          render={(reintegroGasto: GastoRow["reintegro"]) => (
+            <Tag color={REINTEGRO_COLOR[reintegroGasto.estado]}>{REINTEGRO_LABEL[reintegroGasto.estado]}</Tag>
+          )}
         />
         <Table.Column
           title="Fecha de aprobación"

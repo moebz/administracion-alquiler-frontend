@@ -13,7 +13,8 @@ import { formatMonto } from "../../utils/monto";
 import { COMPRA_CONDICION_OPTIONS, type CompraCondicion } from "../compras/types";
 import type { CompraRow } from "../compras/types";
 import { CARGO_DEUDOR_AL } from "../cargos/types";
-import type { AnticipoOrigenSituacion, AnticipoProveedor, CargoPrevisto, GastoRow } from "./types";
+import { emparejarFacturados } from "./emparejar";
+import type { AnticipoOrigenSituacion, AnticipoProveedor, CargoPrevisto, CargosEsperado, GastoRow } from "./types";
 
 const TASA_IVA_OPTIONS = [
   { label: "Exenta", value: 0 },
@@ -71,13 +72,14 @@ const AnticipoOpcion = ({ anticipo }: { anticipo: AnticipoProveedor }) => {
 };
 
 // Avisa qué va a pasar con los cargos antes de registrar la factura: uno por cada línea, al inquilino o al propietario.
-const AvisoCargo = ({ previsto, lineas }: { previsto: CargoPrevisto; lineas: number }) => {
+// `estado` es el de `previsto`, salvo REAPUNTAR, que el modal decide con las líneas cargadas.
+const AvisoCargo = ({ previsto, estado, lineas }: { previsto: CargoPrevisto; estado: CargosEsperado; lineas: number }) => {
   const alDeudor = CARGO_DEUDOR_AL[previsto.deudor];
   const detalle = `${lineas === 1 ? "Un cargo" : `${lineas} cargos`} de tipo ${CARGO_TIPO_PREVISTO_LABEL[previsto.tipo]} ${alDeudor} ${previsto.deudor_nombre}, por un total de ${formatMonto(previsto.monto)}`;
 
   // Explicar de dónde sale el vencimiento sugerido: al rehacer, el de los cargos actuales si todavía no pasó.
   let ayudaVencimiento = "Sugerido: el próximo día de vencimiento del contrato, para cobrarlo junto con el alquiler.";
-  if (previsto.estado === "REHACER") {
+  if (estado === "REHACER" || estado === "REAPUNTAR") {
     ayudaVencimiento = "Sugerido: el vencimiento de los cargos actuales, o el próximo día de vencimiento del contrato si ya pasó.";
   }
 
@@ -129,19 +131,34 @@ const AvisoCargo = ({ previsto, lineas }: { previsto: CargoPrevisto; lineas: num
     />
   );
 
-  if (previsto.estado === "REVISAR_FACTURA") {
+  if (estado === "REAPUNTAR") {
+    return (
+      <>
+        {avisoContratoTerminado}
+        <Alert
+          type="info"
+          showIcon
+          style={{ marginBottom: 16 }}
+          message="Los cargos ya facturados coinciden con líneas de esta factura y pasan a apuntar a ellas; los demás se rehacen"
+          description={campoVencimiento}
+        />
+      </>
+    );
+  }
+
+  if (estado === "REVISAR_FACTURA") {
     return (
       <Alert
         type="warning"
         showIcon
         style={{ marginBottom: 16 }}
         message={`Hay cargos ya facturados ${alDeudor}: ningún cargo se va a tocar`}
-        description={`Si vas a corregir la factura ${alDeudor}, anulala antes de registrar esta factura del proveedor, así los cargos se rehacen solos.`}
+        description={`Si una línea de esta factura tiene el mismo monto y tasa que cada cargo facturado, los cargos pasan a apuntarla solos. Si no, después vas a poder reapuntarlos desde Cargos, o anular la factura ${alDeudor} antes de registrar esta, así se rehacen solos.`}
       />
     );
   }
 
-  if (previsto.estado === "REHACER") {
+  if (estado === "REHACER") {
     return (
       <>
         {avisoContratoTerminado}
@@ -203,17 +220,20 @@ const valoresIniciales = (gasto: GastoRow, compra?: CompraRow) =>
         anticipos: gasto.anticipos_proveedor.filter((anticipo) => anticipo.tildado).map((anticipo) => anticipo.id),
       };
 
-// Con `compra` edita esa factura (PUT) en vez de registrar una nueva (POST).
+// Con `compra` edita esa factura (PUT) en vez de registrar una nueva (POST). `onRefrescar` vuelve a pedir el gasto
+// cuando el backend avisa que lo que va a pasar con los cargos cambió desde que se abrió el modal.
 export const RegistrarFacturaModal = ({
   gasto,
   compra,
   onClose,
   onSuccess,
+  onRefrescar,
 }: {
   gasto: GastoRow;
   compra?: CompraRow;
   onClose: () => void;
   onSuccess: () => void;
+  onRefrescar?: () => void;
 }) => {
   const { message } = App.useApp();
   const { data: permissions } = usePermissions<string[]>({});
@@ -226,6 +246,11 @@ export const RegistrarFacturaModal = ({
   const diferencia = montoGasto - totales.total;
   // Solo al registrar se crean cargos por primera vez; al editar, los activos se rehacen.
   const previsto = compra ? null : gasto.cargo_previsto;
+  // Decidir con las líneas cargadas si los cargos ya facturados se reapuntan, con la misma regla que el backend.
+  let estadoCargos: CargosEsperado = previsto?.estado === "BLOQUEADO" ? "NINGUNO" : (previsto?.estado ?? "NINGUNO");
+  if (previsto?.estado === "REVISAR_FACTURA" && emparejarFacturados(previsto.cargos_facturados, detalles) !== null) {
+    estadoCargos = "REAPUNTAR";
+  }
   // Solo cuentan los cargos de la factura vigente: los marcados vienen de una factura anulada y no se rehacen.
   const cargosActivos = compra ? gasto.cargos.filter((cargo) => cargo.estado !== "ANULADO" && !cargo.marca) : [];
   // Un cargo ya facturado no se puede rehacer: el backend rechaza la edición con 422, así que se bloquea el guardado.
@@ -243,6 +268,8 @@ export const RegistrarFacturaModal = ({
     const response = await kyInstance[compra ? "put" : "post"](`gastos/${gasto.id}/factura`, {
       json: {
         ...values,
+        // Mandar el aviso mostrado: si al guardar lo que pasa con los cargos es otra cosa, el backend lo rechaza.
+        cargos_esperado: compra ? undefined : estadoCargos,
         anticipos: anticiposElegidos.length > 0 ? anticiposElegidos : undefined,
         fecha: dayjs(values.fecha).format("YYYY-MM-DD"),
         fecha_primer_vencimiento: values.condicion === "CREDITO" && values.fecha_primer_vencimiento
@@ -262,6 +289,14 @@ export const RegistrarFacturaModal = ({
     }
 
     const body = await response.json<{ message?: string; errors?: Record<string, string[]> }>().catch(() => null);
+
+    // Volver a pedir el gasto si lo previsto cambió con el modal abierto: el aviso se actualiza y el modal no se cierra.
+    if (response.status === 422 && !body?.errors && body?.message?.startsWith("Lo que va a pasar con los cargos cambió")) {
+      message.warning(body.message);
+      onRefrescar?.();
+      return;
+    }
+
     if (response.status === 422 && body?.errors) {
       form.setFields(
         Object.entries(body.errors).map(([name, errors]) => ({
@@ -297,7 +332,7 @@ export const RegistrarFacturaModal = ({
         onFinish={registrar}
         initialValues={valoresIniciales(gasto, compra)}
       >
-        {previsto && <AvisoCargo previsto={previsto} lineas={detalles.length} />}
+        {previsto && <AvisoCargo previsto={previsto} estado={estadoCargos} lineas={detalles.length} />}
         {cargosActivos.length > 0 && !hayCargoFacturado && (
           <Alert
             type="warning"

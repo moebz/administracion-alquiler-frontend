@@ -1,13 +1,19 @@
 import { useState } from "react";
 import { List, useTable } from "@refinedev/antd";
-import { App, Button, Form, Input, Modal, Popconfirm, Select, Space, Table, Tag } from "antd";
+import { App, Button, Form, Input, Modal, Popconfirm, Select, Space, Table, Tag, Typography } from "antd";
 import dayjs from "dayjs";
 import { FilterBar } from "../../components/filter-bar";
 import { kyInstance } from "../../providers/data";
 import { formatMonto } from "../../utils/monto";
 import { extractErrorMessage } from "../../providers/auth";
-import { GASTO_ESTADO_COLOR, GASTO_TIPO_LABEL, type GastoEstado, type GastoRow } from "../gastos/types";
-import { GASTO_ESTADO_LABEL_PROPIETARIO, GASTO_ESTADO_OPTIONS_PROPIETARIO } from "./types";
+import { GASTO_TIPO_LABEL } from "../gastos/types";
+import {
+  GASTO_ESTADO_PORTAL_COLOR,
+  GASTO_ESTADO_PORTAL_LABEL,
+  GASTO_ESTADO_PORTAL_OPTIONS,
+  type GastoEstadoPortal,
+  type GastoPropietarioRow,
+} from "./types";
 
 /**
  * Portal del propietario: solo ve los gastos a_cargo_de=PROPIETARIO de sus
@@ -17,24 +23,24 @@ import { GASTO_ESTADO_LABEL_PROPIETARIO, GASTO_ESTADO_OPTIONS_PROPIETARIO } from
  * de" (siempre es él).
  */
 export const GastoAprobacionList = () => {
-  const { tableProps, tableQuery, setFilters } = useTable<GastoRow>({
+  const { tableProps, tableQuery, setFilters } = useTable<GastoPropietarioRow>({
     resource: "propietario/gastos",
     syncWithLocation: true,
     sorters: { initial: [{ field: "fecha", order: "desc" }] },
-    filters: { initial: [{ field: "estado", operator: "eq", value: "SOLICITADO" }] },
+    filters: { initial: [{ field: "estado", operator: "eq", value: "PENDIENTE_APROBACION" }] },
   });
   const { message } = App.useApp();
 
-  const [estado, setEstado] = useState<GastoEstado | undefined>("SOLICITADO");
-  const [rechazando, setRechazando] = useState<GastoRow | null>(null);
+  const [estado, setEstado] = useState<GastoEstadoPortal | undefined>("PENDIENTE_APROBACION");
+  const [rechazando, setRechazando] = useState<GastoPropietarioRow | null>(null);
   const [formRechazo] = Form.useForm<{ motivo_rechazo: string }>();
 
-  const applyEstado = (nextEstado: GastoEstado | undefined) => {
+  const applyEstado = (nextEstado: GastoEstadoPortal | undefined) => {
     setEstado(nextEstado);
     setFilters(nextEstado ? [{ field: "estado", operator: "eq", value: nextEstado }] : [], "replace");
   };
 
-  const aprobar = async (record: GastoRow) => {
+  const aprobar = async (record: GastoPropietarioRow) => {
     const response = await kyInstance.patch(`propietario/gastos/${record.id}/aprobar`);
     if (response.ok) {
       message.success("Gasto aprobado.");
@@ -67,7 +73,7 @@ export const GastoAprobacionList = () => {
             style={{ minWidth: 220 }}
             allowClear
             placeholder="Todos"
-            options={GASTO_ESTADO_OPTIONS_PROPIETARIO}
+            options={GASTO_ESTADO_PORTAL_OPTIONS}
             value={estado}
             onChange={applyEstado}
           />
@@ -77,39 +83,51 @@ export const GastoAprobacionList = () => {
         <Table.Column
           title="Unidad"
           dataIndex="unidad"
-          render={(unidad: GastoRow["unidad"]) => `${unidad.bloque.edificio.nombre} - ${unidad.bloque.nombre} - ${unidad.numero}`}
+          render={(unidad: GastoPropietarioRow["unidad"]) => `${unidad.bloque.edificio.nombre} - ${unidad.bloque.nombre} - ${unidad.numero}`}
         />
-        <Table.Column title="Tipo" dataIndex="tipo" render={(tipo: GastoRow["tipo"]) => GASTO_TIPO_LABEL[tipo]} />
+        <Table.Column title="Tipo" dataIndex="tipo" render={(tipo: GastoPropietarioRow["tipo"]) => GASTO_TIPO_LABEL[tipo]} />
         <Table.Column title="Descripción" dataIndex="descripcion" />
         <Table.Column
           dataIndex="fecha"
           title="Fecha"
-          render={(fecha: GastoRow["fecha"]) => dayjs(fecha).format("DD/MM/YYYY")}
+          render={(fecha: GastoPropietarioRow["fecha"]) => dayjs(fecha).format("DD/MM/YYYY")}
         />
         <Table.Column
           title="Monto"
           dataIndex="monto"
-          render={(monto: GastoRow["monto"]) => formatMonto(monto)}
+          render={(monto: GastoPropietarioRow["monto"]) => formatMonto(monto)}
         />
-        <Table.Column title="Proveedor" dataIndex="proveedor" render={(proveedor: GastoRow["proveedor"]) => proveedor.nombre} />
+        <Table.Column title="Proveedor" dataIndex="proveedor" render={(proveedor: GastoPropietarioRow["proveedor"]) => proveedor.nombre} />
         <Table.Column
           title="Estado"
-          dataIndex="estado"
-          render={(estadoGasto: GastoRow["estado"]) => (
-            <Tag color={GASTO_ESTADO_COLOR[estadoGasto]}>{GASTO_ESTADO_LABEL_PROPIETARIO[estadoGasto]}</Tag>
+          dataIndex="estado_portal"
+          render={(estadoPortal: GastoPropietarioRow["estado_portal"], record: GastoPropietarioRow) => (
+            <Space direction="vertical" size={4}>
+              <Tag color={GASTO_ESTADO_PORTAL_COLOR[estadoPortal]} style={{ margin: 0 }}>
+                {GASTO_ESTADO_PORTAL_LABEL[estadoPortal]}
+                {estadoPortal === "REINTEGRADO_PARCIAL" &&
+                  ` (${formatMonto(record.reintegro.reintegrado)} de ${formatMonto(record.reintegro.base)})`}
+              </Tag>
+              {/* Mostrar lo que puso la administradora si absorbió solo una parte. */}
+              {estadoPortal !== "ABSORBIDO" && record.reintegro.absorbido !== null && (
+                <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                  Absorbido por la administradora {formatMonto(record.reintegro.absorbido)}
+                </Typography.Text>
+              )}
+            </Space>
           )}
         />
         <Table.Column
           title="Fecha de aprobación"
           dataIndex="fecha_aprobacion"
-          render={(fechaAprobacion: GastoRow["fecha_aprobacion"]) =>
+          render={(fechaAprobacion: GastoPropietarioRow["fecha_aprobacion"]) =>
             fechaAprobacion ? dayjs(fechaAprobacion).format("DD/MM/YYYY HH:mm") : "—"
           }
         />
         <Table.Column
           title="Acciones"
           dataIndex="actions"
-          render={(_, record: GastoRow) =>
+          render={(_, record: GastoPropietarioRow) =>
             record.estado === "SOLICITADO" ? (
               <Space>
                 <Popconfirm title="¿Aprobar este gasto?" okText="Aprobar" cancelText="Cancelar" onConfirm={() => aprobar(record)}>

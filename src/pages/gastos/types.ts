@@ -1,4 +1,4 @@
-import type { CargoDeudor, CargoMarca } from "../cargos/types";
+import type { AccionSugerida, CargoDeudor, CargoMarca } from "../cargos/types";
 
 export type GastoTipo = "EXPENSA" | "REPARACION" | "SERVICIO" | "OTRO";
 
@@ -80,12 +80,15 @@ export type CargoGasto = {
   facturado: number | string;
   cobrado: number | string;
   marca: CargoMarca | null;
+  // Solo con la marca REVISAR_FACTURA.
+  accion_sugerida: AccionSugerida | null;
 };
 
 // CREAR: el gasto nunca tuvo cargos, se crean solos, uno por línea de la factura. `monto` es el total del gasto,
 // que se reparte entre los cargos según las líneas de la factura.
 // REHACER: tiene `cargos_activos` sin facturar (p. ej. tras anular la factura del proveedor): se anulan y se crea uno por línea nueva.
-// REVISAR_FACTURA: algún cargo activo ya está facturado, no se toca ninguno.
+// REVISAR_FACTURA: algún cargo activo ya está facturado, no se toca ninguno; `cargos_facturados` son esos cargos, y si las
+// líneas de la factura los cubren a todos (ver emparejarFacturados()) el modal avisa REAPUNTAR: pasan a apuntar a esas líneas.
 // YA_TUVO: todos sus cargos se anularon, no se crean otros.
 // BLOQUEADO: contrato anulado (solo al inquilino), no se puede registrar la factura.
 // `contrato_terminado` es la fecha de fin del contrato del gasto si ya terminó: los cargos se crean igual, solo se avisa.
@@ -99,7 +102,43 @@ export type CargoPrevisto = {
   fecha_vencimiento: string | null;
   contrato_terminado: string | null;
   cargos_activos: number;
+  cargos_facturados: { id: number; descripcion: string; monto: number | string; tasa_iva: 0 | 5 | 10 }[];
 };
+
+// Lo que el modal le manda al backend como `cargos_esperado`: el aviso que mostró (NINGUNO si el gasto no genera cargos).
+export type CargosEsperado = "CREAR" | "REHACER" | "REVISAR_FACTURA" | "REAPUNTAR" | "YA_TUVO" | "NINGUNO";
+
+// Cuánto le devolvió el deudor a la administradora, aparte del pago al proveedor (`estado` del gasto).
+export type ReintegroEstado = "PENDIENTE_FACTURA_PROVEEDOR" | "PENDIENTE" | "PARCIAL" | "REINTEGRADO" | "NO_APLICA";
+
+export type Reintegro = {
+  estado: ReintegroEstado;
+  reintegrado: number | string;
+  // Σ montos de los cargos activos: lo que tiene que volver.
+  base: number | string;
+  // Lo que puso la administradora (total de la factura vigente − base); null si no corresponde.
+  absorbido: number | string | null;
+};
+
+export const REINTEGRO_LABEL: Record<ReintegroEstado, string> = {
+  PENDIENTE_FACTURA_PROVEEDOR: "Pendiente factura proveedor",
+  PENDIENTE: "Pendiente reintegro",
+  PARCIAL: "Reintegro parcial",
+  REINTEGRADO: "Reintegrado",
+  NO_APLICA: "No aplica",
+};
+
+export const REINTEGRO_COLOR: Record<ReintegroEstado, string> = {
+  PENDIENTE_FACTURA_PROVEEDOR: "default",
+  PENDIENTE: "gold",
+  PARCIAL: "blue",
+  REINTEGRADO: "green",
+  NO_APLICA: "default",
+};
+
+export const REINTEGRO_OPTIONS: { label: string; value: ReintegroEstado }[] = (
+  Object.keys(REINTEGRO_LABEL) as ReintegroEstado[]
+).map((value) => ({ label: REINTEGRO_LABEL[value], value }));
 
 export const APROBADO_POR_LABEL: Record<AprobadoPor, string> = {
   ADMINISTRADORA: "Administradora",
@@ -141,6 +180,8 @@ export type GastoRow = {
   // Serializado como string: `monto` tiene cast `decimal:4` en el modelo (App\Models\Gasto), y Laravel siempre
   // manda un decimal como string en el JSON (no como number) para no perder precisión.
   monto: number | string;
+  // Fijo desde que pasó a APROBADO: tope de "Editar monto". Null mientras está SOLICITADO.
+  monto_aprobado: number | string | null;
   proveedor_id: number;
   proveedor: { id: number; nombre: string };
   a_cargo_de: ACargoDe;
@@ -154,6 +195,9 @@ export type GastoRow = {
   motivo_anulacion: string | null;
   cargos: CargoGasto[];
   cargo_previsto: CargoPrevisto | null;
+  reintegro: Reintegro;
+  // Solo en el detalle, con cargos marcados "Factura anulada" y factura vigente: cuántos se anulan y cuántas líneas los rehacen.
+  rehacer_cargos: { habilitado: boolean; cargos: number; lineas: number } | null;
   // Solo mientras el gasto está aprobado y sin factura; [] en el resto.
   anticipos_proveedor: AnticipoProveedor[];
   documento_compra: {

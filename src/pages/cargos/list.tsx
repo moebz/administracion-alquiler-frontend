@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { List, useTable } from "@refinedev/antd";
 import { usePermissions } from "@refinedev/core";
-import { StopOutlined } from "@ant-design/icons";
+import { NodeIndexOutlined, StopOutlined } from "@ant-design/icons";
 import { Alert, App, Button, Input, Space, Table, Tag, Tooltip, Typography } from "antd";
 import dayjs from "dayjs";
 import { Link, useNavigate, useSearchParams } from "react-router";
@@ -13,6 +13,7 @@ import { CargoMarcaTag } from "./cargo-marca-tag";
 import { buildFiltrosCargos, FILTROS_CARGOS_INICIALES } from "./filtros";
 import { CobrarModal } from "../cobros/cobrar-modal";
 import { GenerarCargosModal } from "./generar-cargos-modal";
+import { ReapuntarCargoModal } from "./reapuntar-cargo-modal";
 import {
   CARGO_DEUDOR_COLOR,
   CARGO_DEUDOR_LABEL,
@@ -48,11 +49,13 @@ export const CargoList = () => {
   const puedeGenerar = permissions?.includes("cargos.generar") ?? false;
   const puedeCrear = permissions?.includes("cargos.crear") ?? false;
   const puedeAnular = permissions?.includes("cargos.anular") ?? false;
+  const puedeReapuntar = permissions?.includes("cargos.reapuntar") ?? false;
   // Cobrar emite la factura (consume numeración del timbrado), así que exige los dos permisos.
   const puedeCobrar = (permissions?.includes("cobros.registrar") && permissions?.includes("facturas.emitir")) ?? false;
 
   const [generando, setGenerando] = useState(false);
   const [cobrando, setCobrando] = useState(false);
+  const [reapuntando, setReapuntando] = useState<CargoRow | null>(null);
 
   const anular = (cargo: CargoRow) => {
     let motivo = "";
@@ -207,7 +210,14 @@ export const CargoList = () => {
               <Tooltip title={record.motivo_anulacion}>
                 <Tag color={CARGO_ESTADO_COLOR[estado]}>{CARGO_ESTADO_LABEL[estado]}</Tag>
               </Tooltip>
-              {record.marca && <CargoMarcaTag marca={record.marca} deudor={record.deudor} />}
+              {record.marca && (
+                <CargoMarcaTag marca={record.marca} deudor={record.deudor} accion={record.accion_sugerida} tasaIva={record.tasa_iva} />
+              )}
+              {puedeReapuntar && (record.accion_sugerida?.candidatas.length ?? 0) > 0 && (
+                <Tooltip title="Reapuntar a la factura de reemplazo del proveedor">
+                  <Button size="small" icon={<NodeIndexOutlined />} onClick={() => setReapuntando(record)} />
+                </Tooltip>
+              )}
               {puedeAnular && estado !== "ANULADO" && (
                 <Tooltip title="Anular cargo">
                   <Button size="small" danger icon={<StopOutlined />} onClick={() => anular(record)} />
@@ -217,6 +227,16 @@ export const CargoList = () => {
           )}
         />
       </Table>
+      {reapuntando && (
+        <ReapuntarCargoModal
+          cargo={reapuntando}
+          onClose={() => setReapuntando(null)}
+          onSuccess={() => {
+            setReapuntando(null);
+            tableQuery.refetch();
+          }}
+        />
+      )}
       {cobrando && contratoParam > 0 && <CobrarModal contratoId={contratoParam} onClose={() => setCobrando(false)} />}
       {generando && (
         <GenerarCargosModal

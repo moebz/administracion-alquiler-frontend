@@ -5,8 +5,11 @@ import {
   CalendarOutlined,
   CheckCircleOutlined,
   DollarOutlined,
+  EditOutlined,
   FileDoneOutlined,
   HomeOutlined,
+  NodeIndexOutlined,
+  RedoOutlined,
   ShopOutlined,
   SolutionOutlined,
   StopOutlined,
@@ -14,6 +17,7 @@ import {
 } from "@ant-design/icons";
 import {
   Alert,
+  App,
   Button,
   Card,
   Descriptions,
@@ -32,14 +36,28 @@ import {
 import dayjs from "dayjs";
 import { Link } from "react-router";
 import { CargoMarcaTag } from "../cargos/cargo-marca-tag";
+import { ReapuntarCargoModal } from "../cargos/reapuntar-cargo-modal";
+import { extractErrorMessage } from "../../providers/auth";
+import { kyInstance } from "../../providers/data";
 import { CARGO_DEUDOR_AL, CARGO_ESTADO_COLOR, CARGO_ESTADO_LABEL, CARGO_TIPO_LABEL, type CargoDeudor } from "../cargos/types";
 import { CompraDetail } from "../compras/compra-detail";
 import type { CompraRow } from "../compras/types";
 import { formatMonto } from "../../utils/monto";
 import { AnularGastoModal } from "./anular-gasto-modal";
+import { EditarMontoModal } from "./editar-monto-modal";
 import { RegistrarFacturaModal } from "./registrar-factura-modal";
 import { RegistrarPagoModal } from "./registrar-pago-modal";
-import { A_CARGO_DE_LABEL, APROBADO_POR_LABEL, GASTO_ESTADO_COLOR, GASTO_ESTADO_LABEL, GASTO_TIPO_LABEL, type CargoGasto, type GastoRow } from "./types";
+import {
+  A_CARGO_DE_LABEL,
+  APROBADO_POR_LABEL,
+  GASTO_ESTADO_COLOR,
+  GASTO_ESTADO_LABEL,
+  GASTO_TIPO_LABEL,
+  REINTEGRO_COLOR,
+  REINTEGRO_LABEL,
+  type CargoGasto,
+  type GastoRow,
+} from "./types";
 
 // Acá vive todo lo del gasto Y de su factura (ver ARQUITECTURA.md, "Gastos"):
 // antes la factura tenía su propia pantalla en pages/compras, separada del
@@ -61,11 +79,17 @@ export const GastoShow = () => {
     (permissions?.includes("gastos.registrar_pago") && permissions?.includes("pagos.registrar")) ?? false;
   const puedeAnularGasto = permissions?.includes("gastos.anular") ?? false;
   const puedeAnularCompra = permissions?.includes("compras.anular") ?? false;
+  // Rehacer cargos y editar el monto van con el permiso del lado gasto de registrar la factura del proveedor.
+  const puedeGestionarFactura = permissions?.includes("gastos.registrar_pago") ?? false;
+  const puedeReapuntar = permissions?.includes("cargos.reapuntar") ?? false;
+  const { message, modal } = App.useApp();
 
   const [facturaAbierta, setFacturaAbierta] = useState(false);
   const [edicionAbierta, setEdicionAbierta] = useState(false);
   const [pagoAbierto, setPagoAbierto] = useState(false);
   const [anularAbierto, setAnularAbierto] = useState(false);
+  const [montoAbierto, setMontoAbierto] = useState(false);
+  const [reapuntando, setReapuntando] = useState<CargoGasto | null>(null);
 
   const { query: compraQuery, result: compra } = useOne<CompraRow>({
     resource: "compras",
@@ -86,6 +110,33 @@ export const GastoShow = () => {
   const cargoFacturado = cargosActivos.some((cargo) => Number(cargo.facturado) > 0);
   // Los cargos de un gasto son al propietario o al inquilino según a cargo de quién esté.
   const deudor: CargoDeudor = gasto?.a_cargo_de === "PROPIETARIO" ? "PROPIETARIO" : "INQUILINO";
+  // El monto se edita en un gasto APROBADO sin factura vigente del proveedor, hasta lo aprobado.
+  const puedeEditarMonto = puedeGestionarFactura && gasto?.estado === "APROBADO" && !gasto.documento_compra_id;
+  const reintegro = gasto?.reintegro;
+  const conReintegro = reintegro && ["PENDIENTE", "PARCIAL", "REINTEGRADO"].includes(reintegro.estado);
+
+  // Confirmar cuántos cargos se anulan y cuántos se crean antes de rehacer.
+  const rehacerCargos = () => {
+    const plan = gasto?.rehacer_cargos;
+    if (!gasto || !plan) return;
+
+    modal.confirm({
+      title: "¿Rehacer los cargos con la factura vigente del proveedor?",
+      content: `Se ${plan.cargos === 1 ? "anula el cargo" : `anulan los ${plan.cargos} cargos`} con la marca "Factura anulada" y se ${plan.lineas === 1 ? "crea uno" : `crean ${plan.lineas}`} por las líneas de la factura que ningún cargo usa.`,
+      okText: "Rehacer",
+      cancelText: "Cancelar",
+      onOk: async () => {
+        const response = await kyInstance.post(`gastos/${gasto.id}/rehacer-cargos`);
+        if (!response.ok) {
+          message.error(await extractErrorMessage(response, "No se pudieron rehacer los cargos."));
+          throw new Error("rehacer rechazado");
+        }
+
+        message.success("Cargos rehechos.");
+        gastoQuery.refetch();
+      },
+    });
+  };
 
   return (
     <Show
@@ -110,6 +161,11 @@ export const GastoShow = () => {
                   <Tag color={GASTO_ESTADO_COLOR[gasto.estado]} style={{ margin: 0 }}>
                     {GASTO_ESTADO_LABEL[gasto.estado]}
                   </Tag>
+                  <Tooltip title="Cuánto le devolvió el deudor a la administradora, aparte del pago al proveedor">
+                    <Tag color={REINTEGRO_COLOR[gasto.reintegro.estado]} style={{ margin: 0 }}>
+                      {REINTEGRO_LABEL[gasto.reintegro.estado]}
+                    </Tag>
+                  </Tooltip>
                   <Tag style={{ margin: 0 }}>
                     {GASTO_TIPO_LABEL[gasto.tipo]}
                     {gasto.tipo === "EXPENSA" && gasto.periodo && ` de ${dayjs(gasto.periodo, "YYYY-MM").format("MM/YYYY")}`}
@@ -125,10 +181,21 @@ export const GastoShow = () => {
               </Flex>
               <Flex vertical align="flex-end" gap={token.margin}>
                 <Flex gap={token.marginXL} wrap justify="flex-end">
-                  <Statistic title="Monto" value={formatMonto(gasto.monto)} style={{ textAlign: "right" }} />
+                  <Flex vertical align="flex-end">
+                    <Statistic title="Monto" value={formatMonto(gasto.monto)} style={{ textAlign: "right" }} />
+                    {/* Mostrar lo aprobado si el monto se editó después de aprobar. */}
+                    {gasto.monto_aprobado !== null && Number(gasto.monto_aprobado) !== Number(gasto.monto) && (
+                      <Typography.Text type="secondary">Aprobado por {formatMonto(gasto.monto_aprobado)}</Typography.Text>
+                    )}
+                    {puedeEditarMonto && (
+                      <Button size="small" icon={<EditOutlined />} onClick={() => setMontoAbierto(true)} style={{ marginTop: 4 }}>
+                        Editar monto
+                      </Button>
+                    )}
+                  </Flex>
                   {compra && compra.estado === "REGISTRADO" && (
                     <Statistic
-                      title="Saldo pendiente"
+                      title="Saldo al proveedor"
                       value={formatMonto(compra.saldo)}
                       valueStyle={{ color: Number(compra.saldo) > 0 ? token.colorWarning : token.colorSuccess }}
                       style={{ textAlign: "right" }}
@@ -147,9 +214,25 @@ export const GastoShow = () => {
                       size="small"
                     />
                     <Typography.Text type="secondary" style={{ textAlign: "right" }}>
-                      Pagado {formatMonto(Number(compra.total) - Number(compra.saldo))} de {formatMonto(compra.total)}
+                      Pagado al proveedor {formatMonto(Number(compra.total) - Number(compra.saldo))} de {formatMonto(compra.total)}
                     </Typography.Text>
                   </Flex>
+                )}
+                {/* Mostrar el reintegro aparte del pago al proveedor: van por caminos distintos. */}
+                {reintegro && conReintegro && (
+                  <Flex vertical style={{ width: "100%" }}>
+                    <Progress
+                      percent={Number(reintegro.base) > 0 ? Math.round((Number(reintegro.reintegrado) / Number(reintegro.base)) * 100) : 0}
+                      status={reintegro.estado === "REINTEGRADO" ? "success" : "normal"}
+                      size="small"
+                    />
+                    <Typography.Text type="secondary" style={{ textAlign: "right" }}>
+                      Reintegrado {formatMonto(reintegro.reintegrado)} de {formatMonto(reintegro.base)}
+                    </Typography.Text>
+                  </Flex>
+                )}
+                {reintegro?.absorbido !== null && reintegro?.absorbido !== undefined && (
+                  <Typography.Text type="secondary">Absorbido por la administradora {formatMonto(reintegro.absorbido)}</Typography.Text>
                 )}
                 {puedeAnularEsteGasto && (
                   <Tooltip
@@ -297,7 +380,16 @@ export const GastoShow = () => {
               </Space>
             }
             extra={
-              <Link to={`/administrador/cargos?gasto_id=${gasto.id}&todos_los_estados=1`}>Ver en Cargos</Link>
+              <Space>
+                {puedeGestionarFactura && gasto.rehacer_cargos && (
+                  <Tooltip title={gasto.rehacer_cargos.habilitado ? undefined : 'Primero resolvé los cargos marcados "Revisar factura".'}>
+                    <Button size="small" icon={<RedoOutlined />} disabled={!gasto.rehacer_cargos.habilitado} onClick={rehacerCargos}>
+                      Rehacer cargos
+                    </Button>
+                  </Tooltip>
+                )}
+                <Link to={`/administrador/cargos?gasto_id=${gasto.id}&todos_los_estados=1`}>Ver en Cargos</Link>
+              </Space>
             }
           >
             <Table<CargoGasto> dataSource={gasto.cargos} rowKey="id" size="small" pagination={false}>
@@ -324,7 +416,14 @@ export const GastoShow = () => {
                     <Tag color={CARGO_ESTADO_COLOR[estado]} style={{ margin: 0 }}>
                       {CARGO_ESTADO_LABEL[estado]}
                     </Tag>
-                    {cargo.marca && <CargoMarcaTag marca={cargo.marca} deudor={cargo.deudor} />}
+                    {cargo.marca && (
+                      <CargoMarcaTag marca={cargo.marca} deudor={cargo.deudor} accion={cargo.accion_sugerida} tasaIva={cargo.tasa_iva} />
+                    )}
+                    {puedeReapuntar && (cargo.accion_sugerida?.candidatas.length ?? 0) > 0 && (
+                      <Tooltip title="Reapuntar a la factura de reemplazo del proveedor">
+                        <Button size="small" icon={<NodeIndexOutlined />} onClick={() => setReapuntando(cargo)} />
+                      </Tooltip>
+                    )}
                   </Space>
                 )}
               />
@@ -337,6 +436,7 @@ export const GastoShow = () => {
         <RegistrarFacturaModal
           gasto={gasto}
           onClose={() => setFacturaAbierta(false)}
+          onRefrescar={() => gastoQuery.refetch()}
           onSuccess={() => {
             setFacturaAbierta(false);
             // Solo el gasto: todavía no había documento_compra_id cuando se
@@ -366,6 +466,26 @@ export const GastoShow = () => {
           onSuccess={() => {
             setPagoAbierto(false);
             refetchTodo();
+          }}
+        />
+      )}
+      {montoAbierto && gasto && (
+        <EditarMontoModal
+          gasto={gasto}
+          onClose={() => setMontoAbierto(false)}
+          onSuccess={() => {
+            setMontoAbierto(false);
+            gastoQuery.refetch();
+          }}
+        />
+      )}
+      {reapuntando && (
+        <ReapuntarCargoModal
+          cargo={reapuntando}
+          onClose={() => setReapuntando(null)}
+          onSuccess={() => {
+            setReapuntando(null);
+            gastoQuery.refetch();
           }}
         />
       )}

@@ -1,3 +1,5 @@
+import { formatMonto } from "../../utils/monto";
+
 export type CargoTipo = "ALQUILER" | "EXPENSA" | "MORA" | "OTRO";
 
 export const CARGO_TIPO_LABEL: Record<CargoTipo, string> = {
@@ -47,6 +49,43 @@ export const cargoMarcaTooltip = (marca: CargoMarca, deudor: CargoDeudor): strin
     return "Registrá la factura de reemplazo del proveedor, que rehace el cargo, o anulalo desde Cargos.";
   }
   return `La factura del proveedor de este cargo se reemplazó después de facturárselo ${CARGO_DEUDOR_AL[deudor]}. Si el monto subió, falta cobrarle la diferencia; si bajó por debajo de lo facturado o cambió la tasa, anulá la factura ${CARGO_DEUDOR_AL[deudor]} (si está en plazo) o emití una NC.`;
+};
+
+// Línea de la factura vigente del proveedor a la que se puede reapuntar un cargo.
+export type LineaCandidata = { id: number; descripcion: string; subtotal: number | string };
+
+// Qué hacer con un cargo marcado "Revisar factura", según las líneas de su tasa en la factura vigente del proveedor.
+export type AccionSugerida = {
+  codigo: "ESPERANDO_REEMPLAZO" | "ANULAR_O_NC" | "ELEGIR_LINEA" | "AJUSTAR_Y_REAPUNTAR" | "NC_Y_REAPUNTAR";
+  facturado: number | string;
+  linea: LineaCandidata | null;
+  // Solo NC_Y_REAPUNTAR: lo que hay que acreditar antes de reapuntar.
+  diferencia: number | string | null;
+  candidatas: LineaCandidata[];
+};
+
+export const accionSugeridaTexto = (accion: AccionSugerida, deudor: CargoDeudor, tasaIva: number): string => {
+  const al = CARGO_DEUDOR_AL[deudor];
+
+  if (accion.codigo === "ESPERANDO_REEMPLAZO") {
+    return "Registrá la factura de reemplazo del proveedor; después vas a poder reapuntar el cargo a su línea nueva.";
+  }
+  if (accion.codigo === "ANULAR_O_NC") {
+    return `La factura de reemplazo del proveedor no tiene una línea libre al ${tasaIva}%: anulá la factura ${al} (si está en plazo) o emití una NC por lo facturado.`;
+  }
+  if (accion.codigo === "ELEGIR_LINEA") {
+    return `La factura de reemplazo del proveedor tiene varias líneas al ${tasaIva}%: reapuntá el cargo a la que le corresponde.`;
+  }
+
+  const subtotal = Number(accion.linea?.subtotal ?? 0);
+  const facturado = Number(accion.facturado);
+  if (accion.codigo === "NC_Y_REAPUNTAR") {
+    return `Facturado ${al} ${formatMonto(facturado)}, la línea nueva es ${formatMonto(subtotal)}: emití una NC por ${formatMonto(accion.diferencia ?? 0)} (o anulá la factura ${al} si está en plazo) y después reapuntá.`;
+  }
+  if (subtotal === facturado) {
+    return `Reapuntá el cargo a la línea nueva "${accion.linea?.descripcion}".`;
+  }
+  return `Ajustá el cargo a ${formatMonto(subtotal)} y reapuntalo a la línea nueva; la diferencia (${formatMonto(subtotal - facturado)}) queda como saldo a cobrar.`;
 };
 
 export const CARGO_DEUDOR_COLOR: Record<CargoDeudor, string> = {
@@ -127,6 +166,8 @@ export type CargoRow = {
   estado: CargoEstado;
   // Solo un cargo activo cuya factura del proveedor se anuló.
   marca: CargoMarca | null;
+  // Solo con la marca REVISAR_FACTURA.
+  accion_sugerida: AccionSugerida | null;
   fecha_anulacion: string | null;
   motivo_anulacion: string | null;
   gasto_id: number | null;
