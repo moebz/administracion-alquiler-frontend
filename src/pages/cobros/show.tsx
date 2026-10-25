@@ -132,7 +132,11 @@ export const CobroShow = () => {
       </Descriptions>
 
       {cobro?.facturas.map((factura) => (
-        <FacturaCobro key={factura.id} factura={factura} />
+        <FacturaCobro
+          key={factura.id}
+          factura={factura}
+          onAnulada={() => query.refetch()}
+        />
       ))}
 
       <SectionDivider icon={<WalletOutlined />}>Medios de cobro</SectionDivider>

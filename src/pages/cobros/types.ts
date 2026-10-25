@@ -57,6 +57,10 @@ export type CobroFacturaRow = {
   estado: "BORRADOR" | "EMITIDO" | "ANULADO";
   // False en una factura que ya estaba abierta (por ejemplo, la de un cobro anulado) y este cobro solo saldó.
   emitida_por_este_cobro: boolean;
+  // Desde acá corre el plazo de 48 h para anularla (por ahora, el momento en que se emitió).
+  fecha_aprobacion_sifen: string | null;
+  // Null si se puede anular; si no, por qué (cobro aplicado, plazo vencido, ya anulada).
+  motivo_no_anulable: string | null;
   saldo: number | string;
   fecha_anulacion: string | null;
   motivo_anulacion: string | null;
