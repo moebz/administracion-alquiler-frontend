@@ -14,7 +14,7 @@ export const TimbradoCreate = () => {
       <TimbradoForm
         formProps={{
           ...formProps,
-          initialValues: { tipo: "PREIMPRESO", rangos: [{ tipo_comprobante: "FACTURA" }], ...formProps.initialValues },
+          initialValues: { tipo: "ELECTRONICO", rangos: [{ tipo_comprobante: "FACTURA" }], ...formProps.initialValues },
         }}
         esEdicion={false}
       />

@@ -54,9 +54,13 @@ export const TimbradoForm = ({ formProps, esEdicion }: TimbradoFormProps) => {
             label="Tipo"
             name="tipo"
             rules={[{ required: true }]}
-            extra={esEdicion ? undefined : "No se puede cambiar una vez creado."}
+            extra={esEdicion ? undefined : "Solo electrónico: las reglas del sistema (plazo de 48 h de SIFEN, CDC, NC) siguen ese régimen. No se puede cambiar una vez creado."}
           >
-            <Select options={TIMBRADO_TIPO_OPTIONS} disabled={esEdicion} />
+            {/* Ofrecer solo el electrónico al crear; al editar se muestra el tipo que tenga, aunque sea preimpreso. */}
+            <Select
+              options={esEdicion ? TIMBRADO_TIPO_OPTIONS : TIMBRADO_TIPO_OPTIONS.filter((opcion) => opcion.value === "ELECTRONICO")}
+              disabled={esEdicion}
+            />
           </Form.Item>
         </Col>
       </SectionRow>
