@@ -4,7 +4,7 @@ import { useList } from "@refinedev/core";
 import { App, Alert, Button, Col, DatePicker, Descriptions, Flex, Form, Input, Modal, Row, Select, Space, Table, Tag, Tooltip, Typography } from "antd";
 import { CalendarOutlined, DeleteOutlined, PlusOutlined, UnorderedListOutlined, WalletOutlined } from "@ant-design/icons";
 import dayjs, { type Dayjs } from "dayjs";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { MontoInput } from "../../components/monto-input";
 import { SectionDivider } from "../../components/section-divider";
 import { SectionRow } from "../../components/section-row";
@@ -282,6 +282,11 @@ export const CobrarModal = ({ contratoId, onClose }: { contratoId: number; onClo
                       <Tooltip title="Ya facturada y todavía impaga (por ejemplo, por un cobro anulado): se cobra sin volver a facturar.">
                         <Tag color="blue">Factura abierta</Tag>
                       </Tooltip>
+                    )}
+                    {fila.cobro_anulado_id !== null && (
+                      <Link to={`/administrador/cobros/show/${fila.cobro_anulado_id}`} target="_blank">
+                        Ver cobro anulado
+                      </Link>
                     )}
                     {fila.cargo_id === null && fila.documento_venta_id === null && (
                       <Tooltip title="Mora calculada a la fecha del cobro: se guarda como cargo al cobrar.">

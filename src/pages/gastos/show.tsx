@@ -305,6 +305,7 @@ export const GastoShow = () => {
               <Table.Column title="Tipo" dataIndex="tipo" render={(tipo: CargoGasto["tipo"]) => CARGO_TIPO_LABEL[tipo]} />
               <Table.Column title="Monto" dataIndex="monto" render={(monto: CargoGasto["monto"]) => formatMonto(monto)} />
               <Table.Column title="IVA" dataIndex="tasa_iva" render={(tasa: CargoGasto["tasa_iva"]) => `${tasa}%`} />
+              <Table.Column title="Facturado" dataIndex="facturado" render={(facturado: CargoGasto["facturado"]) => formatMonto(facturado)} />
               <Table.Column title="Cobrado" dataIndex="cobrado" render={(cobrado: CargoGasto["cobrado"]) => formatMonto(cobrado)} />
               <Table.Column title="Saldo" dataIndex="saldo" render={(saldo: CargoGasto["saldo"]) => formatMonto(saldo)} />
               {/* El cargo al propietario no tiene vencimiento. */}

@@ -109,6 +109,8 @@ export type CobroVistaPreviaItem = {
   documento_venta_id: number | null;
   // Número impreso de la factura abierta.
   numero_factura: string | null;
+  // Cobro de la última aplicación anulada de la factura abierta (por qué quedó abierta), si lo hay.
+  cobro_anulado_id: number | null;
 };
 
 export type CobroVistaPreviaExcluido = {
