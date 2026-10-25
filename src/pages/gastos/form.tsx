@@ -77,6 +77,8 @@ export const GastoForm = ({ formProps, mostrarRequiereAprobacion, onBloqueadoCha
   // App\Http\Controllers\Propietario\GastoController en el backend): un
   // gasto a cargo del inquilino no puede requerirla.
   const esACargoDePropietario = aCargoDe === "PROPIETARIO";
+  // Solo una expensa se le puede cargar al inquilino: para los demás tipos se ofrece únicamente Propietario.
+  const aCargoDeOptions = esExpensa ? A_CARGO_DE_OPTIONS : A_CARGO_DE_OPTIONS.filter((option) => option.value !== "INQUILINO");
 
   // Sugerencia de "a cargo de" para expensas: MODELO_DATOS.md ("Gastos") la
   // ata a contratos_alquiler.expensas_a_cargo_de del contrato vigente de la
@@ -121,6 +123,14 @@ export const GastoForm = ({ formProps, mostrarRequiereAprobacion, onBloqueadoCha
     if (formProps.form?.isFieldsTouched(["a_cargo_de"])) return;
     formProps.form?.setFieldValue("a_cargo_de", aCargoDeSugerido);
   }, [aCargoDeSugerido, formProps.form]);
+
+  useEffect(() => {
+    if (esExpensa || aCargoDe !== "INQUILINO") return;
+    // Solo al cambiar el tipo a mano: pasar a Propietario un gasto que ya no
+    // es expensa y quedó con Inquilino, opción que ya no está en el select.
+    if (!formProps.form?.isFieldsTouched(["tipo"])) return;
+    formProps.form?.setFieldValue("a_cargo_de", "PROPIETARIO");
+  }, [esExpensa, aCargoDe, formProps.form]);
 
   useEffect(() => {
     if (esACargoDePropietario) return;
@@ -242,7 +252,7 @@ export const GastoForm = ({ formProps, mostrarRequiereAprobacion, onBloqueadoCha
               </>
             }
           >
-            <Select options={A_CARGO_DE_OPTIONS} />
+            <Select options={aCargoDeOptions} />
           </Form.Item>
           {sinContratoVigente && (
             <Alert
