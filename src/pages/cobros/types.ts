@@ -107,6 +107,8 @@ export type CobroVistaPreviaItem = {
   // Total que cubre el cobro si llega hasta esta fila.
   acumulado: string;
   documento_venta_id: number | null;
+  // Líneas que ya fijó la factura abierta; vacío en las filas de cargo.
+  lineas: { descripcion: string; tasa_iva: 0 | 5 | 10; subtotal: string }[];
   // Número impreso de la factura abierta.
   numero_factura: string | null;
   // Cobro de la última aplicación anulada de la factura abierta (por qué quedó abierta), si lo hay.

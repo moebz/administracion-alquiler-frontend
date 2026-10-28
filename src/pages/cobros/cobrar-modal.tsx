@@ -278,6 +278,27 @@ export const CobrarModal = ({ contratoId, onClose }: { contratoId: number; onClo
                 selectedRowKeys: filaElegida ? [filaElegida.key] : [],
                 onChange: (_, seleccion) => seleccion[0] && setMontoPrimerMedio(Number(seleccion[0].acumulado)),
               }}
+              expandable={{
+                // Desplegar solo las facturas abiertas, para ver lo que ya fijaron.
+                rowExpandable: (fila) => fila.lineas.length > 0,
+                expandedRowRender: (fila) => (
+                  <Table
+                    dataSource={fila.lineas}
+                    rowKey={(_, indice) => String(indice)}
+                    pagination={false}
+                    size="small"
+                  >
+                    <Table.Column title="Línea" dataIndex="descripcion" />
+                    <Table.Column title="IVA" dataIndex="tasa_iva" render={etiquetaTasa} />
+                    <Table.Column
+                      title="Subtotal"
+                      dataIndex="subtotal"
+                      align="right"
+                      render={(subtotal: string) => formatMonto(subtotal)}
+                    />
+                  </Table>
+                ),
+              }}
             >
               <Table.Column
                 title="Cargo"
@@ -308,7 +329,9 @@ export const CobrarModal = ({ contratoId, onClose }: { contratoId: number; onClo
                 title="Vence"
                 dataIndex="fecha_vencimiento"
                 render={(vence: string, fila: Fila) => (
-                  <Typography.Text type={fila.vencido ? "danger" : undefined}>{dayjs(vence).format("DD/MM/YYYY")}</Typography.Text>
+                  <Typography.Text type={fila.vencido ? "danger" : undefined} style={{ whiteSpace: "nowrap" }}>
+                    {dayjs(vence).format("DD/MM/YYYY")}
+                  </Typography.Text>
                 )}
               />
               <Table.Column title="IVA" dataIndex="tasa_iva" render={etiquetaTasa} />

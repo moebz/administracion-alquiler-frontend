@@ -12,7 +12,17 @@ type Valores = { fecha_rescision: Dayjs; motivo_rescision: string; monto_cargo_m
 type CargoResumen = { id: number; descripcion: string; periodo: string; monto?: string };
 
 type VistaPrevia = {
-  cargo_mes: { id: number; descripcion: string; monto: string; monto_sugerido: string | null; facturado: boolean } | null;
+  cargo_mes: {
+    id: number;
+    descripcion: string;
+    monto: string;
+    monto_sugerido: string | null;
+    cubria_desde: string;
+    cubria_hasta: string;
+    dias_cubiertos: number;
+    dias_prorrateados: number;
+    facturado: boolean;
+  } | null;
   cargos_a_anular: CargoResumen[];
   cargos_con_aviso: CargoResumen[];
 };
@@ -106,7 +116,12 @@ export const RescindirContratoModal = ({
       okButtonProps={{ danger: true, disabled: cargandoVista }}
     >
       <Form form={form} layout="vertical" onFinish={rescindir} initialValues={{ fecha_rescision: dayjs() }}>
-        <Form.Item label="Fecha efectiva" name="fecha_rescision" rules={[{ required: true }]}>
+        <Form.Item
+          label="Fecha efectiva"
+          name="fecha_rescision"
+          extra={`El contrato vence el ${dayjs(contrato.fecha_fin).format("DD/MM/YYYY")}.`}
+          rules={[{ required: true }]}
+        >
           <DatePicker
             style={{ width: "100%" }}
             format="DD/MM/YYYY"
@@ -130,17 +145,23 @@ export const RescindirContratoModal = ({
         <Skeleton active loading={cargandoVista}>
           {vistaPrevia && (
             <>
-              <Descriptions column={2} size="small" style={{ marginBottom: 16 }}>
-                <Descriptions.Item label="Cargo del mes" span={2}>
-                  {cargoMes ? cargoMes.descripcion : "No hay un cargo de alquiler activo en el mes de rescisión."}
+              <Descriptions column={1} size="small" style={{ marginBottom: 16 }}>
+                <Descriptions.Item label="Cargo del mes">
+                  {cargoMes
+                    ? `${cargoMes.descripcion} · ${formatMonto(cargoMes.monto)}`
+                    : "No hay un cargo de alquiler activo en el mes de rescisión."}
                 </Descriptions.Item>
-                {cargoMes && (
-                  <Descriptions.Item label="Monto actual">{formatMonto(cargoMes.monto)}</Descriptions.Item>
+                {montoEditable && (
+                  <Descriptions.Item label="Período del cargo">
+                    {`${dayjs(cargoMes.cubria_desde).format("DD/MM/YYYY")} al ${dayjs(cargoMes.cubria_hasta).format("DD/MM/YYYY")}`}
+                  </Descriptions.Item>
                 )}
-                {cargoMes?.monto_sugerido && (
-                  <Descriptions.Item label="Prorrateo sugerido">{formatMonto(cargoMes.monto_sugerido)}</Descriptions.Item>
+                {montoEditable && (
+                  <Descriptions.Item label="Días prorrateados">
+                    {`${cargoMes.dias_prorrateados} de ${cargoMes.dias_cubiertos}`}
+                  </Descriptions.Item>
                 )}
-                <Descriptions.Item label="Cargos que se anulan" span={2}>
+                <Descriptions.Item label="Cargos que se anulan">
                   {vistaPrevia.cargos_a_anular.length === 0
                     ? "Ninguno"
                     : vistaPrevia.cargos_a_anular.map((cargo) => cargo.descripcion).join(", ")}
@@ -151,7 +172,7 @@ export const RescindirContratoModal = ({
                 <Form.Item
                   label="Monto del cargo del mes"
                   name="monto_cargo_mes"
-                  extra="Es el prorrateo sugerido; podés corregirlo, hasta el monto actual."
+                  extra={`Prorrateo de ${cargoMes.dias_prorrateados} de ${cargoMes.dias_cubiertos} días; podés corregirlo hasta ${formatMonto(cargoMes.monto)}.`}
                   rules={[{ required: true }]}
                 >
                   <MontoInput min={1} max={Number(cargoMes.monto)} />
