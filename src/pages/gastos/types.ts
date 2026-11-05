@@ -16,13 +16,12 @@ export const GASTO_TIPO_LABEL: Record<GastoTipo, string> = {
   OTRO: "Otro",
 };
 
-export type GastoEstado = "SOLICITADO" | "APROBADO" | "RECHAZADO" | "PAGADO" | "ANULADO";
+export type GastoEstado = "SOLICITADO" | "APROBADO" | "RECHAZADO" | "ANULADO";
 
 export const GASTO_ESTADO_OPTIONS: { label: string; value: GastoEstado }[] = [
   { label: "Solicitado", value: "SOLICITADO" },
   { label: "Aprobado", value: "APROBADO" },
   { label: "Rechazado", value: "RECHAZADO" },
-  { label: "Pagado", value: "PAGADO" },
   { label: "Anulado", value: "ANULADO" },
 ];
 
@@ -30,7 +29,6 @@ export const GASTO_ESTADO_LABEL: Record<GastoEstado, string> = {
   SOLICITADO: "Solicitado",
   APROBADO: "Aprobado",
   RECHAZADO: "Rechazado",
-  PAGADO: "Pagado",
   ANULADO: "Anulado",
 };
 
@@ -38,8 +36,34 @@ export const GASTO_ESTADO_COLOR: Record<GastoEstado, string> = {
   SOLICITADO: "gold",
   APROBADO: "green",
   RECHAZADO: "red",
-  PAGADO: "blue",
   ANULADO: "default",
+};
+
+// Cómo se saldó la deuda con el proveedor, calculada desde su factura vigente (null si el gasto no está APROBADO).
+export type SituacionPago = "SIN_FACTURA" | "PENDIENTE" | "PARCIAL" | "PAGADO" | "ACREDITADO";
+
+export const SITUACION_PAGO_OPTIONS: { label: string; value: SituacionPago }[] = [
+  { label: "Sin factura", value: "SIN_FACTURA" },
+  { label: "Pendiente", value: "PENDIENTE" },
+  { label: "Parcial", value: "PARCIAL" },
+  { label: "Pagado", value: "PAGADO" },
+  { label: "Acreditado", value: "ACREDITADO" },
+];
+
+export const SITUACION_PAGO_LABEL: Record<SituacionPago, string> = {
+  SIN_FACTURA: "Sin factura",
+  PENDIENTE: "Pendiente",
+  PARCIAL: "Parcial",
+  PAGADO: "Pagado",
+  ACREDITADO: "Acreditado",
+};
+
+export const SITUACION_PAGO_COLOR: Record<SituacionPago, string> = {
+  SIN_FACTURA: "default",
+  PENDIENTE: "gold",
+  PARCIAL: "blue",
+  PAGADO: "green",
+  ACREDITADO: "cyan",
 };
 
 export type ACargoDe = "PROPIETARIO" | "INQUILINO" | "ADMINISTRADORA";
@@ -108,7 +132,7 @@ export type CargoPrevisto = {
 // Lo que el modal le manda al backend como `cargos_esperado`: el aviso que mostró (NINGUNO si el gasto no genera cargos).
 export type CargosEsperado = "CREAR" | "REHACER" | "REVISAR_FACTURA" | "REAPUNTAR" | "YA_TUVO" | "NINGUNO";
 
-// Cuánto le devolvió el deudor a la administradora, aparte del pago al proveedor (`estado` del gasto).
+// Cuánto le devolvió el deudor a la administradora, aparte del pago al proveedor (`situacion_pago` del gasto).
 export type ReintegroEstado = "PENDIENTE_FACTURA_PROVEEDOR" | "PENDIENTE" | "PARCIAL" | "REINTEGRADO" | "NO_APLICA";
 
 export type Reintegro = {
@@ -187,6 +211,7 @@ export type GastoRow = {
   a_cargo_de: ACargoDe;
   requiere_aprobacion: boolean;
   estado: GastoEstado;
+  situacion_pago: SituacionPago | null;
   aprobado_por: AprobadoPor | null;
   fecha_aprobacion: string | null;
   motivo_rechazo: string | null;

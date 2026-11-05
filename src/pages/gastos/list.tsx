@@ -13,9 +13,13 @@ import {
   REINTEGRO_COLOR,
   REINTEGRO_LABEL,
   REINTEGRO_OPTIONS,
+  SITUACION_PAGO_COLOR,
+  SITUACION_PAGO_LABEL,
+  SITUACION_PAGO_OPTIONS,
   type GastoEstado,
   type GastoRow,
   type ReintegroEstado,
+  type SituacionPago,
 } from "./types";
 
 // Lista de solo lectura: Registrar factura/pago, Anular y Editar viven en el
@@ -28,16 +32,25 @@ export const GastoList = () => {
   });
 
   const [estado, setEstado] = useState<GastoEstado>();
+  const [situacionPago, setSituacionPago] = useState<SituacionPago>();
   const [reintegro, setReintegro] = useState<ReintegroEstado>();
 
   // Mismo criterio que pages/contratos-alquiler/list.tsx: recalcula el array completo de filtros en cada cambio.
-  const applyFilters = (nextEstado: GastoEstado | undefined, nextReintegro: ReintegroEstado | undefined) => {
+  const applyFilters = (
+    nextEstado: GastoEstado | undefined,
+    nextSituacionPago: SituacionPago | undefined,
+    nextReintegro: ReintegroEstado | undefined,
+  ) => {
     setEstado(nextEstado);
+    setSituacionPago(nextSituacionPago);
     setReintegro(nextReintegro);
 
     const filters: CrudFilter[] = [];
     if (nextEstado) {
       filters.push({ field: "estado", operator: "eq", value: nextEstado });
+    }
+    if (nextSituacionPago) {
+      filters.push({ field: "situacion_pago", operator: "eq", value: nextSituacionPago });
     }
     if (nextReintegro) {
       filters.push({ field: "reintegro", operator: "eq", value: nextReintegro });
@@ -56,7 +69,18 @@ export const GastoList = () => {
             placeholder="Todos"
             options={GASTO_ESTADO_OPTIONS}
             value={estado}
-            onChange={(nextEstado) => applyFilters(nextEstado, reintegro)}
+            onChange={(nextEstado) => applyFilters(nextEstado, situacionPago, reintegro)}
+          />
+        </Space>
+        <Space>
+          <span>Pago al proveedor</span>
+          <Select
+            style={{ minWidth: 160 }}
+            allowClear
+            placeholder="Todos"
+            options={SITUACION_PAGO_OPTIONS}
+            value={situacionPago}
+            onChange={(nextSituacionPago) => applyFilters(estado, nextSituacionPago, reintegro)}
           />
         </Space>
         <Space>
@@ -67,7 +91,7 @@ export const GastoList = () => {
             placeholder="Todos"
             options={REINTEGRO_OPTIONS}
             value={reintegro}
-            onChange={(nextReintegro) => applyFilters(estado, nextReintegro)}
+            onChange={(nextReintegro) => applyFilters(estado, situacionPago, nextReintegro)}
           />
         </Space>
       </FilterBar>
@@ -113,6 +137,13 @@ export const GastoList = () => {
               </Space>
             );
           }}
+        />
+        <Table.Column
+          title="Pago al proveedor"
+          dataIndex="situacion_pago"
+          render={(situacion: GastoRow["situacion_pago"]) =>
+            situacion ? <Tag color={SITUACION_PAGO_COLOR[situacion]}>{SITUACION_PAGO_LABEL[situacion]}</Tag> : "—"
+          }
         />
         <Table.Column
           title="Reintegro"

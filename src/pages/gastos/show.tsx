@@ -55,6 +55,8 @@ import {
   GASTO_TIPO_LABEL,
   REINTEGRO_COLOR,
   REINTEGRO_LABEL,
+  SITUACION_PAGO_COLOR,
+  SITUACION_PAGO_LABEL,
   type CargoGasto,
   type GastoRow,
 } from "./types";
@@ -161,6 +163,13 @@ export const GastoShow = () => {
                   <Tag color={GASTO_ESTADO_COLOR[gasto.estado]} style={{ margin: 0 }}>
                     {GASTO_ESTADO_LABEL[gasto.estado]}
                   </Tag>
+                  {gasto.situacion_pago && (
+                    <Tooltip title="Cómo se saldó la deuda con el proveedor">
+                      <Tag color={SITUACION_PAGO_COLOR[gasto.situacion_pago]} style={{ margin: 0 }}>
+                        {SITUACION_PAGO_LABEL[gasto.situacion_pago]}
+                      </Tag>
+                    </Tooltip>
+                  )}
                   <Tooltip title="Cuánto le devolvió el deudor a la administradora, aparte del pago al proveedor">
                     <Tag color={REINTEGRO_COLOR[gasto.reintegro.estado]} style={{ margin: 0 }}>
                       {REINTEGRO_LABEL[gasto.reintegro.estado]}

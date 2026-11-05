@@ -46,7 +46,7 @@ export type GastoPropietarioRow = {
   fecha: string;
   monto: number | string;
   proveedor: { id: number; nombre: string };
-  estado: "SOLICITADO" | "APROBADO" | "RECHAZADO" | "PAGADO" | "ANULADO";
+  estado: "SOLICITADO" | "APROBADO" | "RECHAZADO" | "ANULADO";
   fecha_aprobacion: string | null;
   estado_portal: GastoEstadoPortal;
   reintegro: Reintegro;
