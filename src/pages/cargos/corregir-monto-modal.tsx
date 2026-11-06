@@ -4,18 +4,12 @@ import { MontoInput } from "../../components/monto-input";
 import { extractErrorMessage } from "../../providers/auth";
 import { kyInstance } from "../../providers/data";
 import { formatMonto } from "../../utils/monto";
+import { describirPermisosFaltantes } from "./correccion";
 import type { CargoRow, PlanCorreccion } from "./types";
 
 type CargoCorregible = Pick<CargoRow, "id" | "descripcion" | "monto" | "monto_vigente">;
 
 type Valores = { monto: number; motivo: string };
-
-// Nombre en lenguaje humano de los permisos que puede pedir una corrección, para avisar el que le falta al usuario.
-const PERMISO_LABEL: Record<string, string> = {
-  "cargos.corregir_monto": "corregir el monto de los cargos",
-  "cargos.corregir_mora": "corregir el monto de las moras",
-  "facturas.emitir_nc": "emitir notas de crédito",
-};
 
 // Corrige el monto de un cargo: el usuario escribe el monto correcto y el motivo, "Revisar" pide la vista previa de lo que
 // se va a hacer (bajar o subir el monto, NC al inquilino, ajuste nuevo) y recién "Confirmar" lo hace, con el plan que vio.
@@ -140,7 +134,7 @@ export const CorregirMontoModal = ({
             <Alert
               type="error"
               showIcon
-              message={`Te falta permiso para ${plan.permisos_faltantes.map((permiso) => PERMISO_LABEL[permiso] ?? permiso).join(" y para ")}.`}
+              message={describirPermisosFaltantes(plan.permisos_faltantes)}
             />
           )}
         </>

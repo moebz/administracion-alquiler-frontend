@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { emiteNotasCredito, permisoParaCorregir, puedeCorregirMonto } from "./correccion";
+import { describirPermisosFaltantes, emiteNotasCredito, permisoParaCorregir, puedeCorregirMonto } from "./correccion";
 import type { PasoCorreccion } from "./types";
 
 describe("permisoParaCorregir", () => {
@@ -60,5 +60,21 @@ describe("emiteNotasCredito", () => {
 
   it("no detecta NC si el plan solo cambia montos", () => {
     expect(emiteNotasCredito([baja])).toBe(false);
+  });
+});
+
+describe("describirPermisosFaltantes", () => {
+  it("nombra el permiso que falta", () => {
+    expect(describirPermisosFaltantes(["facturas.emitir_nc"])).toBe("Te falta permiso para emitir notas de crédito.");
+  });
+
+  it("une varios permisos con una y", () => {
+    expect(describirPermisosFaltantes(["cargos.corregir_monto", "facturas.emitir_nc"])).toBe(
+      "Te falta permiso para corregir el monto de los cargos y para emitir notas de crédito.",
+    );
+  });
+
+  it("deja el código de un permiso que no conoce", () => {
+    expect(describirPermisosFaltantes(["otro.permiso"])).toBe("Te falta permiso para otro.permiso.");
   });
 });
