@@ -1,37 +1,29 @@
 import { useState } from "react";
-import { CreditCardOutlined, DeleteOutlined, FileTextOutlined, PlusOutlined, UnorderedListOutlined, WalletOutlined } from "@ant-design/icons";
+import { CreditCardOutlined, FileTextOutlined, UnorderedListOutlined, WalletOutlined } from "@ant-design/icons";
 import { usePermissions } from "@refinedev/core";
-import { Alert, App, Button, Checkbox, Col, DatePicker, Descriptions, Flex, Form, Input, InputNumber, Modal, Select, Tooltip, Typography } from "antd";
+import { Alert, App, Checkbox, Col, DatePicker, Descriptions, Flex, Form, Input, InputNumber, Modal, Select, Typography } from "antd";
 import dayjs from "dayjs";
 import { Link } from "react-router";
 import { kyInstance } from "../../providers/data";
 import { SectionDivider } from "../../components/section-divider";
 import { SectionRow } from "../../components/section-row";
-import { MontoInput } from "../../components/monto-input";
-import { subtotalLinea, totalesFactura, type LineaFactura } from "../../utils/factura";
+import { totalesFactura } from "../../utils/factura";
 import { formatMonto } from "../../utils/monto";
 import { COMPRA_CONDICION_OPTIONS, type CompraCondicion } from "../compras/types";
 import type { CompraRow } from "../compras/types";
 import { CARGO_DEUDOR_AL } from "../cargos/types";
 import { emparejarFacturados } from "./emparejar";
+import { LineasFormList, type LineaDocumento } from "./lineas-form-list";
 import type { AnticipoOrigenSituacion, AnticipoProveedor, CargoPrevisto, CargosEsperado, GastoRow } from "./types";
 
-const TASA_IVA_OPTIONS = [
-  { label: "Exenta", value: 0 },
-  { label: "5%", value: 5 },
-  { label: "10%", value: 10 },
-];
-
 const FORM_GUTTER = 24;
-
-type Linea = LineaFactura & { descripcion: string };
 
 type Valores = {
   timbrado_proveedor: string;
   numero: string;
   fecha: string;
   condicion: CompraCondicion;
-  detalles: Linea[];
+  detalles: LineaDocumento[];
   cantidad_cuotas?: number;
   fecha_primer_vencimiento?: string;
   fecha_vencimiento_cargo?: string;
@@ -378,8 +370,9 @@ export const RegistrarFacturaModal = ({
         </SectionRow>
 
         <SectionDivider icon={<UnorderedListOutlined />}>Detalle</SectionDivider>
-        <Form.List
-          name="detalles"
+        <LineasFormList
+          detalles={detalles}
+          precioNuevaLinea={diferencia > 0 ? diferencia : undefined}
           rules={[
             {
               validator: async () => {
@@ -388,56 +381,7 @@ export const RegistrarFacturaModal = ({
               },
             },
           ]}
-        >
-          {(fields, { add, remove }, { errors }) => (
-            <>
-              {fields.map(({ key, name }) => (
-                <SectionRow key={key} gutter={12} align="top">
-                  <Col xs={24} md={8}>
-                    <Form.Item label={name === 0 ? "Descripción" : undefined} name={[name, "descripcion"]} rules={[{ required: true }, { max: 255 }]}>
-                      <Input />
-                    </Form.Item>
-                  </Col>
-                  <Col xs={12} md={3}>
-                    <Form.Item label={name === 0 ? "Cantidad" : undefined} name={[name, "cantidad"]} rules={[{ required: true }]}>
-                      <InputNumber style={{ width: "100%" }} min={0.0001} />
-                    </Form.Item>
-                  </Col>
-                  <Col xs={12} md={5}>
-                    <Form.Item label={name === 0 ? "Precio unitario" : undefined} name={[name, "precio_unitario"]} rules={[{ required: true }]}>
-                      <MontoInput min={1} />
-                    </Form.Item>
-                  </Col>
-                  <Col xs={12} md={4}>
-                    <Form.Item label={name === 0 ? "IVA" : undefined} name={[name, "tasa_iva"]} rules={[{ required: true }]}>
-                      <Select options={TASA_IVA_OPTIONS} />
-                    </Form.Item>
-                  </Col>
-                  <Col xs={10} md={3}>
-                    <Form.Item label={name === 0 ? "Subtotal" : undefined}>
-                      <Typography.Text>{formatMonto(subtotalLinea(detalles[name] ?? {}))}</Typography.Text>
-                    </Form.Item>
-                  </Col>
-                  <Col xs={2} md={1}>
-                    <Form.Item label={name === 0 ? " " : undefined}>
-                      <Tooltip title="Quitar línea">
-                        <Button size="small" icon={<DeleteOutlined />} disabled={fields.length === 1} onClick={() => remove(name)} />
-                      </Tooltip>
-                    </Form.Item>
-                  </Col>
-                </SectionRow>
-              ))}
-              <Button
-                type="dashed"
-                icon={<PlusOutlined />}
-                onClick={() => add({ cantidad: 1, tasa_iva: 10, precio_unitario: diferencia > 0 ? diferencia : undefined })}
-              >
-                Agregar línea
-              </Button>
-              {errors.length > 0 && <Alert type="error" showIcon message={errors} style={{ marginTop: 16 }} />}
-            </>
-          )}
-        </Form.List>
+        />
         <Descriptions column={1} size="small" style={{ margin: "16px 0", maxWidth: 360, marginLeft: "auto" }}>
           <Descriptions.Item label="Exentas">{formatMonto(totales.exentas)}</Descriptions.Item>
           {totales.gravadas_5 > 0 && (

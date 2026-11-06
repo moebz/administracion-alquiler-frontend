@@ -45,6 +45,8 @@ import { AnularAplicacionNcModal } from "../compras/anular-aplicacion-nc-modal";
 import { AnularNcModal } from "../compras/anular-nc-modal";
 import { CompraDetail } from "../compras/compra-detail";
 import { RegistrarNcModal } from "../compras/registrar-nc-modal";
+import { RegistrarNdModal } from "../compras/registrar-nd-modal";
+import { AnularNdModal } from "../compras/anular-nd-modal";
 import type { CompraNotaAplicacionRow, CompraNotaRow, CompraRow } from "../compras/types";
 import { formatMonto } from "../../utils/monto";
 import { AnularGastoModal } from "./anular-gasto-modal";
@@ -98,6 +100,7 @@ export const GastoShow = () => {
   const [anularAbierto, setAnularAbierto] = useState(false);
   const [montoAbierto, setMontoAbierto] = useState(false);
   const [ncAbierta, setNcAbierta] = useState(false);
+  const [ndAbierta, setNdAbierta] = useState(false);
   const [anulandoNota, setAnulandoNota] = useState<CompraNotaRow | null>(null);
   const [anulandoAplicacion, setAnulandoAplicacion] = useState<{ aplicacion: CompraNotaAplicacionRow; nota: CompraNotaRow } | null>(null);
   const [reapuntando, setReapuntando] = useState<CargoGasto | null>(null);
@@ -121,7 +124,7 @@ export const GastoShow = () => {
   const cargoFacturado = cargosActivos.some((cargo) => Number(cargo.facturado) > 0);
   // Los cargos de un gasto son al propietario o al inquilino según a cargo de quién esté.
   const deudor: CargoDeudor = gasto?.a_cargo_de === "PROPIETARIO" ? "PROPIETARIO" : "INQUILINO";
-  // El monto se edita en un gasto APROBADO sin factura vigente del proveedor, hasta lo aprobado.
+  // El monto se edita, sin tope, en un gasto APROBADO sin factura vigente del proveedor.
   const puedeEditarMonto = puedeGestionarFactura && gasto?.estado === "APROBADO" && !gasto.documento_compra_id;
   const reintegro = gasto?.reintegro;
   const conReintegro = reintegro && ["PENDIENTE", "PARCIAL", "REINTEGRADO"].includes(reintegro.estado);
@@ -357,6 +360,7 @@ export const GastoShow = () => {
             }
             onEditar={puedeEditarFactura ? () => setEdicionAbierta(true) : undefined}
             onRegistrarNc={puedeRegistrarFactura && gasto.estado === "APROBADO" ? () => setNcAbierta(true) : undefined}
+            onRegistrarNd={puedeRegistrarFactura && gasto.estado === "APROBADO" ? () => setNdAbierta(true) : undefined}
             onAnularNota={puedeAnularCompra ? setAnulandoNota : undefined}
             onAnularAplicacion={puedeAnularPagos ? (aplicacion, nota) => setAnulandoAplicacion({ aplicacion, nota }) : undefined}
             accionesCuotas={
@@ -514,7 +518,29 @@ export const GastoShow = () => {
           }}
         />
       )}
-      {anulandoNota && gasto && (
+      {ndAbierta && gasto && compra && (
+        <RegistrarNdModal
+          gasto={gasto}
+          compra={compra}
+          onClose={() => setNdAbierta(false)}
+          onSuccess={() => {
+            setNdAbierta(false);
+            refetchTodo();
+          }}
+        />
+      )}
+      {anulandoNota && gasto && anulandoNota.tipo === "NOTA_DEBITO" && (
+        <AnularNdModal
+          gasto={gasto}
+          nota={anulandoNota}
+          onClose={() => setAnulandoNota(null)}
+          onSuccess={() => {
+            setAnulandoNota(null);
+            refetchTodo();
+          }}
+        />
+      )}
+      {anulandoNota && gasto && anulandoNota.tipo === "NOTA_CREDITO" && (
         <AnularNcModal
           gasto={gasto}
           nota={anulandoNota}

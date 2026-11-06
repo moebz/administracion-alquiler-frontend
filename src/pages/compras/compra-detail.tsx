@@ -55,6 +55,7 @@ export const CompraDetail = ({
   onAnulada,
   onEditar,
   onRegistrarNc,
+  onRegistrarNd,
   onAnularNota,
   onAnularAplicacion,
   accionesCuotas,
@@ -66,7 +67,9 @@ export const CompraDetail = ({
   onEditar?: () => void;
   // Abre el alta de una NC del proveedor; sin esta prop no se ofrece (la NC se registra desde el gasto).
   onRegistrarNc?: () => void;
-  // Abre la anulación de una NC; sin esta prop no se ofrece.
+  // Abre el alta de una ND del proveedor; sin esta prop no se ofrece.
+  onRegistrarNd?: () => void;
+  // Abre la anulación de una NC o ND; sin esta prop no se ofrece.
   onAnularNota?: (nota: CompraNotaRow) => void;
   // Abre la anulación de una aplicación de NC sin pago; sin esta prop no se ofrece (las que tienen pago se anulan desde el pago).
   onAnularAplicacion?: (aplicacion: CompraNotaAplicacionRow, nota: CompraNotaRow) => void;
@@ -134,6 +137,11 @@ export const CompraDetail = ({
                 {onRegistrarNc && compra?.estado === "REGISTRADO" && (
                   <Button size="small" icon={<PlusOutlined />} onClick={onRegistrarNc}>
                     Registrar NC
+                  </Button>
+                )}
+                {onRegistrarNd && compra?.estado === "REGISTRADO" && (
+                  <Button size="small" icon={<PlusOutlined />} onClick={onRegistrarNd}>
+                    Registrar ND
                   </Button>
                 )}
                 {puedeAnular && compra?.estado === "REGISTRADO" && (
@@ -323,6 +331,18 @@ export const CompraDetail = ({
               }
             />
             <Table.Column
+              title="Saldo a pagar"
+              key="saldo_a_pagar"
+              align="right"
+              render={(_, nota: CompraNotaRow) =>
+                nota.tipo === "NOTA_DEBITO" && nota.estado === "REGISTRADO" ? (
+                  <strong>{formatMonto(nota.cuotas.reduce((acum, cuota) => acum + Number(cuota.saldo), 0))}</strong>
+                ) : (
+                  "—"
+                )
+              }
+            />
+            <Table.Column
               title="Estado"
               key="estado"
               render={(_, nota: CompraNotaRow) => (
@@ -332,8 +352,8 @@ export const CompraDetail = ({
                       {COMPRA_ESTADO_LABEL[nota.estado]}
                     </Tag>
                   </Tooltip>
-                  {onAnularNota && nota.tipo === "NOTA_CREDITO" && nota.estado === "REGISTRADO" && (
-                    <Tooltip title="Anular NC">
+                  {onAnularNota && nota.estado === "REGISTRADO" && (
+                    <Tooltip title={nota.tipo === "NOTA_CREDITO" ? "Anular NC" : "Anular ND"}>
                       <Button danger size="small" icon={<StopOutlined />} onClick={() => onAnularNota(nota)} />
                     </Tooltip>
                   )}

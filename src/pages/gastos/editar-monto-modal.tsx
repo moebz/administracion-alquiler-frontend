@@ -8,7 +8,7 @@ import type { GastoRow } from "./types";
 
 type Valores = { monto: number };
 
-// Cambia el monto de un gasto APROBADO sin factura del proveedor, hasta lo aprobado y sin volver a pedir aprobación.
+// Cambia el monto de un gasto APROBADO sin factura del proveedor, sin tope y sin volver a pedir aprobación.
 export const EditarMontoModal = ({
   gasto,
   onClose,
@@ -50,7 +50,7 @@ export const EditarMontoModal = ({
         type="info"
         showIcon
         style={{ marginBottom: 16 }}
-        message={`Usalo cuando la factura del proveedor llega por menos de lo aprobado. Podés bajarlo y volver a subirlo hasta ${formatMonto(aprobado)} sin pedir aprobación otra vez.`}
+        message="Usalo cuando la factura del proveedor llega por otro monto que el aprobado. No se vuelve a pedir aprobación: lo aprobado por el propietario queda registrado aparte."
       />
       <Form form={form} layout="vertical" onFinish={guardar} initialValues={{ monto: Number(gasto.monto) }}>
         <Form.Item
@@ -61,13 +61,12 @@ export const EditarMontoModal = ({
             { required: true },
             {
               validator: async (_, monto: number | undefined) => {
-                if (monto !== undefined && monto > aprobado) throw new Error(`No puede superar lo aprobado (${formatMonto(aprobado)}).`);
                 if (monto !== undefined && monto <= 0) throw new Error("Tiene que ser mayor a 0.");
               },
             },
           ]}
         >
-          <MontoInput min={1} max={aprobado} />
+          <MontoInput min={1} />
         </Form.Item>
       </Form>
     </Modal>

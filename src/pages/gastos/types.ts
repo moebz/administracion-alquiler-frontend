@@ -108,6 +108,8 @@ export type CargoGasto = {
   accion_sugerida: AccionSugerida | null;
   // Lo que el proveedor mantiene en la línea del cargo, si el cargo cobra más que eso (por una NC del proveedor).
   monto_segun_proveedor: number | string | null;
+  // Línea del proveedor de la que nace el cargo (null si no nace de una).
+  documento_compra_detalle_id: number | null;
 };
 
 // CREAR: el gasto nunca tuvo cargos, se crean solos, uno por línea de la factura. `monto` es el total del gasto,
@@ -129,6 +131,17 @@ export type CargoPrevisto = {
   contrato_terminado: string | null;
   cargos_activos: number;
   cargos_facturados: { id: number; descripcion: string; monto: number | string; tasa_iva: 0 | 5 | 10 }[];
+};
+
+// Qué pasa con los cargos al registrar una ND del proveedor sobre la factura vigente (null si el gasto no genera cargos).
+// `crea` es false con el contrato anulado: la ND se registra igual, sin cargos. `contrato_terminado` solo avisa.
+export type CargoPrevistoNd = {
+  crea: boolean;
+  motivo: "CONTRATO_ANULADO" | null;
+  deudor: CargoDeudor;
+  deudor_nombre: string;
+  fecha_vencimiento: string | null;
+  contrato_terminado: string | null;
 };
 
 // Lo que el modal le manda al backend como `cargos_esperado`: el aviso que mostró (NINGUNO si el gasto no genera cargos).
@@ -232,6 +245,7 @@ export type GastoRow = {
   motivo_anulacion: string | null;
   cargos: CargoGasto[];
   cargo_previsto: CargoPrevisto | null;
+  cargo_previsto_nd: CargoPrevistoNd | null;
   reintegro: Reintegro;
   // Solo en el detalle, con cargos marcados "Factura anulada" y factura vigente: cuántos se anulan y cuántas líneas los rehacen.
   rehacer_cargos: { habilitado: boolean; cargos: number; lineas: number } | null;
