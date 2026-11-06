@@ -1,5 +1,13 @@
 import { useState } from "react";
-import { CalculatorOutlined, CalendarOutlined, EditOutlined, FileDoneOutlined, StopOutlined } from "@ant-design/icons";
+import {
+  CalculatorOutlined,
+  CalendarOutlined,
+  DiffOutlined,
+  EditOutlined,
+  FileDoneOutlined,
+  PlusOutlined,
+  StopOutlined,
+} from "@ant-design/icons";
 import {
   Alert,
   App,
@@ -17,6 +25,7 @@ import {
   Table,
   Tag,
   theme,
+  Tooltip,
   Typography,
 } from "antd";
 import type { ReactNode } from "react";
@@ -31,6 +40,7 @@ import {
   COMPRA_ESTADO_LABEL,
   type CompraCuotaRow,
   type CompraDetalleRow,
+  type CompraNotaRow,
   type CompraRow,
 } from "./types";
 
@@ -43,6 +53,8 @@ export const CompraDetail = ({
   puedeAnular,
   onAnulada,
   onEditar,
+  onRegistrarNc,
+  onAnularNota,
   accionesCuotas,
   avisoAnulacion,
 }: {
@@ -50,6 +62,10 @@ export const CompraDetail = ({
   puedeAnular: boolean;
   onAnulada: () => void;
   onEditar?: () => void;
+  // Abre el alta de una NC del proveedor; sin esta prop no se ofrece (la NC se registra desde el gasto).
+  onRegistrarNc?: () => void;
+  // Abre la anulación de una NC; sin esta prop no se ofrece.
+  onAnularNota?: (nota: CompraNotaRow) => void;
   accionesCuotas?: ReactNode;
   // Aviso que se muestra en el modal antes de anular (ej. qué pasa con el cargo del gasto).
   avisoAnulacion?: ReactNode;
@@ -78,6 +94,9 @@ export const CompraDetail = ({
   // Los pagos con aplicaciones activas no se anulan con la factura: quedan como anticipo al proveedor.
   const tienePagosActivos = compra?.cuotas.some((cuota) => cuota.pagos.some((pago) => pago.estado === "ACTIVA")) ?? false;
   const total = Number(compra?.total ?? 0);
+  // Una factura con notas registradas no se anula, y una con cualquier nota (también anulada) no se edita.
+  const notas = compra?.notas ?? [];
+  const tieneNotasRegistradas = notas.some((nota) => nota.estado === "REGISTRADO");
   const hoy = dayjs().startOf("day");
 
   const cardStyle = { borderRadius: token.borderRadiusLG, boxShadow: token.boxShadowTertiary };
@@ -103,15 +122,28 @@ export const CompraDetail = ({
                     {COMPRA_ESTADO_LABEL[compra.estado]}
                   </Tag>
                 )}
-                {onEditar && compra?.estado === "REGISTRADO" && compra.cuotas.every((cuota) => cuota.pagos.length === 0) && (
+                {onEditar && compra?.estado === "REGISTRADO" && notas.length === 0 && compra.cuotas.every((cuota) => cuota.pagos.length === 0) && (
                   <Button size="small" icon={<EditOutlined />} onClick={onEditar}>
                     Editar factura
                   </Button>
                 )}
-                {puedeAnular && compra?.estado === "REGISTRADO" && (
-                  <Button danger size="small" icon={<StopOutlined />} onClick={() => setModalAbierto(true)}>
-                    Anular factura
+                {onRegistrarNc && compra?.estado === "REGISTRADO" && (
+                  <Button size="small" icon={<PlusOutlined />} onClick={onRegistrarNc}>
+                    Registrar NC
                   </Button>
+                )}
+                {puedeAnular && compra?.estado === "REGISTRADO" && (
+                  <Tooltip title={tieneNotasRegistradas ? "Anulá primero sus notas." : undefined}>
+                    <Button
+                      danger
+                      size="small"
+                      icon={<StopOutlined />}
+                      disabled={tieneNotasRegistradas}
+                      onClick={() => setModalAbierto(true)}
+                    >
+                      Anular factura
+                    </Button>
+                  </Tooltip>
                 )}
               </Flex>
             }
@@ -197,6 +229,53 @@ export const CompraDetail = ({
           </Card>
         </Col>
       </Row>
+
+      {notas.length > 0 && (
+        <Card variant="borderless" style={cardStyle} title={cardTitle(<DiffOutlined />, "Notas del proveedor")}>
+          <Table<CompraNotaRow> dataSource={notas} rowKey="id" pagination={false} size="middle">
+            <Table.Column
+              title="Nota"
+              key="nota"
+              render={(_, nota: CompraNotaRow) => (
+                <Flex vertical>
+                  <span>
+                    {nota.tipo === "NOTA_CREDITO" ? "NC" : "ND"} {nota.numero}
+                  </span>
+                  {nota.motivo && <Typography.Text type="secondary">{nota.motivo}</Typography.Text>}
+                </Flex>
+              )}
+            />
+            <Table.Column title="Fecha" dataIndex="fecha" render={(fecha: string) => dayjs(fecha).format("DD/MM/YYYY")} />
+            <Table.Column title="Total" dataIndex="total" align="right" render={(monto: CompraNotaRow["total"]) => formatMonto(monto)} />
+            <Table.Column
+              title="Saldo a favor"
+              dataIndex="saldo_a_favor"
+              align="right"
+              render={(saldo: CompraNotaRow["saldo_a_favor"], nota: CompraNotaRow) =>
+                saldo === null || nota.estado === "ANULADO" ? "—" : <strong>{formatMonto(saldo)}</strong>
+              }
+            />
+            <Table.Column
+              title="Estado"
+              key="estado"
+              render={(_, nota: CompraNotaRow) => (
+                <Space size={4} wrap>
+                  <Tooltip title={nota.motivo_anulacion}>
+                    <Tag bordered={false} color={COMPRA_ESTADO_COLOR[nota.estado]} style={{ margin: 0 }}>
+                      {COMPRA_ESTADO_LABEL[nota.estado]}
+                    </Tag>
+                  </Tooltip>
+                  {onAnularNota && nota.tipo === "NOTA_CREDITO" && nota.estado === "REGISTRADO" && (
+                    <Tooltip title="Anular NC">
+                      <Button danger size="small" icon={<StopOutlined />} onClick={() => onAnularNota(nota)} />
+                    </Tooltip>
+                  )}
+                </Space>
+              )}
+            />
+          </Table>
+        </Card>
+      )}
 
       <Card
         variant="borderless"

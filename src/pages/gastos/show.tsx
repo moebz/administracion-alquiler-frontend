@@ -36,12 +36,15 @@ import {
 import dayjs from "dayjs";
 import { Link } from "react-router";
 import { CargoMarcaTag } from "../cargos/cargo-marca-tag";
+import { MontoSegunProveedorTag } from "../cargos/monto-segun-proveedor-tag";
 import { ReapuntarCargoModal } from "../cargos/reapuntar-cargo-modal";
 import { extractErrorMessage } from "../../providers/auth";
 import { kyInstance } from "../../providers/data";
 import { CARGO_DEUDOR_AL, CARGO_ESTADO_COLOR, CARGO_ESTADO_LABEL, CARGO_TIPO_LABEL, type CargoDeudor } from "../cargos/types";
+import { AnularNcModal } from "../compras/anular-nc-modal";
 import { CompraDetail } from "../compras/compra-detail";
-import type { CompraRow } from "../compras/types";
+import { RegistrarNcModal } from "../compras/registrar-nc-modal";
+import type { CompraNotaRow, CompraRow } from "../compras/types";
 import { formatMonto } from "../../utils/monto";
 import { AnularGastoModal } from "./anular-gasto-modal";
 import { EditarMontoModal } from "./editar-monto-modal";
@@ -81,6 +84,8 @@ export const GastoShow = () => {
     (permissions?.includes("gastos.registrar_pago") && permissions?.includes("pagos.registrar")) ?? false;
   const puedeAnularGasto = permissions?.includes("gastos.anular") ?? false;
   const puedeAnularCompra = permissions?.includes("compras.anular") ?? false;
+  // Anular una NC con aplicaciones activas pide además anular pagos.
+  const puedeAnularPagos = permissions?.includes("pagos.anular") ?? false;
   // Rehacer cargos y editar el monto van con el permiso del lado gasto de registrar la factura del proveedor.
   const puedeGestionarFactura = permissions?.includes("gastos.registrar_pago") ?? false;
   const puedeReapuntar = permissions?.includes("cargos.reapuntar") ?? false;
@@ -91,6 +96,8 @@ export const GastoShow = () => {
   const [pagoAbierto, setPagoAbierto] = useState(false);
   const [anularAbierto, setAnularAbierto] = useState(false);
   const [montoAbierto, setMontoAbierto] = useState(false);
+  const [ncAbierta, setNcAbierta] = useState(false);
+  const [anulandoNota, setAnulandoNota] = useState<CompraNotaRow | null>(null);
   const [reapuntando, setReapuntando] = useState<CargoGasto | null>(null);
 
   const { query: compraQuery, result: compra } = useOne<CompraRow>({
@@ -205,8 +212,8 @@ export const GastoShow = () => {
                   {compra && compra.estado === "REGISTRADO" && (
                     <Statistic
                       title="Saldo al proveedor"
-                      value={formatMonto(compra.saldo)}
-                      valueStyle={{ color: Number(compra.saldo) > 0 ? token.colorWarning : token.colorSuccess }}
+                      value={formatMonto(compra.saldo_al_proveedor ?? 0)}
+                      valueStyle={{ color: Number(compra.saldo_al_proveedor) > 0 ? token.colorWarning : token.colorSuccess }}
                       style={{ textAlign: "right" }}
                     />
                   )}
@@ -215,15 +222,15 @@ export const GastoShow = () => {
                   <Flex vertical style={{ width: "100%" }}>
                     <Progress
                       percent={
-                        Number(compra.total) > 0
-                          ? Math.round(((Number(compra.total) - Number(compra.saldo)) / Number(compra.total)) * 100)
+                        Number(compra.total_neto) > 0
+                          ? Math.round(((Number(compra.total_neto) - Number(compra.saldo_al_proveedor)) / Number(compra.total_neto)) * 100)
                           : 0
                       }
-                      status={Number(compra.saldo) === 0 ? "success" : "normal"}
+                      status={Number(compra.saldo_al_proveedor) === 0 ? "success" : "normal"}
                       size="small"
                     />
                     <Typography.Text type="secondary" style={{ textAlign: "right" }}>
-                      Pagado al proveedor {formatMonto(Number(compra.total) - Number(compra.saldo))} de {formatMonto(compra.total)}
+                      Pagado al proveedor {formatMonto(Number(compra.total_neto) - Number(compra.saldo_al_proveedor))} de {formatMonto(compra.total_neto ?? 0)}
                     </Typography.Text>
                   </Flex>
                 )}
@@ -347,6 +354,8 @@ export const GastoShow = () => {
               ) : undefined
             }
             onEditar={puedeEditarFactura ? () => setEdicionAbierta(true) : undefined}
+            onRegistrarNc={puedeRegistrarFactura && gasto.estado === "APROBADO" ? () => setNcAbierta(true) : undefined}
+            onAnularNota={puedeAnularCompra ? setAnulandoNota : undefined}
             accionesCuotas={
               compra && compra.estado === "REGISTRADO" && Number(compra.saldo) > 0 && puedeRegistrarPago ? (
                 <Button type="primary" icon={<DollarOutlined />} onClick={() => setPagoAbierto(true)}>
@@ -428,6 +437,9 @@ export const GastoShow = () => {
                     {cargo.marca && (
                       <CargoMarcaTag marca={cargo.marca} deudor={cargo.deudor} accion={cargo.accion_sugerida} tasaIva={cargo.tasa_iva} />
                     )}
+                    {cargo.monto_segun_proveedor !== null && (
+                      <MontoSegunProveedorTag montoSegunProveedor={cargo.monto_segun_proveedor} monto={cargo.monto} />
+                    )}
                     {puedeReapuntar && (cargo.accion_sugerida?.candidatas.length ?? 0) > 0 && (
                       <Tooltip title="Reapuntar a la factura de reemplazo del proveedor">
                         <Button size="small" icon={<NodeIndexOutlined />} onClick={() => setReapuntando(cargo)} />
@@ -485,6 +497,29 @@ export const GastoShow = () => {
           onSuccess={() => {
             setMontoAbierto(false);
             gastoQuery.refetch();
+          }}
+        />
+      )}
+      {ncAbierta && gasto && compra && (
+        <RegistrarNcModal
+          gasto={gasto}
+          compra={compra}
+          onClose={() => setNcAbierta(false)}
+          onSuccess={() => {
+            setNcAbierta(false);
+            refetchTodo();
+          }}
+        />
+      )}
+      {anulandoNota && gasto && (
+        <AnularNcModal
+          gasto={gasto}
+          nota={anulandoNota}
+          puedeAnularPagos={puedeAnularPagos}
+          onClose={() => setAnulandoNota(null)}
+          onSuccess={() => {
+            setAnulandoNota(null);
+            refetchTodo();
           }}
         />
       )}

@@ -34,6 +34,10 @@ export type CompraDetalleRow = {
   precio_unitario: number | string;
   tasa_iva: number;
   subtotal: number | string;
+  // En la línea de una NC: la línea de la factura que corrige.
+  detalle_ref_id: number | null;
+  // Solo en las líneas de una factura: lo que todavía se puede acreditar con una NC (subtotal − NC registradas).
+  tope_nc: number | string | null;
 };
 
 export type CompraCuotaPagoRow = {
@@ -51,6 +55,39 @@ export type CompraCuotaRow = {
   monto: number | string;
   saldo: number | string;
   pagos: CompraCuotaPagoRow[];
+};
+
+// Uso del saldo a favor de una NC del proveedor contra una cuota; sin pago si se aplicó sola al registrar la NC.
+export type CompraNotaAplicacionRow = {
+  id: number;
+  estado: "ACTIVA" | "ANULADA";
+  monto_aplicado: number | string;
+  cuota_id: number;
+  numero_cuota: number;
+  documento_compra_id: number;
+  documento_compra_numero: string;
+  pago_proveedor_id: number | null;
+  pago_proveedor_numero: number | null;
+  fecha_anulacion: string | null;
+  motivo_anulacion: string | null;
+};
+
+// NC o ND del proveedor que corrige una factura (`notas` de la factura).
+export type CompraNotaRow = {
+  id: number;
+  tipo: "NOTA_CREDITO" | "NOTA_DEBITO";
+  numero: string;
+  timbrado_proveedor: string;
+  fecha: string;
+  total: number | string;
+  estado: CompraEstado;
+  motivo: string | null;
+  fecha_anulacion: string | null;
+  motivo_anulacion: string | null;
+  // Solo en una NC: total − aplicaciones activas.
+  saldo_a_favor: number | string | null;
+  detalles: Pick<CompraDetalleRow, "id" | "descripcion" | "tasa_iva" | "subtotal" | "detalle_ref_id">[];
+  aplicaciones: CompraNotaAplicacionRow[];
 };
 
 export type CompraRow = {
@@ -74,9 +111,16 @@ export type CompraRow = {
   total: number | string;
   total_gs: number | string;
   saldo: number | string;
+  // Solo en una factura: lo que vale con sus notas (total − NC + ND registradas) y lo que se le debe al proveedor.
+  total_neto: number | string | null;
+  saldo_al_proveedor: number | string | null;
+  // Solo en una NC.
+  saldo_a_favor: number | string | null;
+  documento_ref_id: number | null;
   estado: CompraEstado;
   fecha_anulacion: string | null;
   motivo_anulacion: string | null;
   detalles: CompraDetalleRow[];
+  notas: CompraNotaRow[];
   cuotas: CompraCuotaRow[];
 };

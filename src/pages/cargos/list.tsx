@@ -10,6 +10,7 @@ import { kyInstance } from "../../providers/data";
 import { formatMonto } from "../../utils/monto";
 import { CargoListFilters } from "./cargo-list-filters";
 import { CargoMarcaTag } from "./cargo-marca-tag";
+import { MontoSegunProveedorTag } from "./monto-segun-proveedor-tag";
 import { buildFiltrosCargos, FILTROS_CARGOS_INICIALES } from "./filtros";
 import { CobrarModal } from "../cobros/cobrar-modal";
 import { GenerarCargosModal } from "./generar-cargos-modal";
@@ -212,6 +213,9 @@ export const CargoList = () => {
               </Tooltip>
               {record.marca && (
                 <CargoMarcaTag marca={record.marca} deudor={record.deudor} accion={record.accion_sugerida} tasaIva={record.tasa_iva} />
+              )}
+              {record.monto_segun_proveedor !== null && (
+                <MontoSegunProveedorTag montoSegunProveedor={record.monto_segun_proveedor} monto={record.monto} />
               )}
               {puedeReapuntar && (record.accion_sugerida?.candidatas.length ?? 0) > 0 && (
                 <Tooltip title="Reapuntar a la factura de reemplazo del proveedor">

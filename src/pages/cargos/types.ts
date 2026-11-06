@@ -168,6 +168,8 @@ export type CargoRow = {
   marca: CargoMarca | null;
   // Solo con la marca REVISAR_FACTURA.
   accion_sugerida: AccionSugerida | null;
+  // Lo que el proveedor mantiene en la línea del cargo, si el cargo cobra más que eso (por una NC del proveedor).
+  monto_segun_proveedor: number | string | null;
   fecha_anulacion: string | null;
   motivo_anulacion: string | null;
   gasto_id: number | null;

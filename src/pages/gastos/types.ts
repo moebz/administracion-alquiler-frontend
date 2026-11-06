@@ -106,6 +106,8 @@ export type CargoGasto = {
   marca: CargoMarca | null;
   // Solo con la marca REVISAR_FACTURA.
   accion_sugerida: AccionSugerida | null;
+  // Lo que el proveedor mantiene en la línea del cargo, si el cargo cobra más que eso (por una NC del proveedor).
+  monto_segun_proveedor: number | string | null;
 };
 
 // CREAR: el gasto nunca tuvo cargos, se crean solos, uno por línea de la factura. `monto` es el total del gasto,
@@ -140,7 +142,7 @@ export type Reintegro = {
   reintegrado: number | string;
   // Σ montos de los cargos activos: lo que tiene que volver.
   base: number | string;
-  // Lo que puso la administradora (total de la factura vigente − base); null si no corresponde.
+  // Lo que puso la administradora (total neto de la factura vigente − base); null si no corresponde.
   absorbido: number | string | null;
 };
 
@@ -230,6 +232,10 @@ export type GastoRow = {
     numero: string;
     timbrado_proveedor: string;
     estado: "REGISTRADO" | "ANULADO";
+    // Lo que se le debe al proveedor por la factura y sus notas (= saldo_al_proveedor).
     saldo: number | string;
+    saldo_al_proveedor: number | string;
+    // Lo que vale la factura con sus notas: total − NC + ND registradas.
+    total_neto: number | string;
   } | null;
 };
