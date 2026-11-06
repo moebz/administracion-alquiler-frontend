@@ -85,4 +85,6 @@ export type ContratoAlquilerRow = {
   motivo_rescision: string | null;
   fecha_anulacion: string | null;
   motivo_anulacion: string | null;
+  // Suma del saldo a favor de las NC al inquilino del contrato (string con 4 decimales).
+  saldo_a_favor_inquilino: string;
 };

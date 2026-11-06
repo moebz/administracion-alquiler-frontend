@@ -129,6 +129,9 @@ const es = {
     proveedores: {
       proveedores: "proveedor",
     },
+    "facturas-venta": {
+      "facturas-venta": "factura al inquilino",
+    },
     "contratos-alquiler": {
       "contratos-alquiler": "contrato de alquiler",
       titles: { list: "Contratos de alquiler" },

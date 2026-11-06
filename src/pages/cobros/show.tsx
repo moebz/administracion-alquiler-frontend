@@ -1,5 +1,6 @@
 import { useState } from "react";
 import {
+  BankOutlined,
   FileTextOutlined,
   LinkOutlined,
   StopOutlined,
@@ -22,15 +23,18 @@ import {
   Typography,
 } from "antd";
 import dayjs from "dayjs";
+import { Link } from "react-router";
 import { SectionDivider } from "../../components/section-divider";
 import { extractErrorMessage } from "../../providers/auth";
 import { kyInstance } from "../../providers/data";
 import { formatMonto } from "../../utils/monto";
+import { AnularAplicacionNcModal } from "../compras/anular-aplicacion-nc-modal";
 import { FacturaCobro } from "./factura-cobro";
 import {
   COBRO_ESTADO_COLOR,
   COBRO_ESTADO_LABEL,
   type CobroAplicacionRow,
+  type CobroNotaCreditoRow,
   type CobroRow,
   type CobroValorRow,
 } from "./types";
@@ -47,6 +51,9 @@ export const CobroShow = () => {
   // Valor que se anula con el modal; null si se anula el cobro entero.
   const [valorAAnular, setValorAAnular] = useState<CobroValorRow | null>(null);
   const [guardando, setGuardando] = useState(false);
+  // Aplicación de NC que se anula con su propio modal; null si no hay ninguna.
+  const [aplicacionNcAAnular, setAplicacionNcAAnular] =
+    useState<CobroNotaCreditoRow | null>(null);
   const [form] = Form.useForm<{ motivo_anulacion: string }>();
 
   const abrirAnulacion = (valor: CobroValorRow | null) => {
@@ -96,6 +103,9 @@ export const CobroShow = () => {
     (cobro?.valores ?? []).some(
       (valor) => (valor.estado === "ACTIVO") !== cobroActivo
     );
+  const aplicacionesNcActivas = (cobro?.notas_credito ?? []).filter(
+    (aplicacion) => aplicacion.estado === "ACTIVA"
+  );
   const mostrarEstadoAplicaciones = (cobro?.aplicaciones ?? []).some(
     (aplicacion) => (aplicacion.estado === "ACTIVA") !== cobroActivo
   );
@@ -277,6 +287,83 @@ export const CobroShow = () => {
         )}
       </Table>
 
+      {cobro && cobro.notas_credito.length > 0 && (
+        <>
+          <SectionDivider icon={<BankOutlined />}>
+            Notas de crédito usadas
+          </SectionDivider>
+          <Table
+            dataSource={cobro.notas_credito}
+            rowKey="id"
+            pagination={false}
+            size="small"
+          >
+            <Table.Column title="Nota de crédito" dataIndex="numero_nc" />
+            <Table.Column
+              title="Factura"
+              dataIndex="numero_factura"
+              render={(numero: string | null, record: CobroNotaCreditoRow) => (
+                <Link
+                  to={`/administrador/facturas-venta/show/${record.factura_id}`}
+                >
+                  {numero}
+                </Link>
+              )}
+            />
+            <Table.Column
+              title="Monto aplicado"
+              dataIndex="monto_aplicado"
+              align="right"
+              render={(monto: CobroNotaCreditoRow["monto_aplicado"]) =>
+                formatMonto(monto)
+              }
+            />
+            <Table.Column
+              title="Estado"
+              dataIndex="estado"
+              render={(
+                estadoAplicacion: CobroNotaCreditoRow["estado"],
+                record: CobroNotaCreditoRow
+              ) =>
+                estadoAplicacion === "ACTIVA" ? (
+                  <Space size={4} wrap>
+                    <Tag color="green">Activa</Tag>
+                    {puedeAnular && (
+                      <Tooltip title="Anular aplicación">
+                        <Button
+                          size="small"
+                          danger
+                          icon={<StopOutlined />}
+                          onClick={() => setAplicacionNcAAnular(record)}
+                        />
+                      </Tooltip>
+                    )}
+                  </Space>
+                ) : (
+                  <Tooltip title={record.motivo_anulacion}>
+                    <Tag color="default">Anulada</Tag>
+                  </Tooltip>
+                )
+              }
+            />
+          </Table>
+        </>
+      )}
+
+      {aplicacionNcAAnular && (
+        <AnularAplicacionNcModal
+          aplicacionId={aplicacionNcAAnular.id}
+          ruta="nc-venta-aplicaciones"
+          origen="cobro"
+          descripcion={`Se usaron ${formatMonto(aplicacionNcAAnular.monto_aplicado)} de la NC ${aplicacionNcAAnular.numero_nc} en este cobro: la factura ${aplicacionNcAAnular.numero_factura} queda abierta por ${formatMonto(aplicacionNcAAnular.monto_aplicado)}`}
+          onClose={() => setAplicacionNcAAnular(null)}
+          onSuccess={() => {
+            setAplicacionNcAAnular(null);
+            query.refetch();
+          }}
+        />
+      )}
+
       <Modal
         title={valorAAnular ? "Anular medio de cobro" : "Anular cobro"}
         open={modalAbierto}
@@ -298,10 +385,19 @@ export const CobroShow = () => {
               la última.
             </p>
           ) : (
-            <p>
-              Los medios de cobro dejan de contar en sus fondos. La factura al
-              inquilino sigue emitida y queda pendiente de cobro.
-            </p>
+            <>
+              <p>
+                Los medios de cobro dejan de contar en sus fondos. La factura al
+                inquilino sigue emitida y queda pendiente de cobro.
+              </p>
+              {aplicacionesNcActivas.map((aplicacion) => (
+                <p key={aplicacion.id}>
+                  Los {formatMonto(aplicacion.monto_aplicado)} de la NC{" "}
+                  {aplicacion.numero_nc} vuelven a quedar a favor del
+                  inquilino.
+                </p>
+              ))}
+            </>
           )}
           <Form.Item
             label="Motivo"

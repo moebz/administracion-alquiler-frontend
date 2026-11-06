@@ -51,8 +51,23 @@ const PERMISO_ANULAR_COBROS = "cobros.anular";
 
 type FacturaCobroProps = {
   factura: CobroFacturaRow;
-  // Se llama al anular la factura o al emitir o anular una NC o su aplicación, para recargar el cobro.
+  // Se llama al anular la factura o al emitir o anular una NC o su aplicación, para recargar la página que la muestra.
   onCambio: () => void;
+};
+
+// Devuelve el título de la sección según cómo se muestra la factura.
+const getTituloFactura = (emitidaPorEsteCobro: boolean | null) => {
+  // Sin cobro (la página propia de la factura) no se dice quién la emitió.
+  if (emitidaPorEsteCobro === null) {
+    return "Factura";
+  }
+
+  // Con cobro, distinguir la que emitió de la que ya estaba abierta y el cobro saldó.
+  if (emitidaPorEsteCobro) {
+    return "Factura emitida";
+  }
+
+  return "Factura cobrada";
 };
 
 // Datos de una anulación que pide el motivo en un modal de confirmación.
@@ -211,7 +226,7 @@ export const FacturaCobro = ({ factura, onCambio }: FacturaCobroProps) => {
   return (
     <>
       <SectionDivider icon={<FileDoneOutlined />}>
-        {factura.emitida_por_este_cobro ? "Factura emitida" : "Factura cobrada"}
+        {getTituloFactura(factura.emitida_por_este_cobro)}
       </SectionDivider>
       {/* Ofrecer anular solo una factura emitida; deshabilitado, el tooltip explica por qué todavía no se puede. */}
       {factura.estado === "EMITIDO" && (puedeAnular || puedeEmitirNc) && (
@@ -363,9 +378,13 @@ export const FacturaCobro = ({ factura, onCambio }: FacturaCobroProps) => {
                   <Table.Column
                     title="Aplicada a"
                     key="destino"
-                    render={(_, aplicacion: NotaCreditoAplicacionRow) =>
-                      `Factura ${aplicacion.numero_factura}`
-                    }
+                    render={(_, aplicacion: NotaCreditoAplicacionRow) => (
+                      <Link
+                        to={`/administrador/facturas-venta/show/${aplicacion.documento_venta_id}`}
+                      >
+                        Factura {aplicacion.numero_factura}
+                      </Link>
+                    )}
                   />
                   <Table.Column
                     title="Monto"

@@ -3,17 +3,24 @@ import { App, Form, Input, Modal } from "antd";
 import { extractErrorMessage } from "../../providers/auth";
 import { kyInstance } from "../../providers/data";
 
-// Anula un uso del saldo a favor de una NC del proveedor: el pago y su efectivo no cambian,
-// la cuota vuelve a quedar abierta y el saldo vuelve a la NC.
+// Anula un uso del saldo a favor de una NC: el pago o cobro y su efectivo no cambian,
+// la cuota vuelve a quedar abierta y el saldo vuelve a la NC. Por defecto es una NC del proveedor;
+// con `ruta` y `origen` sirve para una NC al inquilino.
 export const AnularAplicacionNcModal = ({
   aplicacionId,
   descripcion,
+  ruta = "nc-compra-aplicaciones",
+  origen = "pago",
   onClose,
   onSuccess,
 }: {
   aplicacionId: number;
   // Qué se anula, para que quien confirma vea el efecto (ej. "100.000 de la NC 001-001-0000100 en la factura 001-001-0000002").
   descripcion: string;
+  // Recurso del PATCH, sin el prefijo de la API (ej. "nc-venta-aplicaciones").
+  ruta?: string;
+  // Documento en el que se usó el saldo, para el texto ("pago" o "cobro").
+  origen?: "pago" | "cobro";
   onClose: () => void;
   onSuccess: () => void;
 }) => {
@@ -23,7 +30,7 @@ export const AnularAplicacionNcModal = ({
 
   const anular = async (values: { motivo_anulacion: string }) => {
     setGuardando(true);
-    const response = await kyInstance.patch(`nc-compra-aplicaciones/${aplicacionId}/anular`, { json: values });
+    const response = await kyInstance.patch(`${ruta}/${aplicacionId}/anular`, { json: values });
     setGuardando(false);
 
     if (response.ok) {
@@ -46,7 +53,7 @@ export const AnularAplicacionNcModal = ({
       confirmLoading={guardando}
     >
       <p>
-        {descripcion}. El saldo vuelve a la NC y la cuota queda abierta; el pago y su efectivo no cambian.
+        {descripcion}. El saldo vuelve a la NC y la cuota queda abierta; el {origen} y su efectivo no cambian.
       </p>
       <Form form={form} layout="vertical" onFinish={anular}>
         <Form.Item label="Motivo" name="motivo_anulacion" rules={[{ required: true }, { max: 255 }]}>

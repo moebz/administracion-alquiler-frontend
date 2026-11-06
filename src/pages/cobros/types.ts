@@ -39,6 +39,21 @@ export type CobroAplicacionRow = {
   valor_anulado_id: number | null;
 };
 
+// Uso del saldo a favor de una NC al inquilino en este cobro, contra la cuota de una factura.
+export type CobroNotaCreditoRow = {
+  id: number;
+  // NC cuyo saldo a favor se usó.
+  documento_venta_id: number;
+  numero_nc: string | null;
+  cuota_id: number;
+  factura_id: number;
+  numero_factura: string | null;
+  monto_aplicado: number | string;
+  estado: "ACTIVA" | "ANULADA";
+  fecha_anulacion: string | null;
+  motivo_anulacion: string | null;
+};
+
 export type CobroFacturaDetalleRow = {
   id: number;
   descripcion: string;
@@ -115,8 +130,9 @@ export type CobroFacturaRow = {
   numero: string | null;
   fecha: string;
   estado: "BORRADOR" | "EMITIDO" | "ANULADO";
-  // False en una factura que ya estaba abierta (por ejemplo, la de un cobro anulado) y este cobro solo saldó.
-  emitida_por_este_cobro: boolean;
+  // False en una factura que ya estaba abierta (por ejemplo, la de un cobro anulado) y este cobro solo saldó;
+  // null cuando se muestra sin un cobro (la página propia de la factura).
+  emitida_por_este_cobro: boolean | null;
   // Desde acá corre el plazo de 48 h para anularla (por ahora, el momento en que se emitió).
   fecha_aprobacion_sifen: string | null;
   // Null si se puede anular; si no, por qué (cobro aplicado, plazo vencido, ya anulada).
@@ -152,6 +168,15 @@ export type CobroRow = {
   facturas: CobroFacturaRow[];
   valores: CobroValorRow[];
   aplicaciones: CobroAplicacionRow[];
+  // Saldo a favor de NC al inquilino usado en este cobro.
+  notas_credito: CobroNotaCreditoRow[];
+};
+
+// Respuesta de cobrar cuando el saldo a favor de las NC cubrió todo: no se registró cobro.
+export type CobroSinCobroRespuesta = {
+  cobro: null;
+  // Facturas que el cobro cubre, la emitida primero.
+  facturas_saldadas: number[];
 };
 
 // Fila de la vista previa del cobro: un cargo por facturar, la mora del día de un alquiler vencido (cargo_id null,
@@ -185,11 +210,23 @@ export type CobroVistaPreviaExcluido = {
   saldo: string;
 };
 
+// NC emitida del contrato con saldo a favor, para usar en el cobro.
+export type CobroSaldoAFavor = {
+  id: number;
+  numero: string | null;
+  fecha: string;
+  total: string;
+  saldo_a_favor: string;
+  // Factura que corrige la NC.
+  factura: { id: number; numero: string | null };
+};
+
 export type CobroVistaPrevia = {
   contrato: { id: number; inquilino: { id: number; nombre: string }; unidad: string };
   fecha: string;
   items: CobroVistaPreviaItem[];
   excluidos: CobroVistaPreviaExcluido[];
+  saldos_a_favor: CobroSaldoAFavor[];
 };
 
 export type PuntoExpedicionOpcion = { id: number; etiqueta: string };

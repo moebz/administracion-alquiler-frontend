@@ -86,6 +86,7 @@ import { GastoList, GastoCreate, GastoEdit, GastoShow } from "./pages/gastos";
 import { CompraShow } from "./pages/compras";
 import { PagoProveedorList, PagoProveedorShow } from "./pages/pagos-proveedor";
 import { CobroList, CobroShow } from "./pages/cobros";
+import { FacturaVentaShow } from "./pages/facturas-venta";
 import { BancoList, BancoCreate, BancoEdit } from "./pages/bancos";
 import { FondoList, FondoCreate, FondoEdit } from "./pages/fondos";
 import {
@@ -304,6 +305,17 @@ function App() {
                     label: "Cobros",
                     icon: <AccountBookOutlined />,
                     parent: "edificios",
+                  },
+                },
+                {
+                  // Sin `list`: la factura al inquilino no tiene entrada en el
+                  // menú, se llega desde el cobro que la saldó o desde una NC
+                  // (ver pages/facturas-venta/show.tsx).
+                  name: "facturas-venta",
+                  show: "/administrador/facturas-venta/show/:id",
+                  meta: {
+                    label: "Facturas al inquilino",
+                    icon: <FileDoneOutlined />,
                   },
                 },
                 {
@@ -613,6 +625,9 @@ function App() {
                     <Route path="cobros">
                       <Route index element={<CobroList />} />
                       <Route path="show/:id" element={<CobroShow />} />
+                    </Route>
+                    <Route path="facturas-venta">
+                      <Route path="show/:id" element={<FacturaVentaShow />} />
                     </Route>
                     <Route path="compras">
                       <Route path="show/:id" element={<CompraShow />} />

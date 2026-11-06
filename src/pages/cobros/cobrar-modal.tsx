@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useSelect } from "@refinedev/antd";
 import { useList } from "@refinedev/core";
 import { App, Alert, Button, Col, DatePicker, Descriptions, Flex, Form, Input, Modal, Row, Select, Space, Table, Tag, Tooltip, Typography } from "antd";
-import { CalendarOutlined, DeleteOutlined, PlusOutlined, UnorderedListOutlined, WalletOutlined } from "@ant-design/icons";
+import { BankOutlined, CalendarOutlined, DeleteOutlined, PlusOutlined, UnorderedListOutlined, WalletOutlined } from "@ant-design/icons";
 import dayjs, { type Dayjs } from "dayjs";
 import { Link, useNavigate } from "react-router";
 import { MontoInput } from "../../components/monto-input";
@@ -12,10 +12,10 @@ import { extractErrorMessage } from "../../providers/auth";
 import { kyInstance } from "../../providers/data";
 import { formatMonto } from "../../utils/monto";
 import { CARGO_TIPO_LABEL } from "../cargos/types";
-import { cubiertoPorFila } from "./imputacion";
+import { cubiertoPorFila, repartirCredito } from "./imputacion";
 import type { MedioPagoRow } from "../medios-pago/types";
 import type { PersonaCuentaBancariaRow } from "../personas/types";
-import type { CobroVistaPrevia, CobroVistaPreviaItem, PuntoExpedicionOpcion } from "./types";
+import type { CobroRow, CobroSinCobroRespuesta, CobroVistaPrevia, CobroVistaPreviaItem, PuntoExpedicionOpcion } from "./types";
 
 type Valor = {
   medio_pago_id: number;
@@ -24,7 +24,13 @@ type Valor = {
   persona_cuenta_id?: number;
   nro_comprobante?: string;
 };
-type Valores = { fecha: Dayjs; punto_expedicion_id?: number; valores: Valor[] };
+// `notas` guarda, por id de NC, cuánto de su saldo a favor se usa en este cobro.
+type Valores = {
+  fecha: Dayjs;
+  punto_expedicion_id?: number;
+  valores: Valor[];
+  notas?: Record<string, number | null | undefined>;
+};
 type Fila = CobroVistaPreviaItem & { key: number };
 
 // Muestra la tasa de una fila; la factura abierta no tiene una sola tasa.
@@ -40,10 +46,11 @@ const mensajeDeError = (error: unknown, porDefecto: string) =>
   typeof (error as { message?: unknown })?.message === "string" ? (error as { message: string }).message : porDefecto;
 
 // Cobra al inquilino cargos y facturas abiertas de un contrato, con el mismo esquema que el pago al proveedor
-// (gastos/registrar-pago-modal.tsx): el total a cobrar es la suma de los valores, y elegir una fila o "Cobrar todo"
-// cargan su acumulado en el primer valor. El total cubre las filas en el orden de imputación que fija el sistema (ver
-// ARQUITECTURA.md, "Cargos de alquiler") y la última puede quedar cubierta en parte. Solo se emite factura si el cobro
-// cubre algún cargo por facturar.
+// (gastos/registrar-pago-modal.tsx): el total a cobrar es la suma de los valores más el saldo a favor de las NC del
+// contrato, y elegir una fila o "Cobrar todo" cargan en el primer valor lo que falta después de usar el saldo a favor.
+// El total cubre las filas en el orden de imputación que fija el sistema (ver ARQUITECTURA.md, "Cargos de alquiler") y
+// la última puede quedar cubierta en parte; sobre cada fila se usa primero el saldo a favor y después la plata. Solo se
+// emite factura si el cobro cubre algún cargo por facturar, y si el saldo a favor cubre todo no se registra un cobro.
 export const CobrarModal = ({ contratoId, onClose }: { contratoId: number; onClose: () => void }) => {
   const { message } = App.useApp();
   const navigate = useNavigate();
@@ -105,12 +112,21 @@ export const CobrarModal = ({ contratoId, onClose }: { contratoId: number; onClo
   }, [contratoId, fechaIso, form]);
 
   const filas: Fila[] = useMemo(() => (vistaPrevia?.items ?? []).map((item, key) => ({ ...item, key })), [vistaPrevia]);
+  const saldosAFavor = vistaPrevia?.saldos_a_favor ?? [];
+  const notas = Form.useWatch("notas", form) as Valores["notas"];
+  const sumaNotas = Object.values(notas ?? {}).reduce<number>((acum, monto) => acum + (Number(monto) || 0), 0);
   const sumaValores = (valores ?? []).reduce((acum, valor) => acum + (Number(valor?.monto) || 0), 0);
   // Tomar como máximo el acumulado de la última fila: más que eso no se cobra (no se deja saldo a favor).
   const maximo = filas.length > 0 ? Number(filas[filas.length - 1].acumulado) : 0;
-  const cubiertos = cubiertoPorFila(filas.map((fila) => fila.saldo), sumaValores);
+  // Si el saldo a favor cubre todo lo que hay para cobrar, no hace falta pedir medios de cobro.
+  const creditoCubreTodo = sumaNotas > 0 && sumaNotas >= maximo;
+  // Total del cobro: el saldo a favor más la plata (que se ignora si el saldo a favor ya cubre todo).
+  const totalACobrar = (creditoCubreTodo ? 0 : sumaValores) + sumaNotas;
+  const cubiertos = cubiertoPorFila(filas.map((fila) => fila.saldo), totalACobrar);
+  // Repartir lo cubierto de cada fila entre el saldo a favor (primero) y la plata.
+  const repartos = repartirCredito(cubiertos, sumaNotas);
   // Marcar en el radio la fila cuyo acumulado coincide con el total, si hay una.
-  const filaElegida = filas.find((fila) => Number(fila.acumulado) === sumaValores);
+  const filaElegida = filas.find((fila) => Number(fila.acumulado) === totalACobrar);
   // Emitir factura solo si el cobro cubre, entera o en parte, alguna fila que no es una factura abierta.
   const emiteFactura = filas.some((fila, indice) => cubiertos[indice] > 0 && fila.documento_venta_id === null);
 
@@ -127,8 +143,9 @@ export const CobrarModal = ({ contratoId, onClose }: { contratoId: number; onClo
     return undefined;
   };
 
-  // Cargar el monto en el primer medio de cobro, como los atajos del pago al proveedor.
-  const setMontoPrimerMedio = (monto: number) => {
+  // Cargar en el primer medio de cobro lo que falta después de usar el saldo a favor, como los atajos del pago al proveedor.
+  const setMontoPrimerMedio = (montoACobrar: number) => {
+    const monto = Math.max(0, montoACobrar - sumaNotas);
     const actuales = (form.getFieldValue("valores") as Valor[] | undefined) ?? [];
     if (actuales.length === 0) {
       form.setFieldValue("valores", [{ monto }]);
@@ -168,22 +185,36 @@ export const CobrarModal = ({ contratoId, onClose }: { contratoId: number; onClo
   }));
 
   const cobrar = async (values: Valores) => {
+    // Mandar solo las NC con un importe, y los valores solo si el saldo a favor no alcanza para todo.
+    const notasCredito = saldosAFavor
+      .map((nota) => ({ id: nota.id, monto: Number(values.notas?.[String(nota.id)]) || 0 }))
+      .filter((nota) => nota.monto > 0);
     setGuardando(true);
     const response = await kyInstance.post("cobros", {
       json: {
         contrato_id: contratoId,
         fecha: values.fecha.format("YYYY-MM-DD"),
         punto_expedicion_id: emiteFactura ? values.punto_expedicion_id : undefined,
-        valores: values.valores,
+        valores: creditoCubreTodo ? undefined : values.valores,
+        notas_credito: notasCredito.length > 0 ? notasCredito : undefined,
       },
     });
     setGuardando(false);
 
     if (response.ok) {
-      const cobro = await response.json<{ id: number }>();
-      message.success("Cobro registrado.");
+      const resultado = await response.json<CobroRow | CobroSinCobroRespuesta>();
       onClose();
-      navigate(`/administrador/cobros/show/${cobro.id}`);
+
+      // Si el saldo a favor cubrió todo no hay cobro que mostrar: ir a la factura saldada.
+      if ("cobro" in resultado && resultado.cobro === null) {
+        message.success("Saldado con el saldo a favor del inquilino: no se registró cobro.");
+        navigate(`/administrador/facturas-venta/show/${resultado.facturas_saldadas[0]}`);
+        return;
+      }
+
+      // Si entró plata, ir al detalle del cobro.
+      message.success("Cobro registrado.");
+      navigate(`/administrador/cobros/show/${(resultado as CobroRow).id}`);
       return;
     }
 
@@ -199,7 +230,7 @@ export const CobrarModal = ({ contratoId, onClose }: { contratoId: number; onClo
     message.error(await extractErrorMessage(response, "No se pudo registrar el cobro."));
   };
 
-  const totalCobrable = sumaValores > 0 && sumaValores <= maximo;
+  const totalCobrable = totalACobrar > 0 && totalACobrar <= maximo;
 
   return (
     <Modal
@@ -264,7 +295,7 @@ export const CobrarModal = ({ contratoId, onClose }: { contratoId: number; onClo
             <Typography.Paragraph type="secondary">
               El cobro cubre las filas en este orden (mora, facturas abiertas, alquileres y el resto, lo vencido antes
               que lo que todavía no vence); la última puede quedar cubierta en parte. Elegir una fila carga su
-              acumulado como monto.
+              acumulado como total, menos el saldo a favor que se use.
             </Typography.Paragraph>
             <Table<Fila>
               dataSource={filas}
@@ -342,6 +373,19 @@ export const CobrarModal = ({ contratoId, onClose }: { contratoId: number; onClo
                 align="right"
                 render={(acumulado: string) => formatMonto(acumulado)}
               />
+              {sumaNotas > 0 && (
+                <Table.Column
+                  title="Se paga con"
+                  dataIndex="key"
+                  render={(key: number) => (
+                    <Typography.Text type="secondary" style={{ whiteSpace: "nowrap" }}>
+                      {repartos[key].notas > 0 && `Saldo a favor ${formatMonto(repartos[key].notas)}`}
+                      {repartos[key].notas > 0 && repartos[key].plata > 0 && " · "}
+                      {repartos[key].plata > 0 && `Plata ${formatMonto(repartos[key].plata)}`}
+                    </Typography.Text>
+                  )}
+                />
+              )}
               <Table.Column
                 title=""
                 dataIndex="key"
@@ -386,80 +430,124 @@ export const CobrarModal = ({ contratoId, onClose }: { contratoId: number; onClo
           />
         )}
 
-        <SectionDivider icon={<WalletOutlined />}>Medios de cobro</SectionDivider>
-        <Form.List name="valores">
-          {(fields, { add, remove }) => (
-            <Space direction="vertical" size={12} style={{ width: "100%" }}>
-              {fields.map((field) => {
-                const medioId = form.getFieldValue(["valores", field.name, "medio_pago_id"]);
-                const medio = (medioPagoQuery.data?.data ?? []).find((m) => m.id === medioId);
-
-                return (
-                  <Row key={field.key} gutter={[8, 8]} align="middle">
-                    <Col xs={24} md={6}>
-                      <Form.Item
-                        {...field}
-                        name={[field.name, "medio_pago_id"]}
-                        rules={[{ required: true, message: "Medio" }]}
-                        noStyle
-                      >
-                        <Select {...medioPagoSelectProps} options={mediosPagoOptions} placeholder="Medio" style={{ width: "100%" }} />
-                      </Form.Item>
-                    </Col>
-                    <Col xs={24} md={6}>
-                      <Form.Item
-                        {...field}
-                        name={[field.name, "fondo_id"]}
-                        rules={[{ required: true, message: "Fondo" }]}
-                        noStyle
-                      >
-                        <Select {...fondoSelectProps} placeholder="Fondo" style={{ width: "100%" }} />
-                      </Form.Item>
-                    </Col>
-                    <Col xs={24} md={6}>
-                      <Form.Item {...field} name={[field.name, "monto"]} rules={[{ required: true, message: "Monto" }]} noStyle>
-                        <MontoInput style={{ width: "100%" }} />
-                      </Form.Item>
-                    </Col>
-                    <Col xs={20} md={5}>
-                      <Form.Item
-                        {...field}
-                        name={[field.name, "nro_comprobante"]}
-                        rules={medio?.requiere_datos_bancarios ? [{ required: true, message: "Comprobante" }] : []}
-                        noStyle
-                      >
-                        <Input placeholder="N° comprobante" style={{ width: "100%" }} />
-                      </Form.Item>
-                    </Col>
-                    <Col xs={4} md={1}>
-                      <Button icon={<DeleteOutlined />} disabled={fields.length === 1} onClick={() => remove(field.name)} />
-                    </Col>
-                    {medio?.requiere_datos_bancarios && (
-                      <Col xs={24} md={12}>
-                        <Form.Item {...field} name={[field.name, "persona_cuenta_id"]} noStyle>
-                          <Select
-                            options={cuentaOptions}
-                            placeholder="Cuenta del inquilino (opcional)"
-                            allowClear
-                            style={{ width: "100%" }}
-                          />
-                        </Form.Item>
-                      </Col>
-                    )}
-                  </Row>
-                );
-              })}
-              <Button type="dashed" icon={<PlusOutlined />} onClick={() => add()}>
-                Agregar medio de cobro
-              </Button>
+        {saldosAFavor.length > 0 && (
+          <>
+            <SectionDivider icon={<BankOutlined />}>Saldo a favor del inquilino</SectionDivider>
+            <Space direction="vertical" size={8} style={{ width: "100%", marginBottom: 8 }}>
+              {saldosAFavor.map((nota) => (
+                <Row key={nota.id} gutter={[8, 8]} align="middle">
+                  <Col xs={24} md={12}>
+                    <Typography.Text>NC {nota.numero}</Typography.Text>
+                    <br />
+                    <Typography.Text type="secondary">
+                      corrige la factura {nota.factura.numero} · a favor {formatMonto(nota.saldo_a_favor)}
+                    </Typography.Text>
+                  </Col>
+                  <Col xs={16} md={8}>
+                    <Form.Item name={["notas", String(nota.id)]} noStyle>
+                      <MontoInput style={{ width: "100%" }} max={Number(nota.saldo_a_favor)} />
+                    </Form.Item>
+                  </Col>
+                  <Col xs={8} md={4}>
+                    <Button
+                      onClick={() =>
+                        form.setFieldValue(
+                          ["notas", String(nota.id)],
+                          Math.min(
+                            Number(nota.saldo_a_favor),
+                            Math.max(0, maximo - (sumaNotas - (Number(notas?.[String(nota.id)]) || 0))),
+                          ),
+                        )
+                      }
+                    >
+                      Todo
+                    </Button>
+                  </Col>
+                </Row>
+              ))}
             </Space>
-          )}
-        </Form.List>
+            <Typography.Text type="secondary">Se usa primero el saldo a favor y después los medios de cobro.</Typography.Text>
+          </>
+        )}
+
+        {!creditoCubreTodo && (
+          <>
+            <SectionDivider icon={<WalletOutlined />}>Medios de cobro</SectionDivider>
+            <Form.List name="valores">
+              {(fields, { add, remove }) => (
+                <Space direction="vertical" size={12} style={{ width: "100%" }}>
+                  {fields.map((field) => {
+                    const medioId = form.getFieldValue(["valores", field.name, "medio_pago_id"]);
+                    const medio = (medioPagoQuery.data?.data ?? []).find((m) => m.id === medioId);
+
+                    return (
+                      <Row key={field.key} gutter={[8, 8]} align="middle">
+                        <Col xs={24} md={6}>
+                          <Form.Item
+                            {...field}
+                            name={[field.name, "medio_pago_id"]}
+                            rules={[{ required: true, message: "Medio" }]}
+                            noStyle
+                          >
+                            <Select {...medioPagoSelectProps} options={mediosPagoOptions} placeholder="Medio" style={{ width: "100%" }} />
+                          </Form.Item>
+                        </Col>
+                        <Col xs={24} md={6}>
+                          <Form.Item
+                            {...field}
+                            name={[field.name, "fondo_id"]}
+                            rules={[{ required: true, message: "Fondo" }]}
+                            noStyle
+                          >
+                            <Select {...fondoSelectProps} placeholder="Fondo" style={{ width: "100%" }} />
+                          </Form.Item>
+                        </Col>
+                        <Col xs={24} md={6}>
+                          <Form.Item {...field} name={[field.name, "monto"]} rules={[{ required: true, message: "Monto" }]} noStyle>
+                            <MontoInput style={{ width: "100%" }} />
+                          </Form.Item>
+                        </Col>
+                        <Col xs={20} md={5}>
+                          <Form.Item
+                            {...field}
+                            name={[field.name, "nro_comprobante"]}
+                            rules={medio?.requiere_datos_bancarios ? [{ required: true, message: "Comprobante" }] : []}
+                            noStyle
+                          >
+                            <Input placeholder="N° comprobante" style={{ width: "100%" }} />
+                          </Form.Item>
+                        </Col>
+                        <Col xs={4} md={1}>
+                          <Button icon={<DeleteOutlined />} disabled={fields.length === 1} onClick={() => remove(field.name)} />
+                        </Col>
+                        {medio?.requiere_datos_bancarios && (
+                          <Col xs={24} md={12}>
+                            <Form.Item {...field} name={[field.name, "persona_cuenta_id"]} noStyle>
+                              <Select
+                                options={cuentaOptions}
+                                placeholder="Cuenta del inquilino (opcional)"
+                                allowClear
+                                style={{ width: "100%" }}
+                              />
+                            </Form.Item>
+                          </Col>
+                        )}
+                      </Row>
+                    );
+                  })}
+                  <Button type="dashed" icon={<PlusOutlined />} onClick={() => add()}>
+                    Agregar medio de cobro
+                  </Button>
+                </Space>
+              )}
+            </Form.List>
+          </>
+        )}
 
         <Flex justify="flex-end" gap={8} style={{ marginTop: 16 }}>
           <Typography.Text type="secondary">Total a cobrar:</Typography.Text>
-          <Typography.Text strong type={sumaValores > maximo ? "danger" : undefined}>
-            {formatMonto(sumaValores)}
+          <Typography.Text strong type={totalACobrar > maximo ? "danger" : undefined}>
+            {formatMonto(totalACobrar)}
           </Typography.Text>
           <Typography.Text type="secondary">de {formatMonto(maximo)}</Typography.Text>
         </Flex>

@@ -215,6 +215,11 @@ export const ContratoAlquilerList = () => {
                   {CONTRATO_ALQUILER_ESTADO_LABEL[estadoContrato]}
                 </Tag>
               </Tooltip>
+              {Number(record.saldo_a_favor_inquilino) > 0 && (
+                <Tooltip title="Se puede usar al cobrar los cargos de este contrato">
+                  <Tag color="cyan">Saldo a favor del inquilino: {formatMonto(record.saldo_a_favor_inquilino)}</Tag>
+                </Tooltip>
+              )}
               {record.rescision_programada && (
                 <Tooltip title={record.motivo_rescision}>
                   <Tag color="orange">Sale el {dayjs(record.fecha_rescision).format("DD/MM/YYYY")}</Tag>
