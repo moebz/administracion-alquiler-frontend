@@ -1,12 +1,13 @@
 import { formatMonto } from "../../utils/monto";
 
-export type CargoTipo = "ALQUILER" | "EXPENSA" | "MORA" | "OTRO";
+export type CargoTipo = "ALQUILER" | "EXPENSA" | "MORA" | "OTRO" | "AJUSTE";
 
 export const CARGO_TIPO_LABEL: Record<CargoTipo, string> = {
   ALQUILER: "Alquiler",
   EXPENSA: "Expensa",
   MORA: "Mora",
   OTRO: "Otro",
+  AJUSTE: "Ajuste",
 };
 
 export const CARGO_TIPO_OPTIONS: { label: string; value: CargoTipo }[] = [
@@ -14,9 +15,10 @@ export const CARGO_TIPO_OPTIONS: { label: string; value: CargoTipo }[] = [
   { label: "Expensa", value: "EXPENSA" },
   { label: "Mora", value: "MORA" },
   { label: "Otro", value: "OTRO" },
+  { label: "Ajuste", value: "AJUSTE" },
 ];
 
-// Solo estos dos se cargan a mano: EXPENSA viene de gastos y MORA se materializa al cobrar.
+// Solo estos dos se cargan a mano: EXPENSA viene de gastos, MORA se materializa al cobrar y AJUSTE lo crean las correcciones.
 export const CARGO_TIPO_MANUAL_OPTIONS = CARGO_TIPO_OPTIONS.filter(
   (option) => option.value === "ALQUILER" || option.value === "OTRO",
 );
@@ -156,6 +158,8 @@ export type CargoRow = {
   monto: number | string;
   tasa_iva: 0 | 5 | 10;
   monto_descontado: number | string;
+  // Cargo que corrige, solo en un AJUSTE.
+  cargo_ref_id: number | null;
   facturado: number | string;
   // Lo facturado menos lo que sigue impago en la cuota de su factura al inquilino.
   cobrado: number | string;

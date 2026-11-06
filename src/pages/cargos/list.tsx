@@ -158,6 +158,14 @@ export const CargoList = () => {
               <Typography.Text type="secondary" style={{ fontSize: 12 }}>
                 Tipo: {CARGO_TIPO_LABEL[record.tipo]} · Período: {dayjs(`${record.periodo}-01`).format("MM/YYYY")}
               </Typography.Text>
+              {/* Enlazar al cargo que corrige el ajuste, aunque esté pagado o anulado. */}
+              {record.cargo_ref_id && (
+                <div style={{ fontSize: 12 }}>
+                  <Link to={`/administrador/cargos?cargo_id=${record.cargo_ref_id}&todos_los_estados=1`}>
+                    Corrige el cargo {record.cargo_ref_id}
+                  </Link>
+                </div>
+              )}
             </>
           )}
         />
