@@ -47,6 +47,66 @@ export type CobroFacturaDetalleRow = {
   tasa_iva: 0 | 5 | 10;
   subtotal: number | string;
   cargo_id: number | null;
+  // Lo que una NC nueva puede acreditar de la línea; null en una línea sin cargo (no se acredita).
+  tope_nc: number | string | null;
+};
+
+export type NotaCreditoEstado = "EMITIDO" | "ANULADO";
+
+export const NOTA_CREDITO_ESTADO_LABEL: Record<NotaCreditoEstado, string> = {
+  EMITIDO: "Emitida",
+  ANULADO: "Anulada",
+};
+
+export const NOTA_CREDITO_ESTADO_COLOR: Record<NotaCreditoEstado, string> = {
+  EMITIDO: "green",
+  ANULADO: "default",
+};
+
+// Uso del saldo a favor de una NC contra la cuota de una factura al inquilino.
+export type NotaCreditoAplicacionRow = {
+  id: number;
+  cuota_id: number;
+  documento_venta_id: number;
+  // Número impreso de la factura a la que se aplicó.
+  numero_factura: string | null;
+  // Lo que debe esa factura hoy, con esta aplicación si sigue activa.
+  saldo_factura: number | string;
+  // Cobro en el que se usó el saldo; null si se aplicó sola al emitir la NC.
+  cobro_cliente_id: number | null;
+  numero_cobro: number | null;
+  monto_aplicado: number | string;
+  estado: "ACTIVA" | "ANULADA";
+  fecha_anulacion: string | null;
+  motivo_anulacion: string | null;
+};
+
+export type NotaCreditoLineaRow = {
+  id: number;
+  descripcion: string;
+  subtotal: number | string;
+  cargo_id: number | null;
+};
+
+// NC al inquilino que corrige una factura.
+export type NotaCreditoRow = {
+  id: number;
+  // Número impreso (001-001-0000001).
+  numero: string | null;
+  fecha: string;
+  total: number | string;
+  estado: NotaCreditoEstado;
+  motivo: string | null;
+  // Desde acá corre el plazo de 168 h para anularla (por ahora, el momento en que se emitió).
+  fecha_aprobacion_sifen: string | null;
+  fecha_anulacion: string | null;
+  motivo_anulacion: string | null;
+  // Lo que queda por usar de la NC; 0 si está anulada.
+  saldo_a_favor: number | string;
+  // Null si se puede anular; si no, por qué (ya anulada, pasaron las 168 h).
+  motivo_no_anulable: string | null;
+  detalles: NotaCreditoLineaRow[];
+  aplicaciones: NotaCreditoAplicacionRow[];
 };
 
 export type CobroFacturaRow = {
@@ -71,6 +131,8 @@ export type CobroFacturaRow = {
   iva_10: number | string;
   total: number | string;
   detalles: CobroFacturaDetalleRow[];
+  // NC que corrigen la factura, de la más vieja a la más nueva.
+  notas: NotaCreditoRow[];
 };
 
 export type CobroRow = {

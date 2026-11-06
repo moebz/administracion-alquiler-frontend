@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { FileDoneOutlined } from "@ant-design/icons";
+import { FileDoneOutlined, StopOutlined } from "@ant-design/icons";
 import { usePermissions } from "@refinedev/core";
 import {
+  Alert,
   App,
   Button,
   Descriptions,
@@ -9,6 +10,7 @@ import {
   Form,
   Input,
   Modal,
+  Space,
   Table,
   Tag,
   Tooltip,
@@ -20,7 +22,16 @@ import { SectionDivider } from "../../components/section-divider";
 import { extractErrorMessage } from "../../providers/auth";
 import { kyInstance } from "../../providers/data";
 import { formatMonto } from "../../utils/monto";
-import type { CobroFacturaDetalleRow, CobroFacturaRow } from "./types";
+import { EmitirNcModal } from "./emitir-nc-modal";
+import { describirAplicacionesActivas } from "./nota-credito";
+import {
+  NOTA_CREDITO_ESTADO_COLOR,
+  NOTA_CREDITO_ESTADO_LABEL,
+  type CobroFacturaDetalleRow,
+  type CobroFacturaRow,
+  type NotaCreditoAplicacionRow,
+  type NotaCreditoRow,
+} from "./types";
 
 // Líneas de totales de la factura, en el orden en que se leen en una factura impresa.
 const TOTALES_FACTURA: {
@@ -35,21 +46,39 @@ const TOTALES_FACTURA: {
 ];
 
 const PERMISO_ANULAR = "facturas.anular";
+const PERMISO_EMITIR_NC = "facturas.emitir_nc";
+const PERMISO_ANULAR_COBROS = "cobros.anular";
 
 type FacturaCobroProps = {
   factura: CobroFacturaRow;
-  // Se llama al anular la factura, para recargar el cobro.
-  onAnulada: () => void;
+  // Se llama al anular la factura o al emitir o anular una NC o su aplicación, para recargar el cobro.
+  onCambio: () => void;
+};
+
+// Datos de una anulación que pide el motivo en un modal de confirmación.
+type ConfirmacionConMotivo = {
+  title: string;
+  content?: React.ReactNode;
+  // Ruta del PATCH, sin el prefijo de la API.
+  url: string;
+  // Campos del PATCH además del motivo.
+  extra?: Record<string, unknown>;
+  okDisabled?: boolean;
+  exito: string;
+  error: string;
 };
 
 // Una factura al inquilino a la que se aplica el cobro: la que emitió este cobro o una que ya estaba
 // abierta (por ejemplo, la de un cobro anulado) y este cobro saldó.
-export const FacturaCobro = ({ factura, onAnulada }: FacturaCobroProps) => {
-  const { message } = App.useApp();
+export const FacturaCobro = ({ factura, onCambio }: FacturaCobroProps) => {
+  const { message, modal } = App.useApp();
   const { data: permissions } = usePermissions<string[]>({});
   const puedeAnular = permissions?.includes(PERMISO_ANULAR) ?? false;
+  const puedeEmitirNc = permissions?.includes(PERMISO_EMITIR_NC) ?? false;
+  const puedeAnularCobros = permissions?.includes(PERMISO_ANULAR_COBROS) ?? false;
 
   const [modalAbierto, setModalAbierto] = useState(false);
+  const [emitiendoNc, setEmitiendoNc] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [form] = Form.useForm<{ motivo_anulacion: string }>();
 
@@ -65,7 +94,7 @@ export const FacturaCobro = ({ factura, onAnulada }: FacturaCobroProps) => {
     if (response.ok) {
       message.success("Factura anulada.");
       setModalAbierto(false);
-      onAnulada();
+      onCambio();
       return;
     }
 
@@ -75,24 +104,141 @@ export const FacturaCobro = ({ factura, onAnulada }: FacturaCobroProps) => {
     );
   };
 
+  // Anular con un modal de confirmación que pide el motivo (anular una NC o la aplicación de una NC).
+  const confirmarAnulacion = (confirmacion: ConfirmacionConMotivo) => {
+    let motivo = "";
+
+    modal.confirm({
+      title: confirmacion.title,
+      content: (
+        <>
+          {confirmacion.content}
+          <Input.TextArea
+            rows={3}
+            maxLength={255}
+            placeholder="Motivo de la anulación"
+            onChange={(event) => {
+              motivo = event.target.value;
+            }}
+          />
+        </>
+      ),
+      okText: "Anular",
+      okButtonProps: { danger: true, disabled: confirmacion.okDisabled },
+      cancelText: "Cancelar",
+      onOk: async () => {
+        if (!motivo.trim()) {
+          message.error("Ingresá el motivo de la anulación.");
+          throw new Error("motivo requerido");
+        }
+
+        const response = await kyInstance.patch(confirmacion.url, {
+          json: { motivo_anulacion: motivo, ...confirmacion.extra },
+        });
+        if (!response.ok) {
+          message.error(await extractErrorMessage(response, confirmacion.error));
+          throw new Error("anulación rechazada");
+        }
+
+        message.success(confirmacion.exito);
+        onCambio();
+      },
+    });
+  };
+
+  // Anular una NC: lista sus aplicaciones activas, que se anulan con ella, y avisa si falta el permiso para anularlas.
+  const anularNota = (nota: NotaCreditoRow) => {
+    const textos = describirAplicacionesActivas(nota.aplicaciones);
+    const faltaPermiso = textos.length > 0 && !puedeAnularCobros;
+
+    confirmarAnulacion({
+      title: `¿Anular la NC ${nota.numero ?? ""}?`,
+      content: (
+        <>
+          {textos.length > 0 && (
+            <Alert
+              type="warning"
+              showIcon
+              style={{ marginBottom: 16 }}
+              message="Al anular la NC se anulan sus aplicaciones"
+              description={textos.map((texto) => (
+                <div key={texto}>{texto}</div>
+              ))}
+            />
+          )}
+          {faltaPermiso && (
+            <Alert
+              type="error"
+              showIcon
+              style={{ marginBottom: 16 }}
+              message="No tenés permiso para anular las aplicaciones de la NC (cobros.anular)."
+            />
+          )}
+        </>
+      ),
+      url: `facturas-venta/${nota.id}/anular-nc`,
+      extra: { confirmar_aplicaciones: textos.length > 0 },
+      okDisabled: faltaPermiso,
+      exito: "NC anulada.",
+      error: "No se pudo anular la NC.",
+    });
+  };
+
+  // Anular solo una aplicación de la NC: la cuota queda abierta y el saldo vuelve a la NC.
+  const anularAplicacion = (
+    aplicacion: NotaCreditoAplicacionRow,
+    nota: NotaCreditoRow
+  ) => {
+    confirmarAnulacion({
+      title: "¿Anular la aplicación de la NC?",
+      content: (
+        <p>
+          {describirAplicacionesActivas([aplicacion])[0]} El saldo vuelve a la NC{" "}
+          {nota.numero}.
+        </p>
+      ),
+      url: `nc-venta-aplicaciones/${aplicacion.id}/anular`,
+      exito: "Aplicación anulada.",
+      error: "No se pudo anular la aplicación.",
+    });
+  };
+
+  // Ofrecer emitir una NC solo si queda algo por acreditar en alguna línea con cargo.
+  const hayPorAcreditar = factura.detalles.some(
+    (detalle) => Number(detalle.tope_nc ?? 0) > 0
+  );
+
   return (
     <>
       <SectionDivider icon={<FileDoneOutlined />}>
         {factura.emitida_por_este_cobro ? "Factura emitida" : "Factura cobrada"}
       </SectionDivider>
       {/* Ofrecer anular solo una factura emitida; deshabilitado, el tooltip explica por qué todavía no se puede. */}
-      {puedeAnular && factura.estado === "EMITIDO" && (
-        <Flex justify="flex-end" style={{ marginBottom: 8 }}>
-          <Tooltip title={factura.motivo_no_anulable}>
-            <Button
-              danger
-              size="small"
-              disabled={factura.motivo_no_anulable !== null}
-              onClick={() => setModalAbierto(true)}
-            >
-              Anular factura
-            </Button>
-          </Tooltip>
+      {factura.estado === "EMITIDO" && (puedeAnular || puedeEmitirNc) && (
+        <Flex justify="flex-end" gap={8} style={{ marginBottom: 8 }}>
+          {puedeEmitirNc && (
+            <Tooltip title={hayPorAcreditar ? undefined : "No queda nada por acreditar"}>
+              <Button
+                size="small"
+                disabled={!hayPorAcreditar}
+                onClick={() => setEmitiendoNc(true)}
+              >
+                Emitir NC
+              </Button>
+            </Tooltip>
+          )}
+          {puedeAnular && (
+            <Tooltip title={factura.motivo_no_anulable}>
+              <Button
+                danger
+                size="small"
+                disabled={factura.motivo_no_anulable !== null}
+                onClick={() => setModalAbierto(true)}
+              >
+                Anular factura
+              </Button>
+            </Tooltip>
+          )}
         </Flex>
       )}
       <Descriptions
@@ -194,6 +340,154 @@ export const FacturaCobro = ({ factura, onAnulada }: FacturaCobroProps) => {
           }
         />
       </Table>
+      {/* Listar las NC de la factura, con anular NC dentro de las 168 h y anular aplicación en las que no vienen de un cobro. */}
+      {factura.notas.length > 0 && (
+        <>
+          <SectionDivider icon={<FileDoneOutlined />}>
+            Notas de crédito
+          </SectionDivider>
+          <Table<NotaCreditoRow>
+            dataSource={factura.notas}
+            rowKey="id"
+            pagination={false}
+            size="small"
+            expandable={{
+              rowExpandable: (nota) => nota.aplicaciones.length > 0,
+              expandedRowRender: (nota) => (
+                <Table<NotaCreditoAplicacionRow>
+                  dataSource={nota.aplicaciones}
+                  rowKey="id"
+                  pagination={false}
+                  size="small"
+                >
+                  <Table.Column
+                    title="Aplicada a"
+                    key="destino"
+                    render={(_, aplicacion: NotaCreditoAplicacionRow) =>
+                      `Factura ${aplicacion.numero_factura}`
+                    }
+                  />
+                  <Table.Column
+                    title="Monto"
+                    dataIndex="monto_aplicado"
+                    align="right"
+                    render={(monto: NotaCreditoAplicacionRow["monto_aplicado"]) =>
+                      formatMonto(monto)
+                    }
+                  />
+                  <Table.Column
+                    title="Cobro"
+                    key="cobro"
+                    render={(_, aplicacion: NotaCreditoAplicacionRow) =>
+                      aplicacion.cobro_cliente_id !== null ? (
+                        <Link to={`/administrador/cobros/show/${aplicacion.cobro_cliente_id}`}>
+                          Cobro {aplicacion.numero_cobro}
+                        </Link>
+                      ) : (
+                        "Sin cobro"
+                      )
+                    }
+                  />
+                  <Table.Column
+                    title="Estado"
+                    key="estado"
+                    render={(_, aplicacion: NotaCreditoAplicacionRow) =>
+                      aplicacion.estado === "ACTIVA" ? (
+                        <Space size={4} wrap>
+                          <Tag color="green">Activa</Tag>
+                          {puedeAnularCobros && aplicacion.cobro_cliente_id === null && (
+                            <Tooltip title="Anular aplicación">
+                              <Button
+                                danger
+                                size="small"
+                                icon={<StopOutlined />}
+                                onClick={() => anularAplicacion(aplicacion, nota)}
+                              />
+                            </Tooltip>
+                          )}
+                        </Space>
+                      ) : (
+                        <Tooltip title={aplicacion.motivo_anulacion}>
+                          <Tag color="default">Anulada</Tag>
+                        </Tooltip>
+                      )
+                    }
+                  />
+                </Table>
+              ),
+            }}
+          >
+            <Table.Column
+              title="Nota"
+              key="nota"
+              render={(_, nota: NotaCreditoRow) => (
+                <Flex vertical>
+                  <span>NC {nota.numero ?? "—"}</span>
+                  {nota.motivo && (
+                    <Typography.Text type="secondary">
+                      {nota.motivo}
+                    </Typography.Text>
+                  )}
+                </Flex>
+              )}
+            />
+            <Table.Column
+              title="Fecha"
+              dataIndex="fecha"
+              render={(fecha: string) => dayjs(fecha).format("DD/MM/YYYY")}
+            />
+            <Table.Column
+              title="Total"
+              dataIndex="total"
+              align="right"
+              render={(total: NotaCreditoRow["total"]) => formatMonto(total)}
+            />
+            <Table.Column
+              title="Saldo a favor"
+              dataIndex="saldo_a_favor"
+              align="right"
+              render={(saldo: NotaCreditoRow["saldo_a_favor"], nota: NotaCreditoRow) =>
+                nota.estado === "ANULADO" ? "—" : <strong>{formatMonto(saldo)}</strong>
+              }
+            />
+            <Table.Column
+              title="Estado"
+              key="estado"
+              render={(_, nota: NotaCreditoRow) => (
+                <Space size={4} wrap>
+                  <Tooltip title={nota.motivo_anulacion}>
+                    <Tag bordered={false} color={NOTA_CREDITO_ESTADO_COLOR[nota.estado]} style={{ margin: 0 }}>
+                      {NOTA_CREDITO_ESTADO_LABEL[nota.estado]}
+                    </Tag>
+                  </Tooltip>
+                  {/* Ofrecer anular solo una NC emitida; deshabilitado, el tooltip explica por qué ya no se puede (168 h). */}
+                  {puedeAnular && nota.estado === "EMITIDO" && (
+                    <Tooltip title={nota.motivo_no_anulable ?? "Anular NC"}>
+                      <Button
+                        danger
+                        size="small"
+                        icon={<StopOutlined />}
+                        disabled={nota.motivo_no_anulable !== null}
+                        onClick={() => anularNota(nota)}
+                      />
+                    </Tooltip>
+                  )}
+                </Space>
+              )}
+            />
+          </Table>
+        </>
+      )}
+      {emitiendoNc && (
+        <EmitirNcModal
+          factura={factura}
+          onClose={() => setEmitiendoNc(false)}
+          onSuccess={() => {
+            setEmitiendoNc(false);
+            onCambio();
+          }}
+        />
+      )}
       <Modal
         title={`Anular factura ${factura.numero ?? ""}`}
         open={modalAbierto}

@@ -157,7 +157,7 @@ export const CobroShow = () => {
         <FacturaCobro
           key={factura.id}
           factura={factura}
-          onAnulada={() => query.refetch()}
+          onCambio={() => query.refetch()}
         />
       ))}
 
