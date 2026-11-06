@@ -96,6 +96,8 @@ export type CargoGasto = {
   tipo: "EXPENSA" | "OTRO";
   descripcion: string;
   monto: number | string;
+  // Monto del cargo más el de sus ajustes activos.
+  monto_vigente: number | string;
   tasa_iva: 0 | 5 | 10;
   saldo: number | string;
   // Null en el cargo al propietario: no se le reclama el pago.
@@ -130,7 +132,7 @@ export type CargoPrevisto = {
   fecha_vencimiento: string | null;
   contrato_terminado: string | null;
   cargos_activos: number;
-  cargos_facturados: { id: number; descripcion: string; monto: number | string; tasa_iva: 0 | 5 | 10 }[];
+  cargos_facturados: { id: number; descripcion: string; monto_vigente: number | string; tasa_iva: 0 | 5 | 10 }[];
 };
 
 // Qué pasa con los cargos al registrar una ND del proveedor sobre la factura vigente (null si el gasto no genera cargos).

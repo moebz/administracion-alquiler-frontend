@@ -50,7 +50,7 @@ export const cargoMarcaTooltip = (marca: CargoMarca, deudor: CargoDeudor): strin
   if (marca === "FACTURA_ANULADA") {
     return "Registrá la factura de reemplazo del proveedor, que rehace el cargo, o anulalo desde Cargos.";
   }
-  return `La factura del proveedor de este cargo se reemplazó después de facturárselo ${CARGO_DEUDOR_AL[deudor]}. Si el monto subió, falta cobrarle la diferencia; si bajó por debajo de lo facturado o cambió la tasa, anulá la factura ${CARGO_DEUDOR_AL[deudor]} (si está en plazo) o emití una NC.`;
+  return `La factura del proveedor de este cargo se reemplazó después de facturárselo ${CARGO_DEUDOR_AL[deudor]}. Si la línea nueva vale más, la diferencia queda como ajuste a cobrar; si vale menos, corregí el monto antes de reapuntar; si cambió la tasa, anulá la factura ${CARGO_DEUDOR_AL[deudor]} (si está en plazo) o emití una NC.`;
 };
 
 // Línea de la factura vigente del proveedor a la que se puede reapuntar un cargo.
@@ -60,8 +60,11 @@ export type LineaCandidata = { id: number; descripcion: string; subtotal: number
 export type AccionSugerida = {
   codigo: "ESPERANDO_REEMPLAZO" | "ANULAR_O_NC" | "ELEGIR_LINEA" | "AJUSTAR_Y_REAPUNTAR" | "NC_Y_REAPUNTAR";
   facturado: number | string;
+  // Monto del cargo más el de sus ajustes: contra lo que se compara la línea nueva.
+  monto_vigente: number | string;
   linea: LineaCandidata | null;
-  // Solo NC_Y_REAPUNTAR: lo que hay que acreditar antes de reapuntar.
+  // AJUSTAR_Y_REAPUNTAR: lo que la línea nueva supera al monto vigente y queda como ajuste a cobrar (0 si coincide).
+  // NC_Y_REAPUNTAR: lo que la línea nueva queda por debajo del monto vigente y hay que bajar al corregir el monto.
   diferencia: number | string | null;
   candidatas: LineaCandidata[];
 };
@@ -80,14 +83,14 @@ export const accionSugeridaTexto = (accion: AccionSugerida, deudor: CargoDeudor,
   }
 
   const subtotal = Number(accion.linea?.subtotal ?? 0);
-  const facturado = Number(accion.facturado);
+  const diferencia = Number(accion.diferencia ?? 0);
   if (accion.codigo === "NC_Y_REAPUNTAR") {
-    return `Facturado ${al} ${formatMonto(facturado)}, la línea nueva es ${formatMonto(subtotal)}: emití una NC por ${formatMonto(accion.diferencia ?? 0)} (o anulá la factura ${al} si está en plazo) y después reapuntá.`;
+    return `Corregí el monto a ${formatMonto(subtotal)} y reapuntá.`;
   }
-  if (subtotal === facturado) {
+  if (diferencia === 0) {
     return `Reapuntá el cargo a la línea nueva "${accion.linea?.descripcion}".`;
   }
-  return `Ajustá el cargo a ${formatMonto(subtotal)} y reapuntalo a la línea nueva; la diferencia (${formatMonto(subtotal - facturado)}) queda como saldo a cobrar.`;
+  return `Reapuntalo a la línea nueva; la diferencia (${formatMonto(diferencia)}) queda como ajuste a cobrar.`;
 };
 
 export const CARGO_DEUDOR_COLOR: Record<CargoDeudor, string> = {
