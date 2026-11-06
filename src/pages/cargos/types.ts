@@ -158,8 +158,13 @@ export type CargoRow = {
   monto: number | string;
   tasa_iva: 0 | 5 | 10;
   monto_descontado: number | string;
+  // Monto del cargo más el de sus AJUSTE activos: lo que el deudor debe en total por él.
+  monto_vigente: number | string;
   // Cargo que corrige, solo en un AJUSTE.
   cargo_ref_id: number | null;
+  cargo_ref: { id: number; descripcion: string } | null;
+  // El cargo o alguno de sus AJUSTE tiene movimientos en el historial.
+  tiene_correcciones: boolean;
   facturado: number | string;
   // Lo facturado menos lo que sigue impago en la cuota de su factura al inquilino.
   cobrado: number | string;
@@ -178,4 +183,68 @@ export type CargoRow = {
   motivo_anulacion: string | null;
   gasto_id: number | null;
   gasto: { id: number; descripcion: string } | null;
+};
+
+// Un paso de "Corregir monto": lo que la vista previa dice que se va a hacer, ya en texto.
+export type PasoCorreccion =
+  | {
+      tipo: "BAJAR" | "SUBIR";
+      cargo_id: number;
+      descripcion: string;
+      monto_anterior: string;
+      monto_nuevo: string;
+      importe: string;
+      anula: boolean;
+      texto: string;
+    }
+  | {
+      tipo: "NC";
+      documento_venta_id: number;
+      numero: string;
+      lineas: { cargo_id: number; descripcion: string; monto: string }[];
+      total: string;
+      aplicado_a_cuota: string;
+      saldo_a_favor: string;
+      texto: string;
+    }
+  | {
+      tipo: "AJUSTE";
+      cargo_ref_id: number;
+      monto: string;
+      fecha_vencimiento: string | null;
+      texto: string;
+    };
+
+// Respuesta de GET /cargos/{id}/correccion-preview.
+export type PlanCorreccion = {
+  cargo_id: number;
+  monto_vigente: string;
+  monto_nuevo: string;
+  ajustes: { id: number; monto: string; facturado: string }[];
+  pasos: PasoCorreccion[];
+  avisos: string[];
+  // Permisos que pide el plan y, de esos, los que le faltan al usuario.
+  permisos: string[];
+  permisos_faltantes: string[];
+};
+
+export type CorreccionAccion = "MONTO" | "EMITIR_NC" | "ANULAR_NC" | "CREAR_AJUSTE" | "REAPUNTE";
+
+// Fila del historial de un cargo y sus ajustes: GET /cargos/{id}/correcciones.
+export type CorreccionRow = {
+  id: number;
+  fecha: string;
+  cargo_id: number;
+  cargo_descripcion: string;
+  es_ajuste: boolean;
+  accion: CorreccionAccion;
+  accion_label: string;
+  // Con signo: cuánto cambió el monto de ese cargo.
+  monto: string;
+  // Monto del cargo después de este movimiento.
+  monto_resultante: string;
+  motivo: string;
+  usuario: string | null;
+  documento_venta: { id: number; numero: string | null; documento_ref_id: number | null } | null;
+  linea_proveedor: { id: number; descripcion: string; documento_compra_id: number } | null;
 };

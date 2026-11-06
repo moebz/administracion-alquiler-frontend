@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { List, useTable } from "@refinedev/antd";
 import { usePermissions } from "@refinedev/core";
-import { NodeIndexOutlined, StopOutlined } from "@ant-design/icons";
+import { EditOutlined, HistoryOutlined, NodeIndexOutlined, StopOutlined } from "@ant-design/icons";
 import { Alert, App, Button, Input, Space, Table, Tag, Tooltip, Typography } from "antd";
 import dayjs from "dayjs";
 import { Link, useNavigate, useSearchParams } from "react-router";
@@ -10,6 +10,9 @@ import { kyInstance } from "../../providers/data";
 import { formatMonto } from "../../utils/monto";
 import { CargoListFilters } from "./cargo-list-filters";
 import { CargoMarcaTag } from "./cargo-marca-tag";
+import { CorreccionesModal } from "./correcciones-modal";
+import { CorregirMontoModal } from "./corregir-monto-modal";
+import { puedeCorregirMonto } from "./correccion";
 import { MontoSegunProveedorTag } from "./monto-segun-proveedor-tag";
 import { buildFiltrosCargos, FILTROS_CARGOS_INICIALES } from "./filtros";
 import { CobrarModal } from "../cobros/cobrar-modal";
@@ -57,6 +60,8 @@ export const CargoList = () => {
   const [generando, setGenerando] = useState(false);
   const [cobrando, setCobrando] = useState(false);
   const [reapuntando, setReapuntando] = useState<CargoRow | null>(null);
+  const [corrigiendo, setCorrigiendo] = useState<CargoRow | null>(null);
+  const [viendoHistorial, setViendoHistorial] = useState<CargoRow | null>(null);
 
   const anular = (cargo: CargoRow) => {
     let motivo = "";
@@ -178,6 +183,14 @@ export const CargoList = () => {
               <Typography.Text type="secondary" style={{ fontSize: 12 }}>
                 IVA {record.tasa_iva}%
               </Typography.Text>
+              {/* Mostrar el monto vigente cuando los ajustes activos lo cambian: es lo que el deudor debe por el cargo. */}
+              {Number(record.monto_vigente) !== Number(monto) && (
+                <div>
+                  <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+                    Con ajustes: {formatMonto(record.monto_vigente)}
+                  </Typography.Text>
+                </div>
+              )}
             </>
           )}
         />
@@ -230,6 +243,16 @@ export const CargoList = () => {
                   <Button size="small" icon={<NodeIndexOutlined />} onClick={() => setReapuntando(record)} />
                 </Tooltip>
               )}
+              {puedeCorregirMonto(record, permissions) && (
+                <Tooltip title="Corregir monto">
+                  <Button size="small" icon={<EditOutlined />} onClick={() => setCorrigiendo(record)} />
+                </Tooltip>
+              )}
+              {record.tiene_correcciones && (
+                <Tooltip title="Historial de correcciones">
+                  <Button size="small" icon={<HistoryOutlined />} onClick={() => setViendoHistorial(record)} />
+                </Tooltip>
+              )}
               {puedeAnular && estado !== "ANULADO" && (
                 <Tooltip title="Anular cargo">
                   <Button size="small" danger icon={<StopOutlined />} onClick={() => anular(record)} />
@@ -249,6 +272,17 @@ export const CargoList = () => {
           }}
         />
       )}
+      {corrigiendo && (
+        <CorregirMontoModal
+          cargo={corrigiendo}
+          onClose={() => setCorrigiendo(null)}
+          onSuccess={() => {
+            setCorrigiendo(null);
+            tableQuery.refetch();
+          }}
+        />
+      )}
+      {viendoHistorial && <CorreccionesModal cargo={viendoHistorial} onClose={() => setViendoHistorial(null)} />}
       {cobrando && contratoParam > 0 && <CobrarModal contratoId={contratoParam} onClose={() => setCobrando(false)} />}
       {generando && (
         <GenerarCargosModal
