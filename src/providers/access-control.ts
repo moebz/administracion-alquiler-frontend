@@ -14,6 +14,7 @@ const RESOURCE_ALIAS: Record<string, string> = {
   "proveedores-todos": "proveedores",
   "pagos-proveedor": "pagos",
   "puntos-expedicion": "puntos_expedicion",
+  "cuentas-corrientes": "cuenta_corriente",
 };
 
 // roles y las pantallas propias de la sección propietario se gatean con un
@@ -96,6 +97,7 @@ const RESOURCES_WITH_PERMISSIONS = new Set([
   "compras",
   "pagos-proveedor",
   "cobros",
+  "cuentas-corrientes",
   "establecimientos",
   "puntos-expedicion",
   "timbrados",

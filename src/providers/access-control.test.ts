@@ -22,6 +22,11 @@ describe("requiredPermission", () => {
     expect(requiredPermission("compras", "show")).toBe("compras.ver");
   });
 
+  it("resuelve cuentas-corrientes a cuenta_corriente.ver para list/show", () => {
+    expect(requiredPermission("cuentas-corrientes", "list")).toBe("cuenta_corriente.ver");
+    expect(requiredPermission("cuentas-corrientes", "show")).toBe("cuenta_corriente.ver");
+  });
+
   it("resuelve cobros a cobros.ver para list/show", () => {
     expect(requiredPermission("cobros", "list")).toBe("cobros.ver");
     expect(requiredPermission("cobros", "show")).toBe("cobros.ver");

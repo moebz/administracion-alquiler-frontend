@@ -1,5 +1,5 @@
 import { Show } from "@refinedev/antd";
-import { useGo, useShow } from "@refinedev/core";
+import { useGo, usePermissions, useShow } from "@refinedev/core";
 import { UserOutlined } from "@ant-design/icons";
 import { Button, Card, Descriptions, Space, Tag } from "antd";
 import { PageTitle } from "../../components/page-title";
@@ -11,6 +11,8 @@ export const PersonaShow = () => {
   const { query, result: persona } = useShow<PersonaRow>();
 
   const go = useGo();
+  const { data: permissions } = usePermissions<string[]>({});
+  const puedeVerCuentaCorriente = permissions?.includes("cuenta_corriente.ver") ?? false;
   const verContratos = (field: "inquilino_id" | "propietario_id") =>
     go({
       to: { resource: "contratos-alquiler", action: "list" },
@@ -34,6 +36,15 @@ export const PersonaShow = () => {
               <Button size="small" onClick={() => verContratos("propietario_id")}>
                 Ver contratos como propietario
               </Button>
+              {/* La cuenta corriente solo existe para quien es propietario. */}
+              {persona?.roles.includes("propietario") && puedeVerCuentaCorriente && (
+                <Button
+                  size="small"
+                  onClick={() => go({ to: { resource: "cuentas-corrientes", action: "show", id: persona.id } })}
+                >
+                  Ver cuenta corriente
+                </Button>
+              )}
             </Space>
           }
         >

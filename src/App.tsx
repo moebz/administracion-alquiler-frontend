@@ -1,5 +1,6 @@
 import {
   AccountBookOutlined,
+  ContainerOutlined,
   UserOutlined,
   SafetyCertificateOutlined,
   ApartmentOutlined,
@@ -86,6 +87,7 @@ import { GastoList, GastoCreate, GastoEdit, GastoShow } from "./pages/gastos";
 import { CompraShow } from "./pages/compras";
 import { PagoProveedorList, PagoProveedorShow } from "./pages/pagos-proveedor";
 import { CobroList, CobroShow } from "./pages/cobros";
+import { CuentaCorrienteList, CuentaCorrienteShow } from "./pages/cuentas-corrientes";
 import { FacturaVentaShow } from "./pages/facturas-venta";
 import { BancoList, BancoCreate, BancoEdit } from "./pages/bancos";
 import { FondoList, FondoCreate, FondoEdit } from "./pages/fondos";
@@ -304,6 +306,17 @@ function App() {
                   meta: {
                     label: "Cobros",
                     icon: <AccountBookOutlined />,
+                    parent: "edificios",
+                  },
+                },
+                {
+                  // Solo lectura: las líneas las escribe el sistema cuando nace o cambia un cargo.
+                  name: "cuentas-corrientes",
+                  list: "/administrador/cuentas-corrientes",
+                  show: "/administrador/cuentas-corrientes/show/:id",
+                  meta: {
+                    label: "Cuentas corrientes",
+                    icon: <ContainerOutlined />,
                     parent: "edificios",
                   },
                 },
@@ -625,6 +638,10 @@ function App() {
                     <Route path="cobros">
                       <Route index element={<CobroList />} />
                       <Route path="show/:id" element={<CobroShow />} />
+                    </Route>
+                    <Route path="cuentas-corrientes">
+                      <Route index element={<CuentaCorrienteList />} />
+                      <Route path="show/:id" element={<CuentaCorrienteShow />} />
                     </Route>
                     <Route path="facturas-venta">
                       <Route path="show/:id" element={<FacturaVentaShow />} />
