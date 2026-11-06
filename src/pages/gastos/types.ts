@@ -186,6 +186,16 @@ export type AnticipoProveedor = {
   aviso: boolean;
 };
 
+// NC registrada del proveedor con saldo a favor, que se ofrece al registrar un pago. `gasto` es el que corrige.
+export type SaldoAFavorProveedor = {
+  id: number;
+  numero: string;
+  fecha: string;
+  total: number | string;
+  saldo_a_favor: number | string;
+  gasto: { id: number; descripcion: string; unidad: string } | null;
+};
+
 export type GastoRow = {
   id: number;
   unidad_id: number;
@@ -227,6 +237,8 @@ export type GastoRow = {
   rehacer_cargos: { habilitado: boolean; cargos: number; lineas: number } | null;
   // Solo mientras el gasto está aprobado y sin factura; [] en el resto.
   anticipos_proveedor: AnticipoProveedor[];
+  // Solo en el detalle: NC del proveedor con saldo a favor, de cualquier gasto.
+  saldos_a_favor_proveedor: SaldoAFavorProveedor[];
   documento_compra: {
     id: number;
     numero: string;

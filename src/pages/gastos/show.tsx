@@ -41,10 +41,11 @@ import { ReapuntarCargoModal } from "../cargos/reapuntar-cargo-modal";
 import { extractErrorMessage } from "../../providers/auth";
 import { kyInstance } from "../../providers/data";
 import { CARGO_DEUDOR_AL, CARGO_ESTADO_COLOR, CARGO_ESTADO_LABEL, CARGO_TIPO_LABEL, type CargoDeudor } from "../cargos/types";
+import { AnularAplicacionNcModal } from "../compras/anular-aplicacion-nc-modal";
 import { AnularNcModal } from "../compras/anular-nc-modal";
 import { CompraDetail } from "../compras/compra-detail";
 import { RegistrarNcModal } from "../compras/registrar-nc-modal";
-import type { CompraNotaRow, CompraRow } from "../compras/types";
+import type { CompraNotaAplicacionRow, CompraNotaRow, CompraRow } from "../compras/types";
 import { formatMonto } from "../../utils/monto";
 import { AnularGastoModal } from "./anular-gasto-modal";
 import { EditarMontoModal } from "./editar-monto-modal";
@@ -98,6 +99,7 @@ export const GastoShow = () => {
   const [montoAbierto, setMontoAbierto] = useState(false);
   const [ncAbierta, setNcAbierta] = useState(false);
   const [anulandoNota, setAnulandoNota] = useState<CompraNotaRow | null>(null);
+  const [anulandoAplicacion, setAnulandoAplicacion] = useState<{ aplicacion: CompraNotaAplicacionRow; nota: CompraNotaRow } | null>(null);
   const [reapuntando, setReapuntando] = useState<CargoGasto | null>(null);
 
   const { query: compraQuery, result: compra } = useOne<CompraRow>({
@@ -356,8 +358,9 @@ export const GastoShow = () => {
             onEditar={puedeEditarFactura ? () => setEdicionAbierta(true) : undefined}
             onRegistrarNc={puedeRegistrarFactura && gasto.estado === "APROBADO" ? () => setNcAbierta(true) : undefined}
             onAnularNota={puedeAnularCompra ? setAnulandoNota : undefined}
+            onAnularAplicacion={puedeAnularPagos ? (aplicacion, nota) => setAnulandoAplicacion({ aplicacion, nota }) : undefined}
             accionesCuotas={
-              compra && compra.estado === "REGISTRADO" && Number(compra.saldo) > 0 && puedeRegistrarPago ? (
+              compra && compra.estado === "REGISTRADO" && Number(compra.saldo_al_proveedor ?? compra.saldo) > 0 && puedeRegistrarPago ? (
                 <Button type="primary" icon={<DollarOutlined />} onClick={() => setPagoAbierto(true)}>
                   Registrar pago
                 </Button>
@@ -519,6 +522,17 @@ export const GastoShow = () => {
           onClose={() => setAnulandoNota(null)}
           onSuccess={() => {
             setAnulandoNota(null);
+            refetchTodo();
+          }}
+        />
+      )}
+      {anulandoAplicacion && (
+        <AnularAplicacionNcModal
+          aplicacionId={anulandoAplicacion.aplicacion.id}
+          descripcion={`Se aplicaron ${formatMonto(anulandoAplicacion.aplicacion.monto_aplicado)} de la NC ${anulandoAplicacion.nota.numero} a la cuota ${anulandoAplicacion.aplicacion.numero_cuota} de la factura ${anulandoAplicacion.aplicacion.documento_compra_numero}: queda abierta por ese monto`}
+          onClose={() => setAnulandoAplicacion(null)}
+          onSuccess={() => {
+            setAnulandoAplicacion(null);
             refetchTodo();
           }}
         />

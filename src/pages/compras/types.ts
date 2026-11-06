@@ -87,6 +87,8 @@ export type CompraNotaRow = {
   // Solo en una NC: total − aplicaciones activas.
   saldo_a_favor: number | string | null;
   detalles: Pick<CompraDetalleRow, "id" | "descripcion" | "tasa_iva" | "subtotal" | "detalle_ref_id">[];
+  // Cuotas de la nota: una ND tiene una, una NC ninguna. Se pagan junto con las de la factura.
+  cuotas: Pick<CompraCuotaRow, "id" | "numero_cuota" | "fecha_vencimiento" | "monto" | "saldo">[];
   aplicaciones: CompraNotaAplicacionRow[];
 };
 

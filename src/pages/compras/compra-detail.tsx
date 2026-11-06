@@ -40,6 +40,7 @@ import {
   COMPRA_ESTADO_LABEL,
   type CompraCuotaRow,
   type CompraDetalleRow,
+  type CompraNotaAplicacionRow,
   type CompraNotaRow,
   type CompraRow,
 } from "./types";
@@ -55,6 +56,7 @@ export const CompraDetail = ({
   onEditar,
   onRegistrarNc,
   onAnularNota,
+  onAnularAplicacion,
   accionesCuotas,
   avisoAnulacion,
 }: {
@@ -66,6 +68,8 @@ export const CompraDetail = ({
   onRegistrarNc?: () => void;
   // Abre la anulación de una NC; sin esta prop no se ofrece.
   onAnularNota?: (nota: CompraNotaRow) => void;
+  // Abre la anulación de una aplicación de NC sin pago; sin esta prop no se ofrece (las que tienen pago se anulan desde el pago).
+  onAnularAplicacion?: (aplicacion: CompraNotaAplicacionRow, nota: CompraNotaRow) => void;
   accionesCuotas?: ReactNode;
   // Aviso que se muestra en el modal antes de anular (ej. qué pasa con el cargo del gasto).
   avisoAnulacion?: ReactNode;
@@ -232,7 +236,70 @@ export const CompraDetail = ({
 
       {notas.length > 0 && (
         <Card variant="borderless" style={cardStyle} title={cardTitle(<DiffOutlined />, "Notas del proveedor")}>
-          <Table<CompraNotaRow> dataSource={notas} rowKey="id" pagination={false} size="middle">
+          <Table<CompraNotaRow>
+            dataSource={notas}
+            rowKey="id"
+            pagination={false}
+            size="middle"
+            expandable={{
+              rowExpandable: (nota) => nota.aplicaciones.length > 0,
+              expandedRowRender: (nota) => (
+                <Table<CompraNotaAplicacionRow> dataSource={nota.aplicaciones} rowKey="id" pagination={false} size="small">
+                  <Table.Column
+                    title="Aplicada a"
+                    key="destino"
+                    render={(_, aplicacion: CompraNotaAplicacionRow) =>
+                      `Factura ${aplicacion.documento_compra_numero}, cuota ${aplicacion.numero_cuota}`
+                    }
+                  />
+                  <Table.Column
+                    title="Monto"
+                    dataIndex="monto_aplicado"
+                    align="right"
+                    render={(monto: CompraNotaAplicacionRow["monto_aplicado"]) => formatMonto(monto)}
+                  />
+                  <Table.Column
+                    title="Pago"
+                    key="pago"
+                    render={(_, aplicacion: CompraNotaAplicacionRow) =>
+                      aplicacion.pago_proveedor_id !== null ? (
+                        <Link to={`/administrador/pagos-proveedor/show/${aplicacion.pago_proveedor_id}`}>
+                          Pago {aplicacion.pago_proveedor_numero}
+                        </Link>
+                      ) : (
+                        "Sin pago"
+                      )
+                    }
+                  />
+                  <Table.Column
+                    title="Estado"
+                    key="estado"
+                    render={(_, aplicacion: CompraNotaAplicacionRow) =>
+                      aplicacion.estado === "ACTIVA" ? (
+                        <Space size={4} wrap>
+                          <Tag color="green">Activa</Tag>
+                          {onAnularAplicacion && aplicacion.pago_proveedor_id === null && (
+                            <Tooltip title="Anular aplicación">
+                              <Button
+                                danger
+                                size="small"
+                                icon={<StopOutlined />}
+                                onClick={() => onAnularAplicacion(aplicacion, nota)}
+                              />
+                            </Tooltip>
+                          )}
+                        </Space>
+                      ) : (
+                        <Tooltip title={aplicacion.motivo_anulacion}>
+                          <Tag color="default">Anulada</Tag>
+                        </Tooltip>
+                      )
+                    }
+                  />
+                </Table>
+              ),
+            }}
+          >
             <Table.Column
               title="Nota"
               key="nota"

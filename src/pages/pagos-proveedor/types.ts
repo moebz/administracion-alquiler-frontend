@@ -39,6 +39,21 @@ export type PagoProveedorAplicacionRow = {
   gasto: { id: number; descripcion: string; unidad: string } | null;
 };
 
+// Saldo a favor de una NC del proveedor usado en el pago, sin salida de caja.
+export type PagoProveedorNotaCreditoRow = {
+  id: number;
+  documento_compra_id: number;
+  nota_numero: string;
+  cuota_id: number;
+  factura_id: number;
+  factura_numero: string;
+  numero_cuota: number;
+  monto_aplicado: number | string;
+  estado: "ACTIVA" | "ANULADA";
+  fecha_anulacion: string | null;
+  motivo_anulacion: string | null;
+};
+
 export type PagoProveedorRow = {
   id: number;
   numero: number;
@@ -52,4 +67,5 @@ export type PagoProveedorRow = {
   motivo_anulacion: string | null;
   valores: PagoProveedorValorRow[];
   aplicaciones: PagoProveedorAplicacionRow[];
+  notas_credito: PagoProveedorNotaCreditoRow[];
 };

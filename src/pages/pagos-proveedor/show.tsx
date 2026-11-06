@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FileTextOutlined, LinkOutlined, StopOutlined, WalletOutlined } from "@ant-design/icons";
+import { BankOutlined, FileTextOutlined, LinkOutlined, StopOutlined, WalletOutlined } from "@ant-design/icons";
 import { Show } from "@refinedev/antd";
 import { useShow, usePermissions } from "@refinedev/core";
 import { App, Button, Descriptions, Flex, Form, Input, Modal, Space, Table, Tag, Tooltip, Typography } from "antd";
@@ -9,10 +9,12 @@ import { SectionDivider } from "../../components/section-divider";
 import { extractErrorMessage } from "../../providers/auth";
 import { kyInstance } from "../../providers/data";
 import { formatMonto } from "../../utils/monto";
+import { AnularAplicacionNcModal } from "../compras/anular-aplicacion-nc-modal";
 import {
   PAGO_PROVEEDOR_ESTADO_COLOR,
   PAGO_PROVEEDOR_ESTADO_LABEL,
   type PagoProveedorAplicacionRow,
+  type PagoProveedorNotaCreditoRow,
   type PagoProveedorRow,
   type PagoProveedorValorRow,
 } from "./types";
@@ -28,6 +30,7 @@ export const PagoProveedorShow = () => {
   const [modalAbierto, setModalAbierto] = useState(false);
   const [valorAAnular, setValorAAnular] = useState<PagoProveedorValorRow | null>(null);
   const [guardando, setGuardando] = useState(false);
+  const [aplicacionNcAAnular, setAplicacionNcAAnular] = useState<PagoProveedorNotaCreditoRow | null>(null);
   const [form] = Form.useForm<{ motivo_anulacion: string }>();
 
   const pagoActivo = pago?.estado === "ACTIVO";
@@ -179,6 +182,61 @@ export const PagoProveedorShow = () => {
           )}
         />
       </Table>
+
+      {pago && pago.notas_credito.length > 0 && (
+        <>
+          <SectionDivider icon={<BankOutlined />}>Notas de crédito usadas</SectionDivider>
+          <Table dataSource={pago.notas_credito} rowKey="id" pagination={false} size="small">
+            <Table.Column title="Nota de crédito" dataIndex="nota_numero" />
+            <Table.Column
+              title="Factura"
+              dataIndex="factura_numero"
+              render={(numero: string, record: PagoProveedorNotaCreditoRow) => (
+                <Link to={`/administrador/compras/show/${record.factura_id}`}>{numero}</Link>
+              )}
+            />
+            <Table.Column title="N° cuota" dataIndex="numero_cuota" />
+            <Table.Column
+              title="Monto aplicado"
+              dataIndex="monto_aplicado"
+              align="right"
+              render={(monto: PagoProveedorNotaCreditoRow["monto_aplicado"]) => formatMonto(monto)}
+            />
+            <Table.Column
+              title="Estado"
+              dataIndex="estado"
+              render={(estadoAplicacion: PagoProveedorNotaCreditoRow["estado"], record: PagoProveedorNotaCreditoRow) =>
+                estadoAplicacion === "ACTIVA" ? (
+                  <Space size={4} wrap>
+                    <Tag color="green">Activa</Tag>
+                    {puedeAnular && pagoActivo && (
+                      <Tooltip title="Anular aplicación">
+                        <Button size="small" danger icon={<StopOutlined />} onClick={() => setAplicacionNcAAnular(record)} />
+                      </Tooltip>
+                    )}
+                  </Space>
+                ) : (
+                  <Tooltip title={record.motivo_anulacion}>
+                    <Tag color="default">Anulada</Tag>
+                  </Tooltip>
+                )
+              }
+            />
+          </Table>
+        </>
+      )}
+
+      {aplicacionNcAAnular && (
+        <AnularAplicacionNcModal
+          aplicacionId={aplicacionNcAAnular.id}
+          descripcion={`Se usaron ${formatMonto(aplicacionNcAAnular.monto_aplicado)} de la NC ${aplicacionNcAAnular.nota_numero} en este pago: la factura ${aplicacionNcAAnular.factura_numero} queda abierta por ${formatMonto(aplicacionNcAAnular.monto_aplicado)}`}
+          onClose={() => setAplicacionNcAAnular(null)}
+          onSuccess={() => {
+            setAplicacionNcAAnular(null);
+            query.refetch();
+          }}
+        />
+      )}
 
       <Modal
         title={valorAAnular ? "Anular medio de pago" : "Anular pago"}
