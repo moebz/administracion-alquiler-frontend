@@ -22,6 +22,8 @@ export type CuentaCorrienteMovimiento = {
   saldo: string;
   /** Liquidación que selló las líneas de la fila; null si todavía no se liquidaron. */
   liquidacion_id: number | null;
+  /** Pago al propietario que originó la fila; null si no es una transferencia. */
+  pago_proveedor_id: number | null;
   lineas: CuentaCorrienteLinea[];
 };
 
@@ -74,4 +76,16 @@ export type LiquidacionVistaPrevia = {
   total: string;
   saldo_final: string;
   movimientos: CuentaCorrienteMovimiento[];
+};
+
+export type TransferenciaVistaPrevia = {
+  propietario: { id: number; nombre: string; documento: string };
+  /** YYYY-MM-DD */
+  fecha: string;
+  /** Lo liquidado que todavía no se transfirió. */
+  sugerido: string;
+  /** Saldo del propietario a `fecha`: lo máximo que se le puede transferir. */
+  tope: string;
+  /** Cuentas bancarias activas del propietario. */
+  cuentas: { id: number; banco: string; numero_cuenta: string }[];
 };

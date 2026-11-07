@@ -1,8 +1,7 @@
 import { useState } from "react";
-import { useSelect } from "@refinedev/antd";
 import { useList, useOne, usePermissions } from "@refinedev/core";
-import { App, Button, Col, DatePicker, Descriptions, Flex, Form, Input, Modal, Row, Select, Space, Table, Typography } from "antd";
-import { BankOutlined, CalendarOutlined, DeleteOutlined, FileTextOutlined, PlusOutlined, WalletOutlined } from "@ant-design/icons";
+import { App, Button, Col, DatePicker, Descriptions, Flex, Form, Input, Modal, Row, Space, Table, Typography } from "antd";
+import { BankOutlined, CalendarOutlined, FileTextOutlined, WalletOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { extractErrorMessage } from "../../providers/auth";
 import { kyInstance } from "../../providers/data";
@@ -11,19 +10,12 @@ import { SectionDivider } from "../../components/section-divider";
 import { SectionRow } from "../../components/section-row";
 import { formatMonto } from "../../utils/monto";
 import type { CompraRow } from "../compras/types";
-import type { MedioPagoRow } from "../medios-pago/types";
 import type { PersonaCuentaBancariaRow } from "../personas/types";
+import { ValoresFormList, type ValorFormulario } from "../pagos-proveedor/valores-form-list";
 import type { GastoRow } from "./types";
 
-type Valor = {
-  medio_pago_id: number;
-  fondo_id: number;
-  monto: number;
-  persona_cuenta_id?: number;
-  nro_comprobante?: string;
-};
 // `notas` guarda, por id de NC, cuánto de su saldo a favor se usa en este pago.
-type Valores = { fecha: string; concepto?: string; valores: Valor[]; notas?: Record<string, number | null | undefined> };
+type Valores = { fecha: string; concepto?: string; valores: ValorFormulario[]; notas?: Record<string, number | null | undefined> };
 
 export const RegistrarPagoModal = ({
   gasto,
@@ -66,31 +58,13 @@ export const RegistrarPagoModal = ({
   // Pone en el primer medio de pago lo que falta después de usar el saldo a favor.
   const setMontoPrimerMedio = (montoAPagar: number) => {
     const monto = Math.max(0, montoAPagar - sumaNotas);
-    const actuales = (form.getFieldValue("valores") as Valor[] | undefined) ?? [];
+    const actuales = (form.getFieldValue("valores") as ValorFormulario[] | undefined) ?? [];
     if (actuales.length === 0) {
       form.setFieldValue("valores", [{ monto }]);
       return;
     }
     form.setFieldValue("valores", actuales.map((valor, index) => (index === 0 ? { ...valor, monto } : valor)));
   };
-
-  const { selectProps: medioPagoSelectProps, query: medioPagoQuery } = useSelect<MedioPagoRow>({
-    resource: "medios-pago",
-    optionLabel: "nombre",
-    optionValue: "id",
-    filters: [{ field: "is_active", operator: "eq", value: true }],
-  });
-  // Sin cheques todavía (ver ARQUITECTURA.md, "Compras y pagos a proveedores").
-  const mediosPagoOptions = (medioPagoQuery.data?.data ?? [])
-    .filter((medio) => !medio.codigo.startsWith("CHEQUE"))
-    .map((medio) => ({ label: medio.nombre, value: medio.id }));
-
-  const { selectProps: fondoSelectProps } = useSelect({
-    resource: "fondos",
-    optionLabel: "nombre",
-    optionValue: "id",
-    filters: [{ field: "is_active", operator: "eq", value: true }],
-  });
 
   const { result: cuentas } = useList<PersonaCuentaBancariaRow>({
     resource: `personas/${gasto.proveedor_id}/cuentas-bancarias`,
@@ -102,7 +76,7 @@ export const RegistrarPagoModal = ({
     value: cuenta.id,
   }));
 
-  const valores = Form.useWatch("valores", form) as Valor[] | undefined;
+  const valores = Form.useWatch("valores", form) as ValorFormulario[] | undefined;
   const sumaValores = (valores ?? []).reduce((acum, valor) => acum + (Number(valor?.monto) || 0), 0);
   // Lo que se paga en total: el saldo a favor más la plata (que se ignora si el saldo a favor ya cubre todo).
   const totalAPagar = (creditoCubreTodo ? 0 : sumaValores) + sumaNotas;
@@ -243,74 +217,7 @@ export const RegistrarPagoModal = ({
         {!creditoCubreTodo && (
           <>
             <SectionDivider icon={<WalletOutlined />}>Medios de pago</SectionDivider>
-            <Form.List name="valores" initialValue={[{}]}>
-              {(fields, { add, remove }) => (
-                <Space direction="vertical" size={12} style={{ width: "100%" }}>
-                  {fields.map((field) => {
-                    const medioId = form.getFieldValue(["valores", field.name, "medio_pago_id"]);
-                    const medio = (medioPagoQuery.data?.data ?? []).find((m) => m.id === medioId);
-
-                    return (
-                      <Row key={field.key} gutter={[8, 8]} align="middle">
-                        <Col xs={24} md={6}>
-                          <Form.Item
-                            {...field}
-                            name={[field.name, "medio_pago_id"]}
-                            rules={[{ required: true, message: "Medio" }]}
-                            noStyle
-                          >
-                            <Select {...medioPagoSelectProps} options={mediosPagoOptions} placeholder="Medio" style={{ width: "100%" }} />
-                          </Form.Item>
-                        </Col>
-                        <Col xs={24} md={6}>
-                          <Form.Item
-                            {...field}
-                            name={[field.name, "fondo_id"]}
-                            rules={[{ required: true, message: "Fondo" }]}
-                            noStyle
-                          >
-                            <Select {...fondoSelectProps} placeholder="Fondo" style={{ width: "100%" }} />
-                          </Form.Item>
-                        </Col>
-                        <Col xs={24} md={6}>
-                          <Form.Item {...field} name={[field.name, "monto"]} rules={[{ required: true, message: "Monto" }]} noStyle>
-                            <MontoInput style={{ width: "100%" }} />
-                          </Form.Item>
-                        </Col>
-                        <Col xs={20} md={5}>
-                          <Form.Item
-                            {...field}
-                            name={[field.name, "nro_comprobante"]}
-                            rules={medio?.requiere_datos_bancarios ? [{ required: true, message: "Comprobante" }] : []}
-                            noStyle
-                          >
-                            <Input placeholder="N° comprobante" style={{ width: "100%" }} />
-                          </Form.Item>
-                        </Col>
-                        <Col xs={4} md={1}>
-                          <Button icon={<DeleteOutlined />} onClick={() => remove(field.name)} />
-                        </Col>
-                        {medio?.requiere_datos_bancarios && (
-                          <Col xs={24} md={12}>
-                            <Form.Item {...field} name={[field.name, "persona_cuenta_id"]} noStyle>
-                              <Select
-                                options={cuentaOptions}
-                                placeholder="Cuenta del proveedor (opcional)"
-                                allowClear
-                                style={{ width: "100%" }}
-                              />
-                            </Form.Item>
-                          </Col>
-                        )}
-                      </Row>
-                    );
-                  })}
-                  <Button type="dashed" icon={<PlusOutlined />} onClick={() => add()}>
-                    Agregar medio de pago
-                  </Button>
-                </Space>
-              )}
-            </Form.List>
+            <ValoresFormList form={form} cuentaOptions={cuentaOptions} cuentaPlaceholder="Cuenta del proveedor (opcional)" />
           </>
         )}
 

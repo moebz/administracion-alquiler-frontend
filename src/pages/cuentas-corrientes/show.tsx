@@ -10,6 +10,7 @@ import { kyInstance } from "../../providers/data";
 import { HistorialLiquidaciones } from "./historial-liquidaciones";
 import { LiquidarModal } from "./liquidar-modal";
 import { MontoCell, MovimientosTable } from "./movimientos-table";
+import { TransferirModal } from "./transferir-modal";
 import type { CuentaCorrienteDetalle } from "./types";
 
 const FORMATO_FECHA = "DD/MM/YYYY";
@@ -21,12 +22,15 @@ export const CuentaCorrienteShow = () => {
   const puedeVerLiquidaciones = permissions?.includes("liquidaciones.ver") ?? false;
   const puedeLiquidar = permissions?.includes("liquidaciones.confirmar") ?? false;
   const puedeAnular = permissions?.includes("liquidaciones.anular") ?? false;
+  // Transferir saca plata de caja: pide el permiso propio y también el de registrar pagos (ver el backend).
+  const puedeTransferir = (permissions?.includes("liquidaciones.transferir") && permissions?.includes("pagos.registrar")) ?? false;
 
   const [saldoAl, setSaldoAl] = useState<Dayjs>(() => dayjs());
   const [detalle, setDetalle] = useState<CuentaCorrienteDetalle>();
   const [cargando, setCargando] = useState(true);
   const [liquidando, setLiquidando] = useState(false);
-  // Se incrementa al confirmar o anular una liquidación, para recargar el detalle y el historial.
+  const [transfiriendo, setTransfiriendo] = useState(false);
+  // Se incrementa al confirmar o anular una liquidación o al transferir, para recargar el detalle y el historial.
   const [version, setVersion] = useState(0);
 
   const fechaIso = saldoAl.format("YYYY-MM-DD");
@@ -78,6 +82,7 @@ export const CuentaCorrienteShow = () => {
               </span>
             </Tooltip>
           )}
+          {puedeTransferir && <Button onClick={() => setTransfiriendo(true)}>Transferir</Button>}
         </Space>
       )}
     >
@@ -126,6 +131,17 @@ export const CuentaCorrienteShow = () => {
           onClose={() => setLiquidando(false)}
           onConfirmada={() => {
             setLiquidando(false);
+            recargar();
+          }}
+        />
+      )}
+
+      {transfiriendo && detalle && (
+        <TransferirModal
+          propietarioId={detalle.propietario.id}
+          onClose={() => setTransfiriendo(false)}
+          onTransferida={() => {
+            setTransfiriendo(false);
             recargar();
           }}
         />
