@@ -2,16 +2,20 @@ import { useCallback, useEffect, useState } from "react";
 import { ContainerOutlined } from "@ant-design/icons";
 import { Show } from "@refinedev/antd";
 import { usePermissions, useResourceParams } from "@refinedev/core";
-import { App, Button, DatePicker, Descriptions, Space, Tooltip } from "antd";
+import { Alert, App, Button, DatePicker, Descriptions, Flex, Space, Tooltip } from "antd";
 import dayjs, { type Dayjs } from "dayjs";
 import { FilterBar } from "../../components/filter-bar";
 import { PageTitle } from "../../components/page-title";
 import { kyInstance } from "../../providers/data";
+import { fraseDeFactura, fraseDeNota, hayPorDocumentar } from "./documentos-propietario";
 import { FacturarModal } from "./facturar-modal";
+import { FacturasDelPropietario } from "./facturas-del-propietario";
 import { FacturasPropietario } from "./facturas-propietario";
 import { HistorialLiquidaciones } from "./historial-liquidaciones";
 import { LiquidarModal } from "./liquidar-modal";
 import { MontoCell, MovimientosTable } from "./movimientos-table";
+import { RegistrarFacturaPropietarioModal } from "./registrar-factura-propietario-modal";
+import { RegistrarNcPropietarioModal } from "./registrar-nc-propietario-modal";
 import { TransferirModal } from "./transferir-modal";
 import type { CuentaCorrienteDetalle } from "./types";
 
@@ -28,6 +32,8 @@ export const CuentaCorrienteShow = () => {
   const puedeTransferir = (permissions?.includes("liquidaciones.transferir") && permissions?.includes("pagos.registrar")) ?? false;
   // Facturar emite una factura (consume numeración): pide el permiso propio y también el de emitir facturas.
   const puedeFacturar = (permissions?.includes("liquidaciones.facturar") && permissions?.includes("facturas.emitir")) ?? false;
+  // Registrar la factura o la NC del propietario carga el papel de otro como compra: pide el permiso propio y el de registrar compras.
+  const puedeRegistrarDocumentos = (permissions?.includes("liquidaciones.registrar_documentos") && permissions?.includes("compras.registrar")) ?? false;
 
   const [saldoAl, setSaldoAl] = useState<Dayjs>(() => dayjs());
   const [detalle, setDetalle] = useState<CuentaCorrienteDetalle>();
@@ -35,7 +41,10 @@ export const CuentaCorrienteShow = () => {
   const [liquidando, setLiquidando] = useState(false);
   const [transfiriendo, setTransfiriendo] = useState(false);
   const [facturando, setFacturando] = useState(false);
-  // Se incrementa al confirmar o anular una liquidación, al transferir o al facturar, para recargar el detalle, el historial y las facturas.
+  const [registrandoFactura, setRegistrandoFactura] = useState(false);
+  // Factura del propietario sobre la que se registra una NC desde "Por documentar".
+  const [facturaConNc, setFacturaConNc] = useState<number>();
+  // Se incrementa al confirmar o anular una liquidación, al transferir, al facturar o al registrar o anular un documento del propietario, para recargar el detalle, el historial y las facturas.
   const [version, setVersion] = useState(0);
 
   const fechaIso = saldoAl.format("YYYY-MM-DD");
@@ -67,6 +76,7 @@ export const CuentaCorrienteShow = () => {
 
   const recargar = useCallback(() => setVersion((actual) => actual + 1), []);
 
+  const porDocumentar = detalle?.por_documentar;
   const hayPorVencer = detalle !== undefined && Number(detalle.por_vencer) !== 0;
   const liquidable = detalle?.liquidar.disponible ?? false;
 
@@ -89,6 +99,7 @@ export const CuentaCorrienteShow = () => {
           )}
           {puedeTransferir && <Button onClick={() => setTransfiriendo(true)}>Transferir</Button>}
           {puedeFacturar && <Button onClick={() => setFacturando(true)}>Facturar</Button>}
+          {puedeRegistrarDocumentos && <Button onClick={() => setRegistrandoFactura(true)}>Registrar factura del propietario</Button>}
         </Space>
       )}
     >
@@ -117,6 +128,33 @@ export const CuentaCorrienteShow = () => {
         )}
       </Descriptions>
 
+      {/* Lo que le falta documentar al propietario con el corte de "Saldo al": solo si falta algo. */}
+      {hayPorDocumentar(porDocumentar) && (
+        <Alert
+          type="warning"
+          showIcon
+          style={{ marginBottom: 16 }}
+          message="Por documentar"
+          description={
+            <>
+              {porDocumentar.notas.map((nota) => (
+                <Flex key={`nota-${nota.factura_id}`} align="center" gap={8}>
+                  <span>{fraseDeNota(nota)}</span>
+                  {puedeRegistrarDocumentos && (
+                    <Button size="small" onClick={() => setFacturaConNc(nota.factura_id)}>
+                      Registrar NC
+                    </Button>
+                  )}
+                </Flex>
+              ))}
+              {porDocumentar.facturas.map((factura) => (
+                <div key={`factura-${factura.cargo_id}`}>{fraseDeFactura(factura)}</div>
+              ))}
+            </>
+          }
+        />
+      )}
+
       <MovimientosTable movimientos={detalle?.movimientos} loading={cargando} mostrarLiquidacion />
 
       {puedeVerLiquidaciones && id && (
@@ -133,6 +171,12 @@ export const CuentaCorrienteShow = () => {
       {puedeVerLiquidaciones && id && (
         <div style={{ marginTop: 24 }}>
           <FacturasPropietario propietarioId={Number(id)} version={version} />
+        </div>
+      )}
+
+      {puedeVerLiquidaciones && id && (
+        <div style={{ marginTop: 24 }}>
+          <FacturasDelPropietario propietarioId={Number(id)} version={version} onCambio={recargar} />
         </div>
       )}
 
@@ -154,6 +198,29 @@ export const CuentaCorrienteShow = () => {
           onClose={() => setTransfiriendo(false)}
           onTransferida={() => {
             setTransfiriendo(false);
+            recargar();
+          }}
+        />
+      )}
+
+      {registrandoFactura && detalle && (
+        <RegistrarFacturaPropietarioModal
+          propietarioId={detalle.propietario.id}
+          onClose={() => setRegistrandoFactura(false)}
+          onRegistrada={() => {
+            setRegistrandoFactura(false);
+            recargar();
+          }}
+        />
+      )}
+
+      {facturaConNc !== undefined && detalle && (
+        <RegistrarNcPropietarioModal
+          propietarioId={detalle.propietario.id}
+          facturaId={facturaConNc}
+          onClose={() => setFacturaConNc(undefined)}
+          onRegistrada={() => {
+            setFacturaConNc(undefined);
             recargar();
           }}
         />

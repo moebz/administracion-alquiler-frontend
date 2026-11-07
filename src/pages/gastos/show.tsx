@@ -509,8 +509,24 @@ export const GastoShow = () => {
       )}
       {ncAbierta && gasto && compra && (
         <RegistrarNcModal
-          gasto={gasto}
-          compra={compra}
+          titulo="Registrar NC del proveedor"
+          url={`gastos/${gasto.id}/notas-credito`}
+          cabecera={[
+            { label: "Gasto", valor: gasto.descripcion },
+            { label: "Proveedor", valor: gasto.proveedor.nombre },
+            { label: "Factura", valor: compra.numero },
+            { label: "Saldo de la factura", valor: formatMonto(compra.saldo) },
+          ]}
+          fechaFactura={compra.fecha}
+          saldoFactura={compra.saldo}
+          lineas={compra.detalles.map((detalle) => ({
+            id: detalle.id,
+            descripcion: detalle.descripcion,
+            tasa_iva: detalle.tasa_iva,
+            tope: detalle.tope_nc ?? 0,
+          }))}
+          contraparte="proveedor"
+          ayuda="El gasto baja al neto de la factura. Los cargos no cambian solos: si ya se cobraron, corregí su monto aparte."
           onClose={() => setNcAbierta(false)}
           onSuccess={() => {
             setNcAbierta(false);

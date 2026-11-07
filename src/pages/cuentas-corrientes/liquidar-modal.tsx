@@ -4,6 +4,7 @@ import dayjs from "dayjs";
 import { extractErrorMessage } from "../../providers/auth";
 import { kyInstance } from "../../providers/data";
 import { MontoCell, MovimientosTable } from "./movimientos-table";
+import { PorDocumentarAlert } from "./por-documentar-alert";
 import type { LiquidacionVistaPrevia } from "./types";
 
 const FORMATO_FECHA = "DD/MM/YYYY";
@@ -101,6 +102,8 @@ export const LiquidarModal = ({ propietarioId, corte, onClose, onConfirmada }: P
               <MontoCell monto={vistaPrevia.saldo_final} />
             </Descriptions.Item>
           </Descriptions>
+          {/* Avisar lo que le falta documentar al propietario con este corte; no impide liquidar. */}
+          <PorDocumentarAlert porDocumentar={vistaPrevia.por_documentar} />
           <MovimientosTable movimientos={vistaPrevia.movimientos} loading={cargando} pageSize={10} />
         </>
       )}

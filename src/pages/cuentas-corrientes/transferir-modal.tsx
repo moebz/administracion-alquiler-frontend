@@ -11,6 +11,7 @@ import { formatMonto } from "../../utils/monto";
 import { ValoresFormList, type ValorFormulario } from "../pagos-proveedor/valores-form-list";
 import { FacturarFields } from "./facturar-fields";
 import { MontoCell } from "./movimientos-table";
+import { PorDocumentarAlert } from "./por-documentar-alert";
 import type { FacturarSeleccion, TransferenciaVistaPrevia } from "./types";
 
 type Valores = { fecha: dayjs.Dayjs; concepto?: string; valores: ValorFormulario[] };
@@ -144,6 +145,9 @@ export const TransferirModal = ({ propietarioId, onClose, onTransferida }: Props
           </Descriptions.Item>
         </Descriptions>
       )}
+
+      {/* Avisar lo que le falta documentar al propietario a la fecha; no impide transferir. */}
+      <PorDocumentarAlert porDocumentar={vistaPrevia?.por_documentar} />
 
       <Form form={form} layout="vertical" onFinish={transferir} initialValues={{ fecha: dayjs() }}>
         <SectionDivider icon={<FileTextOutlined />}>Datos de la transferencia</SectionDivider>

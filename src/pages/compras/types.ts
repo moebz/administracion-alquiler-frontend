@@ -38,6 +38,8 @@ export type CompraDetalleRow = {
   detalle_ref_id: number | null;
   // Solo en las líneas de una factura: lo que todavía se puede acreditar con una NC (subtotal − NC registradas).
   tope_nc: number | string | null;
+  // Solo en la factura del propietario y en su NC: el alquiler que documenta la línea.
+  cargo_id: number | null;
 };
 
 export type CompraCuotaPagoRow = {
@@ -119,6 +121,8 @@ export type CompraRow = {
   // Solo en una NC.
   saldo_a_favor: number | string | null;
   documento_ref_id: number | null;
+  // Es la factura que emitió el propietario por sus alquileres, o una NC sobre ella.
+  es_del_propietario: boolean;
   estado: CompraEstado;
   fecha_anulacion: string | null;
   motivo_anulacion: string | null;

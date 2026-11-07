@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { FileTextOutlined, UnorderedListOutlined } from "@ant-design/icons";
 import { Alert, App, Button, Col, DatePicker, Descriptions, Form, Input, Modal, Table, Tag } from "antd";
 import dayjs from "dayjs";
@@ -8,8 +8,6 @@ import { SectionRow } from "../../components/section-row";
 import { extractErrorMessage } from "../../providers/auth";
 import { kyInstance } from "../../providers/data";
 import { formatMonto } from "../../utils/monto";
-import type { GastoRow } from "../gastos/types";
-import type { CompraDetalleRow, CompraRow } from "./types";
 
 type Valores = {
   timbrado_proveedor: string;
@@ -20,16 +18,41 @@ type Valores = {
   importes: Record<number, number>;
 };
 
-// Registra una NC del proveedor sobre la factura vigente del gasto: una línea por cada línea de la factura que el
-// proveedor corrige, hasta lo que queda en ella. Se aplica sola a las cuotas de la factura y el resto queda a favor.
+// Línea de la factura que la NC puede corregir: su tope es lo que queda de ella y `importe` precarga el campo.
+export type LineaNc = {
+  id: number;
+  descripcion: string;
+  tasa_iva: number;
+  tope: number | string;
+  importe?: number | string;
+};
+
+// Registra una NC sobre una factura de compra: una línea por cada línea de la factura que se corrige, hasta lo que queda
+// en ella. Se aplica sola a las cuotas de la factura y el resto queda a favor de quien la emitió. Sirve para la NC del
+// proveedor de un gasto y para la del propietario; cada uno pasa su URL, su cabecera, sus líneas y el texto de ayuda.
 export const RegistrarNcModal = ({
-  gasto,
-  compra,
+  titulo,
+  url,
+  cabecera,
+  fechaFactura,
+  saldoFactura,
+  lineas: lineasFactura,
+  contraparte,
+  ayuda,
   onClose,
   onSuccess,
 }: {
-  gasto: GastoRow;
-  compra: CompraRow;
+  titulo: string;
+  /** Ruta a la que se postea la NC. */
+  url: string;
+  cabecera: { label: string; valor: ReactNode }[];
+  /** YYYY-MM-DD: la NC no puede ser anterior. */
+  fechaFactura: string;
+  saldoFactura: number | string;
+  lineas: LineaNc[];
+  /** Quien emitió la factura, para el texto del saldo a favor: "proveedor" o "propietario". */
+  contraparte: string;
+  ayuda: ReactNode;
   onClose: () => void;
   onSuccess: () => void;
 }) => {
@@ -39,13 +62,13 @@ export const RegistrarNcModal = ({
 
   const importes = Form.useWatch("importes", form) as Record<number, number> | undefined;
   const totalNc = Object.values(importes ?? {}).reduce((acum, importe) => acum + (Number(importe) || 0), 0);
-  // La NC se aplica a las cuotas hasta el saldo de la factura; lo que sobra queda a favor con el proveedor.
-  const aplicado = Math.min(totalNc, Number(compra.saldo));
+  // La NC se aplica a las cuotas hasta el saldo de la factura; lo que sobra queda a favor de quien la emitió.
+  const aplicado = Math.min(totalNc, Number(saldoFactura));
   const aFavor = totalNc - aplicado;
 
   const registrar = async (values: Valores) => {
-    const lineas = compra.detalles
-      .map((detalle) => ({ detalle_ref_id: detalle.id, monto: Number(values.importes?.[detalle.id]) || 0 }))
+    const lineas = lineasFactura
+      .map((linea) => ({ detalle_ref_id: linea.id, monto: Number(values.importes?.[linea.id]) || 0 }))
       .filter((linea) => linea.monto > 0);
 
     if (lineas.length === 0) {
@@ -54,7 +77,7 @@ export const RegistrarNcModal = ({
     }
 
     setGuardando(true);
-    const response = await kyInstance.post(`gastos/${gasto.id}/notas-credito`, {
+    const response = await kyInstance.post(url, {
       json: {
         timbrado_proveedor: values.timbrado_proveedor,
         numero: values.numero,
@@ -88,7 +111,7 @@ export const RegistrarNcModal = ({
 
   return (
     <Modal
-      title="Registrar NC del proveedor"
+      title={titulo}
       open
       onCancel={onClose}
       onOk={() => form.submit()}
@@ -98,10 +121,11 @@ export const RegistrarNcModal = ({
       width={760}
     >
       <Descriptions column={2} size="small" style={{ marginBottom: 16 }}>
-        <Descriptions.Item label="Gasto">{gasto.descripcion}</Descriptions.Item>
-        <Descriptions.Item label="Proveedor">{gasto.proveedor.nombre}</Descriptions.Item>
-        <Descriptions.Item label="Factura">{compra.numero}</Descriptions.Item>
-        <Descriptions.Item label="Saldo de la factura">{formatMonto(compra.saldo)}</Descriptions.Item>
+        {cabecera.map((item) => (
+          <Descriptions.Item key={item.label} label={item.label}>
+            {item.valor}
+          </Descriptions.Item>
+        ))}
       </Descriptions>
 
       <Form form={form} layout="vertical" onFinish={registrar} initialValues={{ fecha: dayjs() }}>
@@ -128,7 +152,7 @@ export const RegistrarNcModal = ({
                 style={{ width: "100%" }}
                 format="DD/MM/YYYY"
                 // La NC no puede ser anterior a la factura que corrige.
-                disabledDate={(fecha) => fecha.isBefore(dayjs(compra.fecha), "day")}
+                disabledDate={(fecha) => fecha.isBefore(dayjs(fechaFactura), "day")}
               />
             </Form.Item>
           </Col>
@@ -140,22 +164,17 @@ export const RegistrarNcModal = ({
         </SectionRow>
 
         <SectionDivider icon={<UnorderedListOutlined />}>Líneas que corrige</SectionDivider>
-        <Table<CompraDetalleRow> dataSource={compra.detalles} rowKey="id" pagination={false} size="small">
+        <Table<LineaNc> dataSource={lineasFactura} rowKey="id" pagination={false} size="small">
           <Table.Column title="Descripción" dataIndex="descripcion" />
           <Table.Column title="IVA" dataIndex="tasa_iva" render={(tasa: number) => <Tag bordered={false}>{tasa}%</Tag>} />
-          <Table.Column
-            title="Tope"
-            dataIndex="tope_nc"
-            align="right"
-            render={(tope: CompraDetalleRow["tope_nc"]) => formatMonto(tope ?? 0)}
-          />
+          <Table.Column title="Tope" dataIndex="tope" align="right" render={(tope: LineaNc["tope"]) => formatMonto(tope)} />
           <Table.Column
             title="Importe de la NC"
             key="importe"
             width={240}
-            render={(_, detalle: CompraDetalleRow) => (
-              <Form.Item name={["importes", detalle.id]} noStyle initialValue={0}>
-                <MontoInput max={Number(detalle.tope_nc ?? 0)} addonAfter={null} />
+            render={(_, linea: LineaNc) => (
+              <Form.Item name={["importes", linea.id]} noStyle initialValue={Number(linea.importe ?? 0)}>
+                <MontoInput max={Number(linea.tope)} addonAfter={null} />
               </Form.Item>
             )}
           />
@@ -163,11 +182,11 @@ export const RegistrarNcModal = ({
             title=""
             key="todo"
             width={70}
-            render={(_, detalle: CompraDetalleRow) => (
+            render={(_, linea: LineaNc) => (
               <Button
                 size="small"
-                disabled={Number(detalle.tope_nc ?? 0) <= 0}
-                onClick={() => form.setFieldValue(["importes", detalle.id], Number(detalle.tope_nc))}
+                disabled={Number(linea.tope) <= 0}
+                onClick={() => form.setFieldValue(["importes", linea.id], Number(linea.tope))}
               >
                 Todo
               </Button>
@@ -179,8 +198,8 @@ export const RegistrarNcModal = ({
           type="info"
           showIcon
           style={{ marginTop: 16 }}
-          message={`Se aplican ${formatMonto(aplicado)} a la factura y quedan ${formatMonto(aFavor)} a favor con el proveedor.`}
-          description="El gasto baja al neto de la factura. Los cargos no cambian solos: si ya se cobraron, corregí su monto aparte."
+          message={`Se aplican ${formatMonto(aplicado)} a la factura y quedan ${formatMonto(aFavor)} a favor con el ${contraparte}.`}
+          description={ayuda}
         />
       </Form>
     </Modal>

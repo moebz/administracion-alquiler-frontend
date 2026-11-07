@@ -72,6 +72,12 @@ const RESOURCE_ACTION_SUFFIX: Record<string, Record<string, string>> = {
   timbrados: { create: ".administrar", edit: ".administrar", delete: ".administrar" },
 };
 
+// Permiso que también abre una acción de un resource, además del propio. La factura del propietario se abre desde su
+// cuenta corriente, así que `compras/show` alcanza con poder ver las liquidaciones (igual que `GET /compras/{id}`).
+const ALTERNATIVE_PERMISSION: Record<string, Record<string, string>> = {
+  compras: { show: "liquidaciones.ver" },
+};
+
 const RESOURCES_WITH_PERMISSIONS = new Set([
   "personas",
   "personas-todos",
@@ -143,7 +149,9 @@ export const canAccessResource = (permissions: string[], resource: string, actio
   }
 
   const section = RESOURCE_SECTION[resource] ?? "administrador";
-  return permissions.includes(permission) && permissions.includes(accessPermission(section));
+  const alternative = ALTERNATIVE_PERMISSION[resource]?.[action];
+  const hasPermission = permissions.includes(permission) || (alternative !== undefined && permissions.includes(alternative));
+  return hasPermission && permissions.includes(accessPermission(section));
 };
 
 export const accessControlProvider: AccessControlProvider = {

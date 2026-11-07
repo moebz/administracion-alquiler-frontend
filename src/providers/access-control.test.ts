@@ -116,6 +116,12 @@ describe("canAccessResource", () => {
     expect(canAccessResource(["acceso.administrador", "fondos.ver"], "fondos", "list")).toBe(true);
   });
 
+  it("permite abrir una compra a quien tiene liquidaciones.ver, pero no listarlas", () => {
+    expect(canAccessResource(["acceso.administrador", "liquidaciones.ver"], "compras", "show")).toBe(true);
+    expect(canAccessResource(["acceso.administrador", "liquidaciones.ver"], "compras", "list")).toBe(false);
+    expect(canAccessResource(["liquidaciones.ver"], "compras", "show")).toBe(false);
+  });
+
   it("deniega compras/pagos-proveedor/cobros a quien no tiene el permiso .ver correspondiente", () => {
     expect(canAccessResource(["acceso.administrador", "edificios.ver"], "compras", "list")).toBe(false);
     expect(canAccessResource(["acceso.administrador", "compras.ver"], "compras", "list")).toBe(true);
