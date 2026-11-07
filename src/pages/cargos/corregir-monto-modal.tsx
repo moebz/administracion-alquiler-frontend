@@ -12,7 +12,7 @@ type CargoCorregible = Pick<CargoRow, "id" | "descripcion" | "monto" | "monto_vi
 type Valores = { monto: number; motivo: string };
 
 // Corrige el monto de un cargo: el usuario escribe el monto correcto y el motivo, "Revisar" pide la vista previa de lo que
-// se va a hacer (bajar o subir el monto, NC al inquilino, ajuste nuevo) y recién "Confirmar" lo hace, con el plan que vio.
+// se va a hacer (bajar o subir el monto, NC al inquilino o al propietario, ajuste nuevo) y recién "Confirmar" lo hace, con el plan que vio.
 export const CorregirMontoModal = ({
   cargo,
   onClose,
