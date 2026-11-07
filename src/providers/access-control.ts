@@ -98,6 +98,7 @@ const RESOURCES_WITH_PERMISSIONS = new Set([
   "pagos-proveedor",
   "cobros",
   "cuentas-corrientes",
+  "liquidaciones",
   "establecimientos",
   "puntos-expedicion",
   "timbrados",

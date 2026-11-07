@@ -88,6 +88,7 @@ import { CompraShow } from "./pages/compras";
 import { PagoProveedorList, PagoProveedorShow } from "./pages/pagos-proveedor";
 import { CobroList, CobroShow } from "./pages/cobros";
 import { CuentaCorrienteList, CuentaCorrienteShow } from "./pages/cuentas-corrientes";
+import { LiquidacionShow } from "./pages/liquidaciones";
 import { FacturaVentaShow } from "./pages/facturas-venta";
 import { BancoList, BancoCreate, BancoEdit } from "./pages/bancos";
 import { FondoList, FondoCreate, FondoEdit } from "./pages/fondos";
@@ -318,6 +319,16 @@ function App() {
                     label: "Cuentas corrientes",
                     icon: <ContainerOutlined />,
                     parent: "edificios",
+                  },
+                },
+                {
+                  // Sin `list`: la liquidación no tiene entrada en el menú, se llega desde la cuenta corriente
+                  // del propietario (ver pages/cuentas-corrientes/show.tsx).
+                  name: "liquidaciones",
+                  show: "/administrador/liquidaciones/show/:id",
+                  meta: {
+                    label: "Liquidaciones",
+                    icon: <ContainerOutlined />,
                   },
                 },
                 {
@@ -642,6 +653,9 @@ function App() {
                     <Route path="cuentas-corrientes">
                       <Route index element={<CuentaCorrienteList />} />
                       <Route path="show/:id" element={<CuentaCorrienteShow />} />
+                    </Route>
+                    <Route path="liquidaciones">
+                      <Route path="show/:id" element={<LiquidacionShow />} />
                     </Route>
                     <Route path="facturas-venta">
                       <Route path="show/:id" element={<FacturaVentaShow />} />

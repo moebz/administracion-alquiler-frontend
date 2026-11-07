@@ -1,29 +1,33 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ContainerOutlined } from "@ant-design/icons";
 import { Show } from "@refinedev/antd";
-import { useResourceParams } from "@refinedev/core";
-import { App, DatePicker, Descriptions, Space, Table, Typography } from "antd";
+import { usePermissions, useResourceParams } from "@refinedev/core";
+import { App, Button, DatePicker, Descriptions, Space, Tooltip } from "antd";
 import dayjs, { type Dayjs } from "dayjs";
 import { FilterBar } from "../../components/filter-bar";
 import { PageTitle } from "../../components/page-title";
 import { kyInstance } from "../../providers/data";
-import { formatMonto } from "../../utils/monto";
-import type { CuentaCorrienteDetalle, CuentaCorrienteMovimiento } from "./types";
+import { HistorialLiquidaciones } from "./historial-liquidaciones";
+import { LiquidarModal } from "./liquidar-modal";
+import { MontoCell, MovimientosTable } from "./movimientos-table";
+import type { CuentaCorrienteDetalle } from "./types";
 
 const FORMATO_FECHA = "DD/MM/YYYY";
-
-// Un monto negativo (un descuento o un saldo a favor de la administradora) se resalta.
-const MontoCell = ({ monto }: { monto: string }) => (
-  <Typography.Text type={Number(monto) < 0 ? "danger" : undefined}>{formatMonto(monto)}</Typography.Text>
-);
 
 export const CuentaCorrienteShow = () => {
   const { id } = useResourceParams();
   const { message } = App.useApp();
+  const { data: permissions } = usePermissions<string[]>({});
+  const puedeVerLiquidaciones = permissions?.includes("liquidaciones.ver") ?? false;
+  const puedeLiquidar = permissions?.includes("liquidaciones.confirmar") ?? false;
+  const puedeAnular = permissions?.includes("liquidaciones.anular") ?? false;
 
   const [saldoAl, setSaldoAl] = useState<Dayjs>(() => dayjs());
   const [detalle, setDetalle] = useState<CuentaCorrienteDetalle>();
   const [cargando, setCargando] = useState(true);
+  const [liquidando, setLiquidando] = useState(false);
+  // Se incrementa al confirmar o anular una liquidación, para recargar el detalle y el historial.
+  const [version, setVersion] = useState(0);
 
   const fechaIso = saldoAl.format("YYYY-MM-DD");
 
@@ -50,14 +54,32 @@ export const CuentaCorrienteShow = () => {
     return () => {
       vigente = false;
     };
-  }, [id, fechaIso, message]);
+  }, [id, fechaIso, version, message]);
+
+  const recargar = useCallback(() => setVersion((actual) => actual + 1), []);
 
   const hayPorVencer = detalle !== undefined && Number(detalle.por_vencer) !== 0;
+  const liquidable = detalle?.liquidar.disponible ?? false;
 
   return (
     <Show
       isLoading={cargando}
       title={<PageTitle icon={<ContainerOutlined />}>Cuenta corriente</PageTitle>}
+      headerButtons={({ defaultButtons }) => (
+        <Space>
+          {defaultButtons}
+          {puedeLiquidar && (
+            // El botón usa como corte la fecha de "Saldo al"; si no se puede liquidar con ella, el tooltip dice por qué.
+            <Tooltip title={liquidable ? undefined : detalle?.liquidar.motivo}>
+              <span>
+                <Button type="primary" disabled={!liquidable} onClick={() => setLiquidando(true)}>
+                  Liquidar
+                </Button>
+              </span>
+            </Tooltip>
+          )}
+        </Space>
+      )}
     >
       <FilterBar>
         <Space>
@@ -84,46 +106,30 @@ export const CuentaCorrienteShow = () => {
         )}
       </Descriptions>
 
-      <Table<CuentaCorrienteMovimiento>
-        dataSource={detalle?.movimientos}
-        loading={cargando}
-        rowKey={(movimiento) => movimiento.lineas[0].id}
-        pagination={{ pageSize: 20, hideOnSinglePage: true }}
-        scroll={{ x: "max-content" }}
-        // Mostrar las líneas de un movimiento solo si se juntaron varias del mismo cargo, fecha y tipo.
-        expandable={{
-          rowExpandable: (movimiento) => movimiento.lineas.length > 1,
-          expandedRowRender: (movimiento) => (
-            <Space direction="vertical" size={0}>
-              {movimiento.lineas.map((linea) => (
-                <Typography.Text key={linea.id} type="secondary">
-                  Línea {linea.id}: {formatMonto(linea.monto)}
-                </Typography.Text>
-              ))}
-            </Space>
-          ),
-        }}
-      >
-        <Table.Column
-          title="Fecha"
-          dataIndex="fecha"
-          render={(fecha: string) => dayjs(fecha).format(FORMATO_FECHA)}
+      <MovimientosTable movimientos={detalle?.movimientos} loading={cargando} mostrarLiquidacion />
+
+      {puedeVerLiquidaciones && id && (
+        <div style={{ marginTop: 24 }}>
+          <HistorialLiquidaciones
+            propietarioId={Number(id)}
+            puedeAnular={puedeAnular}
+            version={version}
+            onAnulada={recargar}
+          />
+        </div>
+      )}
+
+      {liquidando && detalle && (
+        <LiquidarModal
+          propietarioId={detalle.propietario.id}
+          corte={detalle.saldo_al}
+          onClose={() => setLiquidando(false)}
+          onConfirmada={() => {
+            setLiquidando(false);
+            recargar();
+          }}
         />
-        <Table.Column title="Unidad" dataIndex="unidad" />
-        <Table.Column title="Concepto" dataIndex="concepto" />
-        <Table.Column
-          title="Monto"
-          dataIndex="monto"
-          align="right"
-          render={(monto: string) => <MontoCell monto={monto} />}
-        />
-        <Table.Column
-          title="Saldo"
-          dataIndex="saldo"
-          align="right"
-          render={(saldo: string) => <MontoCell monto={saldo} />}
-        />
-      </Table>
+      )}
     </Show>
   );
 };

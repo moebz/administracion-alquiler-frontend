@@ -20,6 +20,8 @@ export type CuentaCorrienteMovimiento = {
   monto: string;
   /** Saldo acumulado hasta esta fila. */
   saldo: string;
+  /** Liquidación que selló las líneas de la fila; null si todavía no se liquidaron. */
+  liquidacion_id: number | null;
   lineas: CuentaCorrienteLinea[];
 };
 
@@ -30,5 +32,46 @@ export type CuentaCorrienteDetalle = {
   saldo: string;
   /** Lo que vence después de `saldo_al`. */
   por_vencer: string;
+  movimientos: CuentaCorrienteMovimiento[];
+  /** Si se puede liquidar con `saldo_al` como corte y, si no, por qué. */
+  liquidar: { disponible: boolean; motivo: string | null };
+};
+
+export type LiquidacionEstado = "CONFIRMADA" | "ANULADA";
+
+export const LIQUIDACION_ESTADO_LABEL: Record<LiquidacionEstado, string> = {
+  CONFIRMADA: "Confirmada",
+  ANULADA: "Anulada",
+};
+
+export type LiquidacionResumen = {
+  id: number;
+  /** YYYY-MM-DD */
+  corte: string;
+  saldo_anterior: string;
+  total: string;
+  saldo_final: string;
+  estado: LiquidacionEstado;
+  /** YYYY-MM-DD */
+  fecha_anulacion: string | null;
+  motivo_anulacion: string | null;
+};
+
+/** Una fila del historial: solo la última liquidación confirmada se puede anular. */
+export type LiquidacionHistorialRow = LiquidacionResumen & { puede_anular: boolean };
+
+export type LiquidacionDetalle = LiquidacionResumen & {
+  propietario: { id: number; nombre: string; documento: string };
+  /** Vacío en una liquidación anulada: sus líneas volvieron a quedar sin liquidar. */
+  movimientos: CuentaCorrienteMovimiento[];
+};
+
+export type LiquidacionVistaPrevia = {
+  propietario: { id: number; nombre: string; documento: string };
+  /** YYYY-MM-DD */
+  corte: string;
+  saldo_anterior: string;
+  total: string;
+  saldo_final: string;
   movimientos: CuentaCorrienteMovimiento[];
 };
