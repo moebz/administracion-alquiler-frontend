@@ -138,6 +138,8 @@ export type CobroFacturaRow = {
   // Null si se puede anular; si no, por qué (cobro aplicado, plazo vencido, ya anulada).
   motivo_no_anulable: string | null;
   saldo: number | string;
+  // La factura de la comisión y el reintegro al propietario: no se le emite NC a mano.
+  es_al_propietario: boolean;
   fecha_anulacion: string | null;
   motivo_anulacion: string | null;
   exentas: number | string;

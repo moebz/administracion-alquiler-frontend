@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { FileTextOutlined, WalletOutlined } from "@ant-design/icons";
-import { Alert, App, Col, DatePicker, Descriptions, Flex, Form, Input, Modal, Typography } from "antd";
+import { FileDoneOutlined, FileTextOutlined, WalletOutlined } from "@ant-design/icons";
+import { usePermissions } from "@refinedev/core";
+import { Alert, App, Checkbox, Col, DatePicker, Descriptions, Flex, Form, Input, Modal, Typography } from "antd";
 import dayjs from "dayjs";
 import { SectionDivider } from "../../components/section-divider";
 import { SectionRow } from "../../components/section-row";
@@ -8,8 +9,9 @@ import { extractErrorMessage } from "../../providers/auth";
 import { kyInstance } from "../../providers/data";
 import { formatMonto } from "../../utils/monto";
 import { ValoresFormList, type ValorFormulario } from "../pagos-proveedor/valores-form-list";
+import { FacturarFields } from "./facturar-fields";
 import { MontoCell } from "./movimientos-table";
-import type { TransferenciaVistaPrevia } from "./types";
+import type { FacturarSeleccion, TransferenciaVistaPrevia } from "./types";
 
 type Valores = { fecha: dayjs.Dayjs; concepto?: string; valores: ValorFormulario[] };
 
@@ -21,13 +23,19 @@ type Props = {
 };
 
 // Registra el desembolso al propietario desde su cuenta corriente. Al elegir la fecha pide el monto sugerido (lo liquidado
-// que todavía no se transfirió) y el tope (el saldo a esa fecha); el backend rechaza lo que supere el tope.
+// que todavía no se transfirió) y el tope (el saldo a esa fecha); el backend rechaza lo que supere el tope. Con
+// "Facturar también hasta el período" corre la misma acción de facturar en la misma transacción: si falla, no se transfiere.
 export const TransferirModal = ({ propietarioId, onClose, onTransferida }: Props) => {
   const { message } = App.useApp();
+  const { data: permissions } = usePermissions<string[]>({});
+  const puedeFacturar = (permissions?.includes("liquidaciones.facturar") && permissions?.includes("facturas.emitir")) ?? false;
   const [form] = Form.useForm<Valores>();
   const [vistaPrevia, setVistaPrevia] = useState<TransferenciaVistaPrevia>();
   const [error, setError] = useState<string>();
   const [guardando, setGuardando] = useState(false);
+  const [conFactura, setConFactura] = useState(false);
+  // Lo que hay que mandar para facturar; undefined mientras la vista previa de facturación no está lista.
+  const [facturacion, setFacturacion] = useState<FacturarSeleccion>();
 
   const fecha = Form.useWatch("fecha", form);
   const valores = Form.useWatch("valores", form) as ValorFormulario[] | undefined;
@@ -84,6 +92,7 @@ export const TransferirModal = ({ propietarioId, onClose, onTransferida }: Props
         fecha: dayjs(values.fecha).format("YYYY-MM-DD"),
         concepto: values.concepto,
         valores: values.valores,
+        facturar: conFactura ? facturacion : undefined,
       },
     });
     setGuardando(false);
@@ -114,7 +123,8 @@ export const TransferirModal = ({ propietarioId, onClose, onTransferida }: Props
       title="Transferir al propietario"
       okText="Transferir"
       cancelText="Cancelar"
-      okButtonProps={{ disabled: !vistaPrevia }}
+      // Con "Facturar también" tildado hace falta que la facturación esté lista (con nada por facturar no se puede tildar).
+      okButtonProps={{ disabled: !vistaPrevia || (conFactura && !facturacion) }}
       confirmLoading={guardando}
       onOk={() => form.submit()}
       onCancel={onClose}
@@ -166,6 +176,23 @@ export const TransferirModal = ({ propietarioId, onClose, onTransferida }: Props
           </Typography.Text>
           {vistaPrevia && <Typography.Text type="secondary">de {formatMonto(vistaPrevia.tope)}</Typography.Text>}
         </Flex>
+
+        {puedeFacturar && (
+          <>
+            <SectionDivider icon={<FileDoneOutlined />}>Facturación</SectionDivider>
+            <Checkbox
+              checked={conFactura}
+              onChange={(evento) => {
+                setConFactura(evento.target.checked);
+                setFacturacion(undefined);
+              }}
+              style={{ marginBottom: 16 }}
+            >
+              Facturar también hasta el período
+            </Checkbox>
+            {conFactura && <FacturarFields propietarioId={propietarioId} onChange={setFacturacion} />}
+          </>
+        )}
       </Form>
     </Modal>
   );

@@ -7,6 +7,8 @@ import dayjs, { type Dayjs } from "dayjs";
 import { FilterBar } from "../../components/filter-bar";
 import { PageTitle } from "../../components/page-title";
 import { kyInstance } from "../../providers/data";
+import { FacturarModal } from "./facturar-modal";
+import { FacturasPropietario } from "./facturas-propietario";
 import { HistorialLiquidaciones } from "./historial-liquidaciones";
 import { LiquidarModal } from "./liquidar-modal";
 import { MontoCell, MovimientosTable } from "./movimientos-table";
@@ -24,13 +26,16 @@ export const CuentaCorrienteShow = () => {
   const puedeAnular = permissions?.includes("liquidaciones.anular") ?? false;
   // Transferir saca plata de caja: pide el permiso propio y también el de registrar pagos (ver el backend).
   const puedeTransferir = (permissions?.includes("liquidaciones.transferir") && permissions?.includes("pagos.registrar")) ?? false;
+  // Facturar emite una factura (consume numeración): pide el permiso propio y también el de emitir facturas.
+  const puedeFacturar = (permissions?.includes("liquidaciones.facturar") && permissions?.includes("facturas.emitir")) ?? false;
 
   const [saldoAl, setSaldoAl] = useState<Dayjs>(() => dayjs());
   const [detalle, setDetalle] = useState<CuentaCorrienteDetalle>();
   const [cargando, setCargando] = useState(true);
   const [liquidando, setLiquidando] = useState(false);
   const [transfiriendo, setTransfiriendo] = useState(false);
-  // Se incrementa al confirmar o anular una liquidación o al transferir, para recargar el detalle y el historial.
+  const [facturando, setFacturando] = useState(false);
+  // Se incrementa al confirmar o anular una liquidación, al transferir o al facturar, para recargar el detalle, el historial y las facturas.
   const [version, setVersion] = useState(0);
 
   const fechaIso = saldoAl.format("YYYY-MM-DD");
@@ -83,6 +88,7 @@ export const CuentaCorrienteShow = () => {
             </Tooltip>
           )}
           {puedeTransferir && <Button onClick={() => setTransfiriendo(true)}>Transferir</Button>}
+          {puedeFacturar && <Button onClick={() => setFacturando(true)}>Facturar</Button>}
         </Space>
       )}
     >
@@ -124,6 +130,12 @@ export const CuentaCorrienteShow = () => {
         </div>
       )}
 
+      {puedeVerLiquidaciones && id && (
+        <div style={{ marginTop: 24 }}>
+          <FacturasPropietario propietarioId={Number(id)} version={version} />
+        </div>
+      )}
+
       {liquidando && detalle && (
         <LiquidarModal
           propietarioId={detalle.propietario.id}
@@ -142,6 +154,17 @@ export const CuentaCorrienteShow = () => {
           onClose={() => setTransfiriendo(false)}
           onTransferida={() => {
             setTransfiriendo(false);
+            recargar();
+          }}
+        />
+      )}
+
+      {facturando && detalle && (
+        <FacturarModal
+          propietarioId={detalle.propietario.id}
+          onClose={() => setFacturando(false)}
+          onFacturada={() => {
+            setFacturando(false);
             recargar();
           }}
         />

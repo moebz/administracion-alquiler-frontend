@@ -89,3 +89,66 @@ export type TransferenciaVistaPrevia = {
   /** Cuentas bancarias activas del propietario. */
   cuentas: { id: number; banco: string; numero_cuenta: string }[];
 };
+
+export type FacturacionConcepto = "REINTEGRO" | "OTRO" | "COMISION";
+
+export const FACTURACION_CONCEPTO_LABEL: Record<FacturacionConcepto, string> = {
+  REINTEGRO: "Reintegro",
+  OTRO: "Otro",
+  COMISION: "Comisión",
+};
+
+/** Línea de la factura al propietario que se emitiría: el reintegro o la comisión de un cargo. */
+export type FacturacionLinea = {
+  cargo_id: number;
+  concepto: FacturacionConcepto;
+  tasa_iva: number;
+  descripcion: string;
+  monto: string;
+};
+
+export type FacturacionNotaLinea = {
+  cargo_id: number;
+  concepto: FacturacionConcepto;
+  descripcion: string;
+  monto: string;
+};
+
+/** NC de comisión que se emitiría sobre una factura al propietario con comisión de más. */
+export type FacturacionNota = {
+  documento_venta_id: number;
+  numero: string | null;
+  lineas: FacturacionNotaLinea[];
+  total: string;
+};
+
+export type FacturacionVistaPrevia = {
+  propietario: { id: number; nombre: string; documento: string };
+  /** YYYY-MM */
+  periodo: string;
+  lineas: FacturacionLinea[];
+  notas: FacturacionNota[];
+  /** Total de la factura (sin las NC). */
+  total: string;
+  /** Permisos que pide emitir esto: los de facturar y, si hay NC, el de emitir NC. */
+  permisos: string[];
+};
+
+/** Lo que se manda al confirmar: la vista previa que vio el usuario, para que el backend avise si cambió. */
+export type FacturarSeleccion = {
+  periodo: string;
+  punto_expedicion_id?: number;
+  esperado: { lineas: FacturacionLinea[]; notas: FacturacionNota[] };
+};
+
+export type FacturaPropietarioRow = {
+  id: number;
+  numero: string | null;
+  /** YYYY-MM-DD */
+  fecha: string;
+  /** Vencimiento de su cuota, YYYY-MM-DD. */
+  vencimiento: string | null;
+  total: string;
+  saldo: string;
+  estado: "BORRADOR" | "EMITIDO" | "ANULADO";
+};

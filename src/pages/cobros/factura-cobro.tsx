@@ -89,7 +89,8 @@ export const FacturaCobro = ({ factura, onCambio }: FacturaCobroProps) => {
   const { message, modal } = App.useApp();
   const { data: permissions } = usePermissions<string[]>({});
   const puedeAnular = permissions?.includes(PERMISO_ANULAR) ?? false;
-  const puedeEmitirNc = permissions?.includes(PERMISO_EMITIR_NC) ?? false;
+  // La factura al propietario no admite "Emitir NC": sus NC las emiten "Facturar al propietario" y "Corregir monto".
+  const puedeEmitirNc = (permissions?.includes(PERMISO_EMITIR_NC) ?? false) && !factura.es_al_propietario;
   const puedeAnularCobros = permissions?.includes(PERMISO_ANULAR_COBROS) ?? false;
 
   const [modalAbierto, setModalAbierto] = useState(false);
