@@ -27,8 +27,10 @@ import {
   ReconciliationOutlined,
   ProfileOutlined,
   SolutionOutlined,
+  SwapOutlined,
+  KeyOutlined,
 } from "@ant-design/icons";
-import { Refine, Authenticated, CanAccess } from "@refinedev/core";
+import { Refine, Authenticated, CanAccess, useGetIdentity } from "@refinedev/core";
 import { RefineKbar, RefineKbarProvider } from "@refinedev/kbar";
 
 import {
@@ -61,7 +63,8 @@ import { i18nProvider } from "./providers/i18n";
 import { RoleHome } from "./pages/role-home";
 import { SectionRoute } from "./components/section-route";
 import { RoleBasedIndex } from "./components/role-based-index";
-import { SECTIONS } from "./providers/sections";
+import type { Identity } from "./providers/identity";
+import { SECTIONS, type Section } from "./providers/sections";
 import { UserCreate, UserEdit } from "./pages/users";
 import {
   PersonaList,
@@ -138,6 +141,23 @@ import {
 import { TimbradoList, TimbradoCreate, TimbradoEdit } from "./pages/timbrados";
 import { EmpresaEdit } from "./pages/empresa";
 import { GastoAprobacionList } from "./pages/propietario-gastos";
+import { PropietarioInicio } from "./pages/propietario-inicio";
+import { PropietarioCuentaShow } from "./pages/propietario-cuenta";
+import { PropietarioLiquidacionList } from "./pages/propietario-liquidaciones";
+import { PropietarioUnidadList } from "./pages/propietario-unidades";
+import { PropietarioTransferenciaList } from "./pages/propietario-transferencias";
+import { SolicitudTransferenciaList, SolicitudesIcon } from "./pages/solicitudes-transferencia";
+
+// Home de cada sección. El propietario con cuenta_corriente.ver_propia ve su inicio; el resto, el home de prueba.
+const HomeDeSeccion = ({ section }: { section: Section }) => {
+  const { data: identity } = useGetIdentity<Identity>();
+
+  if (section === "propietario" && identity?.permissions.includes("cuenta_corriente.ver_propia")) {
+    return <PropietarioInicio />;
+  }
+
+  return <RoleHome section={section} />;
+};
 
 function App() {
   return (
@@ -324,6 +344,17 @@ function App() {
                   },
                 },
                 {
+                  // Las atiende el usuario desde acá o desde la cuenta corriente del propietario. El ícono lleva
+                  // la cantidad de pendientes (ver SolicitudesIcon).
+                  name: "solicitudes-transferencia",
+                  list: "/administrador/solicitudes-transferencia",
+                  meta: {
+                    label: "Solicitudes de transferencia",
+                    icon: <SolicitudesIcon />,
+                    parent: "edificios",
+                  },
+                },
+                {
                   // Sin `list`: la liquidación no tiene entrada en el menú, se llega desde la cuenta corriente
                   // del propietario (ver pages/cuentas-corrientes/show.tsx).
                   name: "liquidaciones",
@@ -457,6 +488,49 @@ function App() {
                   },
                 },
                 {
+                  // Inicio del portal: la ruta /propietario/home muestra PropietarioInicio (ver HomeDeSeccion).
+                  // El nombre es la ruta de su endpoint (/api/propietario/inicio), como propietario/gastos.
+                  name: "propietario/inicio",
+                  list: "/propietario/home",
+                  meta: {
+                    label: "Inicio",
+                    icon: <HomeOutlined />,
+                  },
+                },
+                {
+                  name: "propietario/cuenta",
+                  list: "/propietario/cuenta",
+                  meta: {
+                    label: "Mi cuenta",
+                    icon: <ContainerOutlined />,
+                  },
+                },
+                {
+                  name: "propietario/unidades",
+                  list: "/propietario/unidades",
+                  meta: {
+                    label: "Mis unidades",
+                    icon: <KeyOutlined />,
+                  },
+                },
+                {
+                  name: "propietario/liquidaciones",
+                  list: "/propietario/liquidaciones",
+                  show: "/propietario/liquidaciones/show/:id",
+                  meta: {
+                    label: "Liquidaciones",
+                    icon: <FileTextOutlined />,
+                  },
+                },
+                {
+                  name: "propietario/transferencias",
+                  list: "/propietario/transferencias",
+                  meta: {
+                    label: "Transferencias",
+                    icon: <SwapOutlined />,
+                  },
+                },
+                {
                   // Nombre = path del endpoint (/api/propietario/gastos):
                   // el data provider usa `resource` tal cual como URL, ver
                   // providers/data.ts. Solo lista + aprobar/rechazar, sin
@@ -587,7 +661,7 @@ function App() {
                       path={`/${section}/home`}
                       element={
                         <SectionRoute section={section}>
-                          <RoleHome section={section} />
+                          <HomeDeSeccion section={section} />
                         </SectionRoute>
                       }
                     />
@@ -665,6 +739,7 @@ function App() {
                       <Route index element={<CuentaCorrienteList />} />
                       <Route path="show/:id" element={<CuentaCorrienteShow />} />
                     </Route>
+                    <Route path="solicitudes-transferencia" element={<SolicitudTransferenciaList />} />
                     <Route path="liquidaciones">
                       <Route path="show/:id" element={<LiquidacionShow />} />
                     </Route>
@@ -768,6 +843,13 @@ function App() {
                       </SectionRoute>
                     }
                   >
+                    <Route path="cuenta" element={<PropietarioCuentaShow />} />
+                    <Route path="unidades" element={<PropietarioUnidadList />} />
+                    <Route path="liquidaciones">
+                      <Route index element={<PropietarioLiquidacionList />} />
+                      <Route path="show/:id" element={<LiquidacionShow prefijoPdf="propietario/" />} />
+                    </Route>
+                    <Route path="transferencias" element={<PropietarioTransferenciaList />} />
                     <Route path="gastos" element={<GastoAprobacionList />} />
                   </Route>
                   <Route path="*" element={<ErrorComponent />} />

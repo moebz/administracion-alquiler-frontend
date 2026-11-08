@@ -91,4 +91,13 @@ describe("frasesPorDocumentar", () => {
     expect(frases[1].texto).toContain("Falta su factura por");
     expect(frases[1].texto).toContain("Alquiler Dpto. 2B · 10/26");
   });
+
+  it("habla en tu cuando es para el propietario del portal", () => {
+    const frases = frasesPorDocumentar(porDocumentar, "tu");
+
+    expect(frases[0].texto).toContain("Falta tu NC por");
+    expect(frases[0].texto).toContain("sobre tu factura 001-001-0000007");
+    expect(frases[1].texto).toContain("Falta tu factura por");
+    expect(frases[1].texto).toContain("Alquiler Dpto. 2B · 10/26");
+  });
 });

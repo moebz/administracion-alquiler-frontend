@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { ContainerOutlined } from "@ant-design/icons";
 import { Show } from "@refinedev/antd";
-import { usePermissions, useResourceParams } from "@refinedev/core";
+import { useInvalidate, usePermissions, useResourceParams } from "@refinedev/core";
 import { Alert, App, Button, DatePicker, Descriptions, Flex, Space, Tooltip } from "antd";
 import dayjs, { type Dayjs } from "dayjs";
 import { FilterBar } from "../../components/filter-bar";
@@ -18,6 +18,8 @@ import { LiquidarModal } from "./liquidar-modal";
 import { MontoCell, MovimientosTable } from "./movimientos-table";
 import { RegistrarFacturaPropietarioModal } from "./registrar-factura-propietario-modal";
 import { RegistrarNcPropietarioModal } from "./registrar-nc-propietario-modal";
+import { RechazarSolicitudModal } from "../solicitudes-transferencia/rechazar-modal";
+import { armarAvisoDePedido } from "../solicitudes-transferencia/textos";
 import { TransferirModal } from "./transferir-modal";
 import type { CuentaCorrienteDetalle } from "./types";
 
@@ -26,12 +28,15 @@ const FORMATO_FECHA = "DD/MM/YYYY";
 export const CuentaCorrienteShow = () => {
   const { id } = useResourceParams();
   const { message } = App.useApp();
+  const invalidate = useInvalidate();
   const { data: permissions } = usePermissions<string[]>({});
   const puedeVerLiquidaciones = permissions?.includes("liquidaciones.ver") ?? false;
   const puedeLiquidar = permissions?.includes("liquidaciones.confirmar") ?? false;
   const puedeAnular = permissions?.includes("liquidaciones.anular") ?? false;
   // Transferir saca plata de caja: pide el permiso propio y también el de registrar pagos (ver el backend).
   const puedeTransferir = (permissions?.includes("liquidaciones.transferir") && permissions?.includes("pagos.registrar")) ?? false;
+  // Rechazar la solicitud de transferencia del propietario pide el permiso de transferir (ver el backend).
+  const puedeRechazarSolicitud = permissions?.includes("liquidaciones.transferir") ?? false;
   // Facturar emite una factura (consume numeración): pide el permiso propio y también el de emitir facturas.
   const puedeFacturar = (permissions?.includes("liquidaciones.facturar") && permissions?.includes("facturas.emitir")) ?? false;
   // Registrar la factura o la NC del propietario carga el papel de otro como compra: pide el permiso propio y el de registrar compras.
@@ -42,6 +47,7 @@ export const CuentaCorrienteShow = () => {
   const [cargando, setCargando] = useState(true);
   const [liquidando, setLiquidando] = useState(false);
   const [transfiriendo, setTransfiriendo] = useState(false);
+  const [rechazandoSolicitud, setRechazandoSolicitud] = useState(false);
   const [facturando, setFacturando] = useState(false);
   const [registrandoFactura, setRegistrandoFactura] = useState(false);
   // Factura del propietario sobre la que se registra una NC desde "Por documentar".
@@ -78,7 +84,14 @@ export const CuentaCorrienteShow = () => {
 
   const recargar = useCallback(() => setVersion((actual) => actual + 1), []);
 
+  // Recargar la cuenta y el contador de solicitudes del menú: transferir o rechazar cambian las pendientes.
+  const recargarSolicitudes = useCallback(() => {
+    setVersion((actual) => actual + 1);
+    invalidate({ resource: "solicitudes-transferencia", invalidates: ["list"] });
+  }, [invalidate]);
+
   const porDocumentar = detalle?.por_documentar;
+  const solicitudPendiente = detalle?.solicitud_pendiente ?? null;
   const hayPorVencer = detalle !== undefined && Number(detalle.por_vencer) !== 0;
   const liquidable = detalle?.liquidar.disponible ?? false;
 
@@ -129,6 +142,30 @@ export const CuentaCorrienteShow = () => {
           </Descriptions.Item>
         )}
       </Descriptions>
+
+      {/* La solicitud de transferencia pendiente del propietario, con las dos formas de atenderla. */}
+      {solicitudPendiente && (
+        <Alert
+          type="info"
+          showIcon
+          style={{ marginBottom: 16 }}
+          message={
+            <Flex align="center" gap={8} wrap>
+              <span>{armarAvisoDePedido(solicitudPendiente)}</span>
+              {puedeTransferir && (
+                <Button size="small" onClick={() => setTransfiriendo(true)}>
+                  Transferir
+                </Button>
+              )}
+              {puedeRechazarSolicitud && (
+                <Button size="small" onClick={() => setRechazandoSolicitud(true)}>
+                  Rechazar
+                </Button>
+              )}
+            </Flex>
+          }
+        />
+      )}
 
       {/* Lo que le falta documentar al propietario con el corte de "Saldo al": solo si falta algo. */}
       {hayPorDocumentar(porDocumentar) && (
@@ -209,7 +246,18 @@ export const CuentaCorrienteShow = () => {
           onClose={() => setTransfiriendo(false)}
           onTransferida={() => {
             setTransfiriendo(false);
-            recargar();
+            recargarSolicitudes();
+          }}
+        />
+      )}
+
+      {rechazandoSolicitud && solicitudPendiente && (
+        <RechazarSolicitudModal
+          solicitud={solicitudPendiente}
+          onClose={() => setRechazandoSolicitud(false)}
+          onRechazada={() => {
+            setRechazandoSolicitud(false);
+            recargarSolicitudes();
           }}
         />
       )}

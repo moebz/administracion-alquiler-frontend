@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { BankOutlined, FileTextOutlined, LinkOutlined, StopOutlined, WalletOutlined } from "@ant-design/icons";
 import { Show } from "@refinedev/antd";
-import { useShow, usePermissions } from "@refinedev/core";
+import { useInvalidate, useShow, usePermissions } from "@refinedev/core";
 import { App, Button, Descriptions, Flex, Form, Input, Modal, Space, Table, Tag, Tooltip, Typography } from "antd";
 import dayjs from "dayjs";
 import { Link } from "react-router";
@@ -24,6 +24,7 @@ const PERMISO_ANULAR = "pagos.anular";
 export const PagoProveedorShow = () => {
   const { query, result: pago } = useShow<PagoProveedorRow>();
   const { message } = App.useApp();
+  const invalidate = useInvalidate();
   const { data: permissions } = usePermissions<string[]>({});
   const puedeAnular = permissions?.includes(PERMISO_ANULAR) ?? false;
 
@@ -54,6 +55,8 @@ export const PagoProveedorShow = () => {
       message.success(valorAAnular ? "Medio de pago anulado." : "Pago anulado.");
       setModalAbierto(false);
       query.refetch();
+      // Recargar el contador de solicitudes del menú: anular una transferencia entera devuelve su solicitud a pendiente.
+      invalidate({ resource: "solicitudes-transferencia", invalidates: ["list"] });
       return;
     }
     message.error(

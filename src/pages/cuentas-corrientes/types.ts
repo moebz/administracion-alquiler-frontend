@@ -1,4 +1,5 @@
 import type { CompraCondicion, CompraEstado } from "../compras/types";
+import type { SolicitudTransferencia } from "../solicitudes-transferencia/types";
 
 // Los montos `decimal:4` del backend llegan como string.
 export type CuentaCorrienteResumenRow = {
@@ -87,6 +88,8 @@ export type CuentaCorrienteDetalle = {
   por_documentar?: PorDocumentar;
   /** Solo viene con `liquidaciones.ver`. */
   control?: ControlDocumentos;
+  /** Su solicitud de transferencia pendiente, o null; solo viene con `liquidaciones.ver`. */
+  solicitud_pendiente?: SolicitudTransferencia | null;
 };
 
 export type LiquidacionEstado = "CONFIRMADA" | "ANULADA";
@@ -140,6 +143,8 @@ export type TransferenciaVistaPrevia = {
   tope: string;
   /** Cuentas bancarias activas del propietario. */
   cuentas: { id: number; banco: string; numero_cuenta: string }[];
+  /** Su solicitud de transferencia pendiente, que esta transferencia va a atender; null si no tiene. */
+  solicitud: SolicitudTransferencia | null;
   por_documentar: PorDocumentar;
   control: ControlDocumentos;
 };

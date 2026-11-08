@@ -27,6 +27,9 @@ export const descargarArchivo = async (ruta: string, nombre: string): Promise<vo
   URL.revokeObjectURL(url);
 };
 
+/** Arma la ruta del PDF de la liquidación. El portal del propietario pasa `"propietario/"` como prefijo. */
+export const rutaDelPdfDeLiquidacion = (id: number, prefijo = ""): string => `${prefijo}liquidaciones/${id}/pdf`;
+
 /** Descarga el PDF de la liquidación. `corte` es YYYY-MM-DD. */
-export const descargarPdfDeLiquidacion = (id: number, corte: string): Promise<void> =>
-  descargarArchivo(`liquidaciones/${id}/pdf`, nombreDelPdfDeLiquidacion(id, corte));
+export const descargarPdfDeLiquidacion = (id: number, corte: string, prefijo = ""): Promise<void> =>
+  descargarArchivo(rutaDelPdfDeLiquidacion(id, prefijo), nombreDelPdfDeLiquidacion(id, corte));

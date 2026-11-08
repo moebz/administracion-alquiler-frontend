@@ -9,6 +9,7 @@ import { extractErrorMessage } from "../../providers/auth";
 import { kyInstance } from "../../providers/data";
 import { formatMonto } from "../../utils/monto";
 import { ValoresFormList, type ValorFormulario } from "../pagos-proveedor/valores-form-list";
+import { armarAvisoDeAtencion, elegirCuentaPrecargada, elegirMontoPrecargado } from "../solicitudes-transferencia/textos";
 import { armarMensajeDeTransferencia } from "./compensacion";
 import { ControlDocumentosAlert } from "./control-documentos-alert";
 import { FacturarFields } from "./facturar-fields";
@@ -26,7 +27,8 @@ type Props = {
 };
 
 // Registra el desembolso al propietario desde su cuenta corriente. Al elegir la fecha pide el monto sugerido (lo liquidado
-// que todavía no se transfirió) y el tope (el saldo a esa fecha); el backend rechaza lo que supere el tope. Con
+// que todavía no se transfirió) y el tope (el saldo a esa fecha); el backend rechaza lo que supere el tope. Si el propietario
+// tiene una solicitud pendiente, la transferencia la atiende: precarga su monto y su cuenta en vez del sugerido. Con
 // "Facturar también hasta el período" corre la misma acción de facturar en la misma transacción: si falla, no se transfiere.
 export const TransferirModal = ({ propietarioId, onClose, onTransferida }: Props) => {
   const { message } = App.useApp();
@@ -62,10 +64,16 @@ export const TransferirModal = ({ propietarioId, onClose, onTransferida }: Props
 
         setVistaPrevia(previa);
 
-        // Proponer el sugerido en el primer valor solo si el usuario todavía no escribió un monto.
-        const primero = form.getFieldValue(["valores", 0, "monto"]);
-        if (Number(previa.sugerido) > 0 && !primero) {
-          form.setFieldValue(["valores", 0, "monto"], Number(previa.sugerido));
+        // Proponer en el primer valor el monto de la solicitud pendiente, o el sugerido si no hay, solo si el usuario todavía no escribió un monto.
+        const montoInicial = elegirMontoPrecargado(previa);
+        if (montoInicial !== undefined && !form.getFieldValue(["valores", 0, "monto"])) {
+          form.setFieldValue(["valores", 0, "monto"], montoInicial);
+        }
+
+        // Proponer la cuenta de la solicitud pendiente, si sigue activa y el usuario todavía no eligió una.
+        const cuentaInicial = elegirCuentaPrecargada(previa);
+        if (cuentaInicial !== undefined && !form.getFieldValue(["valores", 0, "persona_cuenta_id"])) {
+          form.setFieldValue(["valores", 0, "persona_cuenta_id"], cuentaInicial);
         }
       })
       .catch((falla: { message?: string }) => {
@@ -149,6 +157,9 @@ export const TransferirModal = ({ propietarioId, onClose, onTransferida }: Props
           </Descriptions.Item>
         </Descriptions>
       )}
+
+      {/* Avisar que esta transferencia atiende la solicitud pendiente del propietario. */}
+      {vistaPrevia?.solicitud && <Alert type="info" showIcon message={armarAvisoDeAtencion(vistaPrevia.solicitud)} style={{ marginBottom: 16 }} />}
 
       {/* Avisar lo que le falta documentar al propietario a la fecha; no impide transferir. */}
       <PorDocumentarAlert porDocumentar={vistaPrevia?.por_documentar} />

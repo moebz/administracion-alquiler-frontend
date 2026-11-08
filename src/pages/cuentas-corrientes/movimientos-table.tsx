@@ -17,12 +17,22 @@ type Props = {
   loading?: boolean;
   /** Agrega la columna "Liquidación", con el enlace al detalle de la que selló cada fila. */
   mostrarLiquidacion?: boolean;
+  /** Arma el enlace de la columna "Liquidación"; por defecto va al detalle del panel interno. */
+  rutaLiquidacion?: (id: number) => string;
   pageSize?: number;
 };
 
 // Tabla de movimientos de una cuenta corriente, para el detalle de la cuenta, la vista previa de una liquidación y
 // la liquidación misma. Las líneas del mismo cargo, fecha, tipo y liquidación llegan juntas en una sola fila.
-export const MovimientosTable = ({ movimientos, loading, mostrarLiquidacion = false, pageSize = 20 }: Props) => {
+const rutaLiquidacionDeAdmin = (id: number): string => `/administrador/liquidaciones/show/${id}`;
+
+export const MovimientosTable = ({
+  movimientos,
+  loading,
+  mostrarLiquidacion = false,
+  rutaLiquidacion = rutaLiquidacionDeAdmin,
+  pageSize = 20,
+}: Props) => {
   const { data: permissions } = usePermissions<string[]>({});
   const puedeVerPagos = permissions?.includes("pagos.ver") ?? false;
 
@@ -68,7 +78,7 @@ export const MovimientosTable = ({ movimientos, loading, mostrarLiquidacion = fa
           title="Liquidación"
           dataIndex="liquidacion_id"
           render={(liquidacionId: number | null) =>
-            liquidacionId === null ? "—" : <Link to={`/administrador/liquidaciones/show/${liquidacionId}`}>N.º {liquidacionId}</Link>
+            liquidacionId === null ? "—" : <Link to={rutaLiquidacion(liquidacionId)}>N.º {liquidacionId}</Link>
           }
         />
       )}

@@ -108,6 +108,22 @@ describe("requiredPermission", () => {
     expect(requiredPermission("propietario/gastos", "list")).toBe("gastos.aprobar_propio");
     expect(requiredPermission("propietario/gastos", "edit")).toBe("gastos.aprobar_propio");
   });
+
+  it("resuelve el inicio, la cuenta, las liquidaciones y las transferencias del portal a cuenta_corriente.ver_propia", () => {
+    for (const resource of ["propietario/inicio", "propietario/cuenta", "propietario/liquidaciones", "propietario/transferencias"]) {
+      expect(requiredPermission(resource, "list")).toBe("cuenta_corriente.ver_propia");
+    }
+
+    expect(requiredPermission("propietario/liquidaciones", "show")).toBe("cuenta_corriente.ver_propia");
+  });
+
+  it("resuelve Mis unidades del portal a unidades.ver_propias", () => {
+    expect(requiredPermission("propietario/unidades", "list")).toBe("unidades.ver_propias");
+  });
+
+  it("resuelve la lista de solicitudes de transferencia del panel interno a liquidaciones.ver", () => {
+    expect(requiredPermission("solicitudes-transferencia", "list")).toBe("liquidaciones.ver");
+  });
 });
 
 describe("canAccessResource", () => {
@@ -175,5 +191,25 @@ describe("canAccessResource", () => {
       false,
     );
     expect(canAccessResource(["acceso.propietario"], "propietario/gastos", "list")).toBe(false);
+  });
+
+  it("el inicio, la cuenta, las liquidaciones y las transferencias del portal son de la seccion propietario", () => {
+    for (const resource of ["propietario/inicio", "propietario/cuenta", "propietario/liquidaciones", "propietario/transferencias"]) {
+      expect(canAccessResource(["cuenta_corriente.ver_propia", "acceso.propietario"], resource, "list")).toBe(true);
+      expect(canAccessResource(["cuenta_corriente.ver_propia", "acceso.administrador"], resource, "list")).toBe(false);
+      expect(canAccessResource(["acceso.propietario"], resource, "list")).toBe(false);
+    }
+  });
+
+  it("Mis unidades es de la seccion propietario y pide unidades.ver_propias", () => {
+    expect(canAccessResource(["unidades.ver_propias", "acceso.propietario"], "propietario/unidades", "list")).toBe(true);
+    expect(canAccessResource(["unidades.ver_propias", "acceso.administrador"], "propietario/unidades", "list")).toBe(false);
+    expect(canAccessResource(["acceso.propietario"], "propietario/unidades", "list")).toBe(false);
+  });
+
+  it("las solicitudes de transferencia son del panel interno y piden poder ver las liquidaciones", () => {
+    expect(canAccessResource(["liquidaciones.ver", "acceso.administrador"], "solicitudes-transferencia", "list")).toBe(true);
+    expect(canAccessResource(["liquidaciones.ver", "acceso.propietario"], "solicitudes-transferencia", "list")).toBe(false);
+    expect(canAccessResource(["acceso.administrador"], "solicitudes-transferencia", "list")).toBe(false);
   });
 });

@@ -33,16 +33,22 @@ export const armarLineasDelBody = (lineas: FacturaPropietarioLinea[]) =>
 export const hayPorDocumentar = (porDocumentar: PorDocumentar | undefined): porDocumentar is PorDocumentar =>
   porDocumentar !== undefined && (porDocumentar.notas.length > 0 || porDocumentar.facturas.length > 0);
 
+/** Posesivo de las frases: "su" en el panel interno, que habla del propietario, y "tu" en el portal, que le habla a él. */
+export type Posesivo = "su" | "tu";
+
 /** Dice qué NC le falta al propietario sobre qué factura. */
-export const fraseDeNota = (nota: PorDocumentarNota): string =>
-  `Falta su NC por ${formatMonto(nota.monto)} sobre su factura ${nota.numero}`;
+export const fraseDeNota = (nota: PorDocumentarNota, posesivo: Posesivo = "su"): string =>
+  `Falta ${posesivo} NC por ${formatMonto(nota.monto)} sobre ${posesivo} factura ${nota.numero}`;
 
 /** Dice qué factura le falta al propietario por un alquiler vencido. */
-export const fraseDeFactura = (factura: PorDocumentarFactura): string =>
-  `Falta su factura por ${formatMonto(factura.monto)}: ${factura.descripcion}`;
+export const fraseDeFactura = (factura: PorDocumentarFactura, posesivo: Posesivo = "su"): string =>
+  `Falta ${posesivo} factura por ${formatMonto(factura.monto)}: ${factura.descripcion}`;
 
 /** Arma, para mostrar, una frase por cada NC y cada factura que le faltan al propietario. */
-export const frasesPorDocumentar = (porDocumentar: PorDocumentar): { clave: string; texto: string }[] => [
-  ...porDocumentar.notas.map((nota) => ({ clave: `nota-${nota.factura_id}`, texto: fraseDeNota(nota) })),
-  ...porDocumentar.facturas.map((factura) => ({ clave: `factura-${factura.cargo_id}`, texto: fraseDeFactura(factura) })),
+export const frasesPorDocumentar = (
+  porDocumentar: PorDocumentar,
+  posesivo: Posesivo = "su",
+): { clave: string; texto: string }[] => [
+  ...porDocumentar.notas.map((nota) => ({ clave: `nota-${nota.factura_id}`, texto: fraseDeNota(nota, posesivo) })),
+  ...porDocumentar.facturas.map((factura) => ({ clave: `factura-${factura.cargo_id}`, texto: fraseDeFactura(factura, posesivo) })),
 ];

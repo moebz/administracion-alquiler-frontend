@@ -15,6 +15,8 @@ const RESOURCE_ALIAS: Record<string, string> = {
   "pagos-proveedor": "pagos",
   "puntos-expedicion": "puntos_expedicion",
   "cuentas-corrientes": "cuenta_corriente",
+  // Las solicitudes de transferencia se ven con el permiso de ver las liquidaciones.
+  "solicitudes-transferencia": "liquidaciones",
 };
 
 // roles y las pantallas propias de la sección propietario se gatean con un
@@ -30,6 +32,11 @@ const FIXED_PERMISSION: Record<string, string> = {
   catalogos: "acceso.administrador",
   facturacion: "acceso.administrador",
   "propietario/gastos": "gastos.aprobar_propio",
+  "propietario/inicio": "cuenta_corriente.ver_propia",
+  "propietario/cuenta": "cuenta_corriente.ver_propia",
+  "propietario/liquidaciones": "cuenta_corriente.ver_propia",
+  "propietario/transferencias": "cuenta_corriente.ver_propia",
+  "propietario/unidades": "unidades.ver_propias",
 };
 
 // Resources con `meta.parent: "catalogos"` en App.tsx. ThemedSider (ver
@@ -53,6 +60,11 @@ const GROUP_CHILDREN: Record<string, string[]> = {
 // vive ahí, salvo el que se declare acá explícitamente.
 const RESOURCE_SECTION: Record<string, Section> = {
   "propietario/gastos": "propietario",
+  "propietario/inicio": "propietario",
+  "propietario/cuenta": "propietario",
+  "propietario/liquidaciones": "propietario",
+  "propietario/transferencias": "propietario",
+  "propietario/unidades": "propietario",
 };
 
 const ACTION_SUFFIX: Record<string, string> = {
@@ -107,6 +119,7 @@ const RESOURCES_WITH_PERMISSIONS = new Set([
   "cobros",
   "cuentas-corrientes",
   "liquidaciones",
+  "solicitudes-transferencia",
   "establecimientos",
   "puntos-expedicion",
   "timbrados",

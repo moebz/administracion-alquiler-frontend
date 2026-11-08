@@ -13,7 +13,8 @@ const FORMATO_FECHA = "DD/MM/YYYY";
 
 // Sin entrada en el menú: se llega desde la cuenta corriente del propietario, por el historial o por la columna
 // "Liquidación" de sus movimientos. Se ve en pantalla y, si está confirmada, se descarga en PDF.
-export const LiquidacionShow = () => {
+// Lo usa también el portal del propietario, con `prefijoPdf="propietario/"` para pedir el PDF de su propia ruta.
+export const LiquidacionShow = ({ prefijoPdf = "" }: { prefijoPdf?: string }) => {
   const { message } = App.useApp();
   const { query, result: liquidacion } = useShow<LiquidacionDetalle>();
   const anulada = liquidacion?.estado === "ANULADA";
@@ -27,7 +28,7 @@ export const LiquidacionShow = () => {
 
     setDescargando(true);
     try {
-      await descargarPdfDeLiquidacion(liquidacion.id, liquidacion.corte);
+      await descargarPdfDeLiquidacion(liquidacion.id, liquidacion.corte, prefijoPdf);
     } catch (error) {
       message.error((error as { message?: string }).message ?? "No se pudo descargar el PDF.");
     } finally {

@@ -154,6 +154,9 @@ const es = {
     ciudades: {
       ciudades: "ciudad",
     },
+    "solicitudes-transferencia": {
+      "solicitudes-transferencia": "solicitud de transferencia",
+    },
   },
 };
 
