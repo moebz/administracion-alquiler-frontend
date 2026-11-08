@@ -26,6 +26,7 @@ import {
   FileProtectOutlined,
   ReconciliationOutlined,
   ProfileOutlined,
+  SolutionOutlined,
 } from "@ant-design/icons";
 import { Refine, Authenticated, CanAccess } from "@refinedev/core";
 import { RefineKbar, RefineKbarProvider } from "@refinedev/kbar";
@@ -135,6 +136,7 @@ import {
   PuntoExpedicionEdit,
 } from "./pages/puntos-expedicion";
 import { TimbradoList, TimbradoCreate, TimbradoEdit } from "./pages/timbrados";
+import { EmpresaEdit } from "./pages/empresa";
 import { GastoAprobacionList } from "./pages/propietario-gastos";
 
 function App() {
@@ -439,6 +441,15 @@ function App() {
                   },
                 },
                 {
+                  name: "empresa",
+                  list: "/administrador/empresa",
+                  meta: {
+                    label: "Datos de la empresa",
+                    icon: <SolutionOutlined />,
+                    parent: "facturacion",
+                  },
+                },
+                {
                   name: "catalogos",
                   meta: {
                     label: "Catálogos",
@@ -714,6 +725,7 @@ function App() {
                       <Route path="create" element={<TimbradoCreate />} />
                       <Route path="edit/:id" element={<TimbradoEdit />} />
                     </Route>
+                    <Route path="empresa" element={<EmpresaEdit />} />
                     <Route path="proveedores">
                       <Route index element={<ProveedorList />} />
                       <Route path="create" element={<ProveedorCreate />} />

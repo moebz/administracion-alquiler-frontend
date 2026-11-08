@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { App, Button, Input, Space, Table, Tag, Tooltip, Typography } from "antd";
-import { EyeOutlined, StopOutlined } from "@ant-design/icons";
+import { EyeOutlined, FilePdfOutlined, StopOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { Link } from "react-router";
 import { extractErrorMessage } from "../../providers/auth";
 import { kyInstance } from "../../providers/data";
+import { descargarPdfDeLiquidacion } from "../../utils/descargar";
 import { MontoCell } from "./movimientos-table";
 import { LIQUIDACION_ESTADO_LABEL, type LiquidacionHistorialRow } from "./types";
 
@@ -25,6 +26,7 @@ export const HistorialLiquidaciones = ({ propietarioId, puedeAnular, version, on
 
   const [filas, setFilas] = useState<LiquidacionHistorialRow[]>();
   const [cargando, setCargando] = useState(true);
+  const [descargandoId, setDescargandoId] = useState<number>();
 
   useEffect(() => {
     let vigente = true;
@@ -44,6 +46,18 @@ export const HistorialLiquidaciones = ({ propietarioId, puedeAnular, version, on
       vigente = false;
     };
   }, [propietarioId, version, message]);
+
+  // Descargar el PDF de la liquidación, o mostrar por qué no se pudo.
+  const descargarPdf = async (liquidacion: LiquidacionHistorialRow) => {
+    setDescargandoId(liquidacion.id);
+    try {
+      await descargarPdfDeLiquidacion(liquidacion.id, liquidacion.corte);
+    } catch (error) {
+      message.error((error as { message?: string }).message ?? "No se pudo descargar el PDF.");
+    } finally {
+      setDescargandoId(undefined);
+    }
+  };
 
   const anular = (liquidacion: LiquidacionHistorialRow) => {
     let motivo = "";
@@ -112,6 +126,16 @@ export const HistorialLiquidaciones = ({ propietarioId, puedeAnular, version, on
                 <Button size="small" icon={<EyeOutlined />} />
               </Link>
             </Tooltip>
+            {estado === "CONFIRMADA" && (
+              <Tooltip title="Descargar PDF">
+                <Button
+                  size="small"
+                  icon={<FilePdfOutlined />}
+                  loading={descargandoId === liquidacion.id}
+                  onClick={() => descargarPdf(liquidacion)}
+                />
+              </Tooltip>
+            )}
             {puedeAnular && liquidacion.puede_anular && (
               <Tooltip title="Anular">
                 <Button size="small" danger icon={<StopOutlined />} onClick={() => anular(liquidacion)} />

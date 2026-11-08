@@ -68,6 +68,18 @@ describe("requiredPermission", () => {
     expect(requiredPermission("timbrados", "edit")).toBe("timbrados.administrar");
   });
 
+  it("resuelve empresa a un unico permiso editar, que gatea ver y editar", () => {
+    expect(requiredPermission("empresa", "list")).toBe("empresa.editar");
+    expect(requiredPermission("empresa", "edit")).toBe("empresa.editar");
+  });
+
+  it("permite empresa solo con acceso.administrador y empresa.editar, y la cuenta como hijo de facturacion", () => {
+    expect(canAccessResource(["acceso.administrador"], "empresa", "list")).toBe(false);
+    expect(canAccessResource(["empresa.editar"], "empresa", "list")).toBe(false);
+    expect(canAccessResource(["acceso.administrador", "empresa.editar"], "empresa", "list")).toBe(true);
+    expect(canAccessResource(["acceso.administrador", "empresa.editar"], "facturacion", "list")).toBe(true);
+  });
+
   it("resuelve roles a roles.administrar sin importar la accion", () => {
     expect(requiredPermission("roles", "list")).toBe("roles.administrar");
     expect(requiredPermission("roles", "create")).toBe("roles.administrar");

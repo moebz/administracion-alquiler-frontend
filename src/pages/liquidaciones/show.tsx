@@ -1,23 +1,53 @@
-import { ContainerOutlined } from "@ant-design/icons";
+import { useState } from "react";
+import { ContainerOutlined, FilePdfOutlined } from "@ant-design/icons";
 import { Show } from "@refinedev/antd";
 import { useShow } from "@refinedev/core";
-import { Alert, Descriptions, Tag } from "antd";
+import { Alert, App, Button, Descriptions, Tag } from "antd";
 import dayjs from "dayjs";
 import { PageTitle } from "../../components/page-title";
+import { descargarPdfDeLiquidacion } from "../../utils/descargar";
 import { MontoCell, MovimientosTable } from "../cuentas-corrientes/movimientos-table";
 import { LIQUIDACION_ESTADO_LABEL, type LiquidacionDetalle } from "../cuentas-corrientes/types";
 
 const FORMATO_FECHA = "DD/MM/YYYY";
 
 // Sin entrada en el menú: se llega desde la cuenta corriente del propietario, por el historial o por la columna
-// "Liquidación" de sus movimientos. Por ahora se ve solo en pantalla, sin imprimir ni generar PDF.
+// "Liquidación" de sus movimientos. Se ve en pantalla y, si está confirmada, se descarga en PDF.
 export const LiquidacionShow = () => {
+  const { message } = App.useApp();
   const { query, result: liquidacion } = useShow<LiquidacionDetalle>();
   const anulada = liquidacion?.estado === "ANULADA";
+  const [descargando, setDescargando] = useState(false);
+
+  // Descargar el PDF de la liquidación, o mostrar por qué no se pudo.
+  const descargarPdf = async () => {
+    if (!liquidacion) {
+      return;
+    }
+
+    setDescargando(true);
+    try {
+      await descargarPdfDeLiquidacion(liquidacion.id, liquidacion.corte);
+    } catch (error) {
+      message.error((error as { message?: string }).message ?? "No se pudo descargar el PDF.");
+    } finally {
+      setDescargando(false);
+    }
+  };
 
   return (
     <Show
       isLoading={query.isLoading}
+      headerButtons={({ defaultButtons }) => (
+        <>
+          {defaultButtons}
+          {liquidacion && !anulada && (
+            <Button icon={<FilePdfOutlined />} loading={descargando} onClick={descargarPdf}>
+              Descargar PDF
+            </Button>
+          )}
+        </>
+      )}
       title={<PageTitle icon={<ContainerOutlined />}>{liquidacion ? `Liquidación N.º ${liquidacion.id}` : "Liquidación"}</PageTitle>}
     >
       {liquidacion && (

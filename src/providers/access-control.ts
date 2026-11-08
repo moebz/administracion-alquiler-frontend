@@ -41,7 +41,7 @@ const FIXED_PERMISSION: Record<string, string> = {
 const CATALOGOS_CHILDREN = ["bancos", "fondos", "medios-pago", "conceptos", "tipos-identificacion", "tipos-relacion", "ciudades"];
 
 // Mismo criterio que CATALOGOS_CHILDREN, para el agrupador "Facturación".
-const FACTURACION_CHILDREN = ["establecimientos", "puntos-expedicion", "timbrados"];
+const FACTURACION_CHILDREN = ["establecimientos", "puntos-expedicion", "timbrados", "empresa"];
 
 const GROUP_CHILDREN: Record<string, string[]> = {
   catalogos: CATALOGOS_CHILDREN,
@@ -70,6 +70,8 @@ const RESOURCE_ACTION_SUFFIX: Record<string, Record<string, string>> = {
   gastos: { create: ".solicitar", edit: ".solicitar" },
   // timbrados: un único permiso (`administrar`) gatea alta, edición y activar/desactivar.
   timbrados: { create: ".administrar", edit: ".administrar", delete: ".administrar" },
+  // empresa: un único permiso (`editar`) gatea ver y editar los datos; la pantalla es solo un form, sin alta ni baja.
+  empresa: { list: ".editar" },
 };
 
 // Permiso que también abre una acción de un resource, además del propio. La factura del propietario se abre desde su
@@ -108,6 +110,7 @@ const RESOURCES_WITH_PERMISSIONS = new Set([
   "establecimientos",
   "puntos-expedicion",
   "timbrados",
+  "empresa",
 ]);
 
 /** null = acceso permitido sin chequeo (resources desconocidos, o agrupadores sin entrada en FIXED_PERMISSION). */
