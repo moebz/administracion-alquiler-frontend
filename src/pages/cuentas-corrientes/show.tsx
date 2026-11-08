@@ -7,6 +7,8 @@ import dayjs, { type Dayjs } from "dayjs";
 import { FilterBar } from "../../components/filter-bar";
 import { PageTitle } from "../../components/page-title";
 import { kyInstance } from "../../providers/data";
+import { Compensaciones } from "./compensaciones";
+import { ControlDocumentosAlert } from "./control-documentos-alert";
 import { fraseDeFactura, fraseDeNota, hayPorDocumentar } from "./documentos-propietario";
 import { FacturarModal } from "./facturar-modal";
 import { FacturasDelPropietario } from "./facturas-del-propietario";
@@ -44,7 +46,7 @@ export const CuentaCorrienteShow = () => {
   const [registrandoFactura, setRegistrandoFactura] = useState(false);
   // Factura del propietario sobre la que se registra una NC desde "Por documentar".
   const [facturaConNc, setFacturaConNc] = useState<number>();
-  // Se incrementa al confirmar o anular una liquidación, al transferir, al facturar o al registrar o anular un documento del propietario, para recargar el detalle, el historial y las facturas.
+  // Se incrementa al confirmar o anular una liquidación, al transferir, al facturar, al registrar o anular un documento del propietario o al anular una compensación, para recargar el detalle, el historial, las facturas y las compensaciones.
   const [version, setVersion] = useState(0);
 
   const fechaIso = saldoAl.format("YYYY-MM-DD");
@@ -155,6 +157,9 @@ export const CuentaCorrienteShow = () => {
         />
       )}
 
+      {/* Control de saldo contra documentos: se muestra siempre, en verde si cuadra y en amarillo si no. */}
+      <ControlDocumentosAlert control={detalle?.control} />
+
       <MovimientosTable movimientos={detalle?.movimientos} loading={cargando} mostrarLiquidacion />
 
       {puedeVerLiquidaciones && id && (
@@ -177,6 +182,12 @@ export const CuentaCorrienteShow = () => {
       {puedeVerLiquidaciones && id && (
         <div style={{ marginTop: 24 }}>
           <FacturasDelPropietario propietarioId={Number(id)} version={version} onCambio={recargar} />
+        </div>
+      )}
+
+      {puedeVerLiquidaciones && id && (
+        <div style={{ marginTop: 24 }}>
+          <Compensaciones propietarioId={Number(id)} version={version} onCambio={recargar} />
         </div>
       )}
 

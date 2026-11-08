@@ -3,6 +3,7 @@ import { Alert, App, Descriptions, Modal } from "antd";
 import dayjs from "dayjs";
 import { extractErrorMessage } from "../../providers/auth";
 import { kyInstance } from "../../providers/data";
+import { ControlDocumentosAlert } from "./control-documentos-alert";
 import { MontoCell, MovimientosTable } from "./movimientos-table";
 import { PorDocumentarAlert } from "./por-documentar-alert";
 import type { LiquidacionVistaPrevia } from "./types";
@@ -104,6 +105,8 @@ export const LiquidarModal = ({ propietarioId, corte, onClose, onConfirmada }: P
           </Descriptions>
           {/* Avisar lo que le falta documentar al propietario con este corte; no impide liquidar. */}
           <PorDocumentarAlert porDocumentar={vistaPrevia.por_documentar} />
+          {/* Avisar si el saldo de la cuenta y los papeles del propietario coinciden; no impide liquidar. */}
+          <ControlDocumentosAlert control={vistaPrevia.control} />
           <MovimientosTable movimientos={vistaPrevia.movimientos} loading={cargando} pageSize={10} />
         </>
       )}

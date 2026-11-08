@@ -61,6 +61,18 @@ export type PorDocumentar = {
   total_facturas: string;
 };
 
+/**
+ * Control de saldo contra documentos: lo que dice la cuenta corriente del propietario contra lo que dicen sus papeles.
+ * Compara todo, sin fecha. `diferencia` = saldo − documentos − por documentar; `cuadra` si es 0.
+ */
+export type ControlDocumentos = {
+  saldo: string;
+  documentos: string;
+  por_documentar: string;
+  diferencia: string;
+  cuadra: boolean;
+};
+
 export type CuentaCorrienteDetalle = {
   propietario: { id: number; nombre: string; documento: string };
   /** YYYY-MM-DD */
@@ -73,6 +85,8 @@ export type CuentaCorrienteDetalle = {
   liquidar: { disponible: boolean; motivo: string | null };
   /** Solo viene con `liquidaciones.ver`. */
   por_documentar?: PorDocumentar;
+  /** Solo viene con `liquidaciones.ver`. */
+  control?: ControlDocumentos;
 };
 
 export type LiquidacionEstado = "CONFIRMADA" | "ANULADA";
@@ -113,6 +127,7 @@ export type LiquidacionVistaPrevia = {
   saldo_final: string;
   movimientos: CuentaCorrienteMovimiento[];
   por_documentar: PorDocumentar;
+  control: ControlDocumentos;
 };
 
 export type TransferenciaVistaPrevia = {
@@ -126,6 +141,19 @@ export type TransferenciaVistaPrevia = {
   /** Cuentas bancarias activas del propietario. */
   cuentas: { id: number; banco: string; numero_cuenta: string }[];
   por_documentar: PorDocumentar;
+  control: ControlDocumentos;
+};
+
+/** Respuesta de transferir: el pago registrado y lo que se compensó de las facturas abiertas con el propietario. */
+export type TransferenciaRegistrada = {
+  id: number;
+  numero: number;
+  /** YYYY-MM-DD */
+  fecha: string;
+  concepto: string | null;
+  monto_total: string;
+  /** 0 si no había nada que compensar. */
+  compensado: string;
 };
 
 export type FacturacionConcepto = "REINTEGRO" | "OTRO" | "COMISION";
@@ -259,4 +287,36 @@ export type FacturaDelPropietarioRow = {
   saldo: string;
   estado: CompraEstado;
   notas: FacturaDelPropietarioNotaRow[];
+};
+
+export type CompensacionEstado = "ACTIVA" | "ANULADA";
+
+export const COMPENSACION_ESTADO_LABEL: Record<CompensacionEstado, string> = {
+  ACTIVA: "Activa",
+  ANULADA: "Anulada",
+};
+
+export const COMPENSACION_ESTADO_COLOR: Record<CompensacionEstado, string> = {
+  ACTIVA: "green",
+  ANULADA: "default",
+};
+
+/** Lo que una compensación cerró de una factura: la que se le emitió al propietario (VENTA) o la que emitió él (COMPRA). */
+export type CompensacionAplicacion = {
+  lado: "VENTA" | "COMPRA";
+  documento_id: number;
+  numero: string | null;
+  monto: string;
+};
+
+export type Compensacion = {
+  id: number;
+  /** YYYY-MM-DD */
+  fecha: string;
+  monto: string;
+  estado: CompensacionEstado;
+  motivo_anulacion: string | null;
+  /** Transferencia de la que salió; null si no nació al transferir. */
+  transferencia: { id: number; numero: number } | null;
+  aplicaciones: CompensacionAplicacion[];
 };

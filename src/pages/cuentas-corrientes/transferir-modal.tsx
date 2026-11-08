@@ -9,10 +9,12 @@ import { extractErrorMessage } from "../../providers/auth";
 import { kyInstance } from "../../providers/data";
 import { formatMonto } from "../../utils/monto";
 import { ValoresFormList, type ValorFormulario } from "../pagos-proveedor/valores-form-list";
+import { armarMensajeDeTransferencia } from "./compensacion";
+import { ControlDocumentosAlert } from "./control-documentos-alert";
 import { FacturarFields } from "./facturar-fields";
 import { MontoCell } from "./movimientos-table";
 import { PorDocumentarAlert } from "./por-documentar-alert";
-import type { FacturarSeleccion, TransferenciaVistaPrevia } from "./types";
+import type { FacturarSeleccion, TransferenciaRegistrada, TransferenciaVistaPrevia } from "./types";
 
 type Valores = { fecha: dayjs.Dayjs; concepto?: string; valores: ValorFormulario[] };
 
@@ -99,7 +101,9 @@ export const TransferirModal = ({ propietarioId, onClose, onTransferida }: Props
     setGuardando(false);
 
     if (response.ok) {
-      message.success("Transferencia registrada.");
+      // Decir lo que se compensó de las facturas abiertas con el propietario, si hubo algo.
+      const registrada = await response.json<TransferenciaRegistrada>();
+      message.success(armarMensajeDeTransferencia(registrada.compensado));
       onTransferida();
       return;
     }
@@ -148,6 +152,8 @@ export const TransferirModal = ({ propietarioId, onClose, onTransferida }: Props
 
       {/* Avisar lo que le falta documentar al propietario a la fecha; no impide transferir. */}
       <PorDocumentarAlert porDocumentar={vistaPrevia?.por_documentar} />
+      {/* Avisar si el saldo de la cuenta y los papeles del propietario coinciden; no impide transferir. */}
+      <ControlDocumentosAlert control={vistaPrevia?.control} />
 
       <Form form={form} layout="vertical" onFinish={transferir} initialValues={{ fecha: dayjs() }}>
         <SectionDivider icon={<FileTextOutlined />}>Datos de la transferencia</SectionDivider>
@@ -180,6 +186,9 @@ export const TransferirModal = ({ propietarioId, onClose, onTransferida }: Props
           </Typography.Text>
           {vistaPrevia && <Typography.Text type="secondary">de {formatMonto(vistaPrevia.tope)}</Typography.Text>}
         </Flex>
+        <Typography.Paragraph type="secondary" style={{ marginTop: 8 }}>
+          Al confirmar, se compensan las facturas abiertas con el propietario y el pago se aplica a sus facturas.
+        </Typography.Paragraph>
 
         {puedeFacturar && (
           <>
