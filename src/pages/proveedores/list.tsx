@@ -42,7 +42,11 @@ export const ProveedorList = () => {
     >
       <Table {...tableProps} rowKey="id">
         <Table.Column dataIndex="nombre" title="Nombre" />
-        <Table.Column dataIndex={["persona", "documento"]} title="Documento" />
+        <Table.Column
+          dataIndex={["persona", "documento"]}
+          title="Documento"
+          render={(documento: string, record: ProveedorRow) => `${record.persona.tipo_identificacion.nombre} ${documento}`}
+        />
         <Table.Column
           dataIndex="rubros"
           title="Rubros"

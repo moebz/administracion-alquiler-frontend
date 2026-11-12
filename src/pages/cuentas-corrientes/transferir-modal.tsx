@@ -210,10 +210,14 @@ export const TransferirModal = ({ propietarioId, onClose, onTransferida }: Props
                 setConFactura(evento.target.checked);
                 setFacturacion(undefined);
               }}
-              style={{ marginBottom: 16 }}
             >
               Facturar también hasta el período
             </Checkbox>
+            <Typography.Paragraph type="secondary" style={{ marginTop: 4 }}>
+              Emite, junto con la transferencia, la factura de la administradora al propietario: la comisión y el reintegro de
+              gastos que todavía no se le facturaron hasta ese período. Es lo mismo que el
+              botón "Facturar".
+            </Typography.Paragraph>
             {conFactura && <FacturarFields propietarioId={propietarioId} onChange={setFacturacion} />}
           </>
         )}

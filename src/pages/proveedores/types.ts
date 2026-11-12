@@ -4,6 +4,7 @@ export type ProveedorRow = {
   persona: {
     id: number;
     tipo_identificacion_id: number;
+    tipo_identificacion: { id: number; nombre: string };
     documento: string;
     nombre: string;
     telefono: string | null;
