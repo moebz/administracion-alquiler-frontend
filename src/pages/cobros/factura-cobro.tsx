@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FileDoneOutlined, StopOutlined } from "@ant-design/icons";
+import { FileDoneOutlined, FilePdfOutlined, StopOutlined } from "@ant-design/icons";
 import { usePermissions } from "@refinedev/core";
 import {
   Alert,
@@ -21,6 +21,7 @@ import { Link } from "react-router";
 import { SectionDivider } from "../../components/section-divider";
 import { extractErrorMessage } from "../../providers/auth";
 import { kyInstance } from "../../providers/data";
+import { descargarPdfDeDocumentoVenta, type TipoDocumentoVenta } from "../../utils/descargar";
 import { formatMonto } from "../../utils/monto";
 import { EmitirNcModal } from "./emitir-nc-modal";
 import { describirAplicacionesActivas } from "./nota-credito";
@@ -96,6 +97,8 @@ export const FacturaCobro = ({ factura, onCambio }: FacturaCobroProps) => {
   const [modalAbierto, setModalAbierto] = useState(false);
   const [emitiendoNc, setEmitiendoNc] = useState(false);
   const [guardando, setGuardando] = useState(false);
+  // Documento (la factura o una NC) cuyo PDF se está descargando.
+  const [descargandoId, setDescargandoId] = useState<number | undefined>();
   const [form] = Form.useForm<{ motivo_anulacion: string }>();
 
   const anular = async (values: { motivo_anulacion: string }) => {
@@ -118,6 +121,18 @@ export const FacturaCobro = ({ factura, onCambio }: FacturaCobroProps) => {
     message.error(
       await extractErrorMessage(response, "No se pudo anular la factura.")
     );
+  };
+
+  // Descargar el PDF de la factura o de una NC, o mostrar el mensaje del servidor si no se pudo.
+  const descargarPdf = async (id: number, tipo: TipoDocumentoVenta, numero: string) => {
+    setDescargandoId(id);
+    try {
+      await descargarPdfDeDocumentoVenta(id, tipo, numero);
+    } catch (error) {
+      message.error((error as { message?: string }).message ?? "No se pudo descargar el PDF.");
+    } finally {
+      setDescargandoId(undefined);
+    }
   };
 
   // Anular con un modal de confirmación que pide el motivo (anular una NC o la aplicación de una NC).
@@ -229,10 +244,22 @@ export const FacturaCobro = ({ factura, onCambio }: FacturaCobroProps) => {
       <SectionDivider icon={<FileDoneOutlined />}>
         {getTituloFactura(factura.emitida_por_este_cobro)}
       </SectionDivider>
-      {/* Ofrecer anular solo una factura emitida; deshabilitado, el tooltip explica por qué todavía no se puede. */}
-      {factura.estado === "EMITIDO" && (puedeAnular || puedeEmitirNc) && (
+      {/* Ofrecer el PDF de la factura, también anulada, y anular solo una factura emitida; deshabilitado, el tooltip explica por qué todavía no se puede. */}
+      {(factura.numero !== null || (factura.estado === "EMITIDO" && (puedeAnular || puedeEmitirNc))) && (
         <Flex justify="flex-end" gap={8} style={{ marginBottom: 8 }}>
-          {puedeEmitirNc && (
+          {factura.numero !== null && (
+            <Tooltip title="Descargar la factura en PDF">
+              <Button
+                size="small"
+                icon={<FilePdfOutlined />}
+                loading={descargandoId === factura.id}
+                onClick={() => descargarPdf(factura.id, "FACTURA", factura.numero!)}
+              >
+                Descargar PDF
+              </Button>
+            </Tooltip>
+          )}
+          {factura.estado === "EMITIDO" && puedeEmitirNc && (
             <Tooltip title={hayPorAcreditar ? undefined : "No queda nada por acreditar"}>
               <Button
                 size="small"
@@ -243,7 +270,7 @@ export const FacturaCobro = ({ factura, onCambio }: FacturaCobroProps) => {
               </Button>
             </Tooltip>
           )}
-          {puedeAnular && (
+          {factura.estado === "EMITIDO" && puedeAnular && (
             <Tooltip title={factura.motivo_no_anulable}>
               <Button
                 danger
@@ -480,6 +507,16 @@ export const FacturaCobro = ({ factura, onCambio }: FacturaCobroProps) => {
                       {NOTA_CREDITO_ESTADO_LABEL[nota.estado]}
                     </Tag>
                   </Tooltip>
+                  {nota.numero !== null && (
+                    <Tooltip title="Descargar la NC en PDF">
+                      <Button
+                        size="small"
+                        icon={<FilePdfOutlined />}
+                        loading={descargandoId === nota.id}
+                        onClick={() => descargarPdf(nota.id, "NOTA_CREDITO", nota.numero!)}
+                      />
+                    </Tooltip>
+                  )}
                   {/* Ofrecer anular solo una NC emitida; deshabilitado, el tooltip explica por qué ya no se puede (168 h). */}
                   {puedeAnular && nota.estado === "EMITIDO" && (
                     <Tooltip title={nota.motivo_no_anulable ?? "Anular NC"}>

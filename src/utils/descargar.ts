@@ -33,3 +33,23 @@ export const rutaDelPdfDeRendicion = (id: number, prefijo = ""): string => `${pr
 /** Descarga el PDF de la rendición. `corte` es YYYY-MM-DD. */
 export const descargarPdfDeRendicion = (id: number, corte: string, prefijo = ""): Promise<void> =>
   descargarArchivo(rutaDelPdfDeRendicion(id, prefijo), nombreDelPdfDeRendicion(id, corte));
+
+/** Tipo de documento de venta con PDF, como lo devuelve el backend. */
+export type TipoDocumentoVenta = "FACTURA" | "NOTA_CREDITO";
+
+/** Arma la ruta del PDF de una factura o NC de venta. El portal del propietario pasa `"propietario/"` como prefijo. */
+export const rutaDelPdfDeDocumentoVenta = (id: number, prefijo = ""): string =>
+  `${prefijo}facturas-venta/${id}/pdf`;
+
+/** Arma el nombre del PDF de una factura o NC; es el mismo que arma `nombreDeArchivo()` del backend. `numeroImpreso` es 001-001-0000123. */
+export const nombreDelPdfDeDocumentoVenta = (tipo: TipoDocumentoVenta, numeroImpreso: string): string =>
+  `${tipo === "FACTURA" ? "factura" : "nota-credito"}-${numeroImpreso}.pdf`;
+
+/** Descarga el PDF de una factura o NC de venta. */
+export const descargarPdfDeDocumentoVenta = (
+  id: number,
+  tipo: TipoDocumentoVenta,
+  numeroImpreso: string,
+  prefijo = ""
+): Promise<void> =>
+  descargarArchivo(rutaDelPdfDeDocumentoVenta(id, prefijo), nombreDelPdfDeDocumentoVenta(tipo, numeroImpreso));
