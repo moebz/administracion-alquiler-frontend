@@ -144,6 +144,7 @@ import { GastoAprobacionList } from "./pages/propietario-gastos";
 import { PropietarioInicio } from "./pages/propietario-inicio";
 import { PropietarioCuentaShow } from "./pages/propietario-cuenta";
 import { PropietarioRendicionList } from "./pages/propietario-rendiciones";
+import { PropietarioFacturaList } from "./pages/propietario-facturas";
 import { PropietarioUnidadList } from "./pages/propietario-unidades";
 import { PropietarioTransferenciaList } from "./pages/propietario-transferencias";
 import { SolicitudTransferenciaList, SolicitudesIcon } from "./pages/solicitudes-transferencia";
@@ -523,6 +524,14 @@ function App() {
                   },
                 },
                 {
+                  name: "propietario/facturas-venta",
+                  list: "/propietario/facturas",
+                  meta: {
+                    label: "Facturas",
+                    icon: <FileDoneOutlined />,
+                  },
+                },
+                {
                   name: "propietario/transferencias",
                   list: "/propietario/transferencias",
                   meta: {
@@ -849,6 +858,7 @@ function App() {
                       <Route index element={<PropietarioRendicionList />} />
                       <Route path="show/:id" element={<RendicionShow prefijoPdf="propietario/" />} />
                     </Route>
+                    <Route path="facturas" element={<PropietarioFacturaList />} />
                     <Route path="transferencias" element={<PropietarioTransferenciaList />} />
                     <Route path="gastos" element={<GastoAprobacionList />} />
                   </Route>

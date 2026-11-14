@@ -35,6 +35,7 @@ const FIXED_PERMISSION: Record<string, string> = {
   "propietario/inicio": "cuenta_corriente.ver_propia",
   "propietario/cuenta": "cuenta_corriente.ver_propia",
   "propietario/rendiciones": "cuenta_corriente.ver_propia",
+  "propietario/facturas-venta": "cuenta_corriente.ver_propia",
   "propietario/transferencias": "cuenta_corriente.ver_propia",
   "propietario/unidades": "unidades.ver_propias",
 };
@@ -63,6 +64,7 @@ const RESOURCE_SECTION: Record<string, Section> = {
   "propietario/inicio": "propietario",
   "propietario/cuenta": "propietario",
   "propietario/rendiciones": "propietario",
+  "propietario/facturas-venta": "propietario",
   "propietario/transferencias": "propietario",
   "propietario/unidades": "propietario",
 };

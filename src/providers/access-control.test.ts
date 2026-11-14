@@ -109,8 +109,8 @@ describe("requiredPermission", () => {
     expect(requiredPermission("propietario/gastos", "edit")).toBe("gastos.aprobar_propio");
   });
 
-  it("resuelve el inicio, la cuenta, las rendiciones y las transferencias del portal a cuenta_corriente.ver_propia", () => {
-    for (const resource of ["propietario/inicio", "propietario/cuenta", "propietario/rendiciones", "propietario/transferencias"]) {
+  it("resuelve el inicio, la cuenta, las rendiciones, las facturas y las transferencias del portal a cuenta_corriente.ver_propia", () => {
+    for (const resource of ["propietario/inicio", "propietario/cuenta", "propietario/rendiciones", "propietario/facturas-venta", "propietario/transferencias"]) {
       expect(requiredPermission(resource, "list")).toBe("cuenta_corriente.ver_propia");
     }
 
@@ -193,8 +193,8 @@ describe("canAccessResource", () => {
     expect(canAccessResource(["acceso.propietario"], "propietario/gastos", "list")).toBe(false);
   });
 
-  it("el inicio, la cuenta, las rendiciones y las transferencias del portal son de la seccion propietario", () => {
-    for (const resource of ["propietario/inicio", "propietario/cuenta", "propietario/rendiciones", "propietario/transferencias"]) {
+  it("el inicio, la cuenta, las rendiciones, las facturas y las transferencias del portal son de la seccion propietario", () => {
+    for (const resource of ["propietario/inicio", "propietario/cuenta", "propietario/rendiciones", "propietario/facturas-venta", "propietario/transferencias"]) {
       expect(canAccessResource(["cuenta_corriente.ver_propia", "acceso.propietario"], resource, "list")).toBe(true);
       expect(canAccessResource(["cuenta_corriente.ver_propia", "acceso.administrador"], resource, "list")).toBe(false);
       expect(canAccessResource(["acceso.propietario"], resource, "list")).toBe(false);
