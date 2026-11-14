@@ -29,6 +29,8 @@ import {
   SolutionOutlined,
   SwapOutlined,
   KeyOutlined,
+  BarChartOutlined,
+  FundOutlined,
 } from "@ant-design/icons";
 import { Refine, Authenticated, CanAccess, useGetIdentity } from "@refinedev/core";
 import { RefineKbar, RefineKbarProvider } from "@refinedev/kbar";
@@ -92,6 +94,7 @@ import { CompraShow } from "./pages/compras";
 import { PagoProveedorList, PagoProveedorShow } from "./pages/pagos-proveedor";
 import { CobroList, CobroShow } from "./pages/cobros";
 import { CuentaCorrienteList, CuentaCorrienteShow } from "./pages/cuentas-corrientes";
+import { CuentasPorCobrarList } from "./pages/cuentas-por-cobrar";
 import { RendicionShow } from "./pages/rendiciones";
 import { FacturaVentaShow } from "./pages/facturas-venta";
 import { BancoList, BancoCreate, BancoEdit } from "./pages/bancos";
@@ -482,6 +485,24 @@ function App() {
                   },
                 },
                 {
+                  // Agrupador de reportes: sin `list` propio, ver FIXED_PERMISSION en providers/access-control.ts.
+                  name: "reportes",
+                  meta: {
+                    label: "Reportes",
+                    icon: <BarChartOutlined />,
+                  },
+                },
+                {
+                  // Solo lectura: se arma al pedirlo, no tiene alta ni edición. El reporte y su PDF salen de /reportes/cuentas-por-cobrar.
+                  name: "cuentas-por-cobrar",
+                  list: "/administrador/cuentas-por-cobrar",
+                  meta: {
+                    label: "Cuentas por cobrar",
+                    icon: <FundOutlined />,
+                    parent: "reportes",
+                  },
+                },
+                {
                   name: "catalogos",
                   meta: {
                     label: "Catálogos",
@@ -749,6 +770,7 @@ function App() {
                       <Route path="show/:id" element={<CuentaCorrienteShow />} />
                     </Route>
                     <Route path="solicitudes-transferencia" element={<SolicitudTransferenciaList />} />
+                    <Route path="cuentas-por-cobrar" element={<CuentasPorCobrarList />} />
                     <Route path="rendiciones">
                       <Route path="show/:id" element={<RendicionShow />} />
                     </Route>

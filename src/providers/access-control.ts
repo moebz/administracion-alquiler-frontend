@@ -17,6 +17,7 @@ const RESOURCE_ALIAS: Record<string, string> = {
   "cuentas-corrientes": "cuenta_corriente",
   // Las solicitudes de transferencia se ven con el permiso de ver las rendiciones.
   "solicitudes-transferencia": "rendiciones",
+  "cuentas-por-cobrar": "cuentas_por_cobrar",
 };
 
 // roles y las pantallas propias de la sección propietario se gatean con un
@@ -31,6 +32,7 @@ const FIXED_PERMISSION: Record<string, string> = {
   roles: "roles.administrar",
   catalogos: "acceso.administrador",
   facturacion: "acceso.administrador",
+  reportes: "acceso.administrador",
   "propietario/gastos": "gastos.aprobar_propio",
   "propietario/inicio": "cuenta_corriente.ver_propia",
   "propietario/cuenta": "cuenta_corriente.ver_propia",
@@ -51,9 +53,13 @@ const CATALOGOS_CHILDREN = ["bancos", "fondos", "medios-pago", "conceptos", "tip
 // Mismo criterio que CATALOGOS_CHILDREN, para el agrupador "Facturación".
 const FACTURACION_CHILDREN = ["establecimientos", "puntos-expedicion", "timbrados", "empresa"];
 
+// Mismo criterio, para el agrupador "Reportes".
+const REPORTES_CHILDREN = ["cuentas-por-cobrar"];
+
 const GROUP_CHILDREN: Record<string, string[]> = {
   catalogos: CATALOGOS_CHILDREN,
   facturacion: FACTURACION_CHILDREN,
+  reportes: REPORTES_CHILDREN,
 };
 
 // Sección a la que pertenece cada resource, para el chequeo de acceso.accion
@@ -122,6 +128,7 @@ const RESOURCES_WITH_PERMISSIONS = new Set([
   "cuentas-corrientes",
   "rendiciones",
   "solicitudes-transferencia",
+  "cuentas-por-cobrar",
   "establecimientos",
   "puntos-expedicion",
   "timbrados",

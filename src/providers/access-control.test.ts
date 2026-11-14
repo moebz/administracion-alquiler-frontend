@@ -124,6 +124,11 @@ describe("requiredPermission", () => {
   it("resuelve la lista de solicitudes de transferencia del panel interno a rendiciones.ver", () => {
     expect(requiredPermission("solicitudes-transferencia", "list")).toBe("rendiciones.ver");
   });
+
+  it("resuelve cuentas-por-cobrar a su permiso propio y el agrupador reportes a acceso.administrador", () => {
+    expect(requiredPermission("cuentas-por-cobrar", "list")).toBe("cuentas_por_cobrar.ver");
+    expect(requiredPermission("reportes", "list")).toBe("acceso.administrador");
+  });
 });
 
 describe("canAccessResource", () => {
@@ -181,6 +186,18 @@ describe("canAccessResource", () => {
     expect(canAccessResource(["acceso.administrador", "edificios.ver"], "facturacion", "list")).toBe(false);
     expect(canAccessResource(["timbrados.ver"], "facturacion", "list")).toBe(false);
     expect(canAccessResource(["acceso.administrador", "timbrados.ver"], "facturacion", "list")).toBe(true);
+  });
+
+  it("permite cuentas-por-cobrar solo con acceso.administrador y su permiso propio, sin reusar cobros ni cuenta corriente", () => {
+    expect(canAccessResource(["acceso.administrador", "cuentas_por_cobrar.ver"], "cuentas-por-cobrar", "list")).toBe(true);
+    expect(canAccessResource(["cuentas_por_cobrar.ver"], "cuentas-por-cobrar", "list")).toBe(false);
+    expect(canAccessResource(["acceso.administrador", "cobros.ver", "cuenta_corriente.ver"], "cuentas-por-cobrar", "list")).toBe(false);
+  });
+
+  it("permite el agrupador reportes solo con acceso.administrador y el permiso de algun reporte", () => {
+    expect(canAccessResource(["acceso.administrador", "cobros.ver"], "reportes", "list")).toBe(false);
+    expect(canAccessResource(["cuentas_por_cobrar.ver"], "reportes", "list")).toBe(false);
+    expect(canAccessResource(["acceso.administrador", "cuentas_por_cobrar.ver"], "reportes", "list")).toBe(true);
   });
 
   it("un resource de la seccion propietario pide el acceso de esa seccion, no el de administrador", () => {
