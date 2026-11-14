@@ -6,25 +6,25 @@ import { kyInstance } from "../../providers/data";
 import { ControlDocumentosAlert } from "./control-documentos-alert";
 import { MontoCell, MovimientosTable } from "./movimientos-table";
 import { PorDocumentarAlert } from "./por-documentar-alert";
-import type { LiquidacionVistaPrevia } from "./types";
+import type { RendicionVistaPrevia } from "./types";
 
 const FORMATO_FECHA = "DD/MM/YYYY";
 
 type Props = {
   propietarioId: number;
-  /** Corte de la liquidación, YYYY-MM-DD. */
+  /** Corte de la rendición, YYYY-MM-DD. */
   corte: string;
   onClose: () => void;
   /** Se llama después de confirmar, para que la cuenta recargue sus movimientos y su historial. */
   onConfirmada: () => void;
 };
 
-// Muestra lo que tomaría la liquidación con ese corte y la confirma. Confirmar manda el total que vio el usuario:
+// Muestra lo que tomaría la rendición con ese corte y la confirma. Confirmar manda el total que vio el usuario:
 // si cambió desde la vista previa el backend responde 422, y el modal vuelve a pedirla para que se revise de nuevo.
-export const LiquidarModal = ({ propietarioId, corte, onClose, onConfirmada }: Props) => {
+export const RendirModal = ({ propietarioId, corte, onClose, onConfirmada }: Props) => {
   const { message } = App.useApp();
 
-  const [vistaPrevia, setVistaPrevia] = useState<LiquidacionVistaPrevia>();
+  const [vistaPrevia, setVistaPrevia] = useState<RendicionVistaPrevia>();
   const [error, setError] = useState<string>();
   const [cargando, setCargando] = useState(true);
   const [confirmando, setConfirmando] = useState(false);
@@ -35,13 +35,13 @@ export const LiquidarModal = ({ propietarioId, corte, onClose, onConfirmada }: P
 
     try {
       const previa = await kyInstance
-        .get(`cuentas-corrientes/${propietarioId}/liquidacion-preview`, { searchParams: { corte } })
-        .json<LiquidacionVistaPrevia>();
+        .get(`cuentas-corrientes/${propietarioId}/rendicion-preview`, { searchParams: { corte } })
+        .json<RendicionVistaPrevia>();
       setVistaPrevia(previa);
     } catch (falla) {
       // Los GET fallidos se rechazan con el mensaje del servidor (ver providers/data.ts).
       setVistaPrevia(undefined);
-      setError((falla as { message?: string }).message ?? "No se pudo calcular la liquidación.");
+      setError((falla as { message?: string }).message ?? "No se pudo calcular la rendición.");
     } finally {
       setCargando(false);
     }
@@ -57,19 +57,19 @@ export const LiquidarModal = ({ propietarioId, corte, onClose, onConfirmada }: P
     }
 
     setConfirmando(true);
-    const response = await kyInstance.post(`cuentas-corrientes/${propietarioId}/liquidaciones`, {
+    const response = await kyInstance.post(`cuentas-corrientes/${propietarioId}/rendiciones`, {
       json: { corte, total_esperado: vistaPrevia.total },
     });
     setConfirmando(false);
 
     if (response.ok) {
-      message.success("Liquidación confirmada.");
+      message.success("Rendición confirmada.");
       onConfirmada();
       return;
     }
 
     // Mostrar el motivo y volver a calcular, para que el usuario revise lo que cambió.
-    message.error(await extractErrorMessage(response, "No se pudo confirmar la liquidación."));
+    message.error(await extractErrorMessage(response, "No se pudo confirmar la rendición."));
     void cargarVistaPrevia();
   };
 
@@ -77,8 +77,8 @@ export const LiquidarModal = ({ propietarioId, corte, onClose, onConfirmada }: P
     <Modal
       open
       width={960}
-      title="Liquidar al propietario"
-      okText="Confirmar liquidación"
+      title="Rendir al propietario"
+      okText="Confirmar rendición"
       cancelText="Cancelar"
       okButtonProps={{ disabled: !vistaPrevia || cargando }}
       confirmLoading={confirmando}
@@ -96,16 +96,16 @@ export const LiquidarModal = ({ propietarioId, corte, onClose, onConfirmada }: P
             <Descriptions.Item label="Saldo anterior">
               <MontoCell monto={vistaPrevia.saldo_anterior} />
             </Descriptions.Item>
-            <Descriptions.Item label="Total de esta liquidación">
+            <Descriptions.Item label="Total de esta rendición">
               <MontoCell monto={vistaPrevia.total} />
             </Descriptions.Item>
             <Descriptions.Item label="Saldo final">
               <MontoCell monto={vistaPrevia.saldo_final} />
             </Descriptions.Item>
           </Descriptions>
-          {/* Avisar lo que le falta documentar al propietario con este corte; no impide liquidar. */}
+          {/* Avisar lo que le falta documentar al propietario con este corte; no impide rendir. */}
           <PorDocumentarAlert porDocumentar={vistaPrevia.por_documentar} />
-          {/* Avisar si el saldo de la cuenta y los papeles del propietario coinciden; no impide liquidar. */}
+          {/* Avisar si el saldo de la cuenta y los papeles del propietario coinciden; no impide rendir. */}
           <ControlDocumentosAlert control={vistaPrevia.control} />
           <MovimientosTable movimientos={vistaPrevia.movimientos} loading={cargando} pageSize={10} />
         </>

@@ -23,8 +23,8 @@ export type CuentaCorrienteMovimiento = {
   monto: string;
   /** Saldo acumulado hasta esta fila. */
   saldo: string;
-  /** Liquidación que selló las líneas de la fila; null si todavía no se liquidaron. */
-  liquidacion_id: number | null;
+  /** Rendición que selló las líneas de la fila; null si todavía no se rindieron. */
+  rendicion_id: number | null;
   /** Pago al propietario que originó la fila; null si no es una transferencia. */
   pago_proveedor_id: number | null;
   lineas: CuentaCorrienteLinea[];
@@ -82,46 +82,46 @@ export type CuentaCorrienteDetalle = {
   /** Lo que vence después de `saldo_al`. */
   por_vencer: string;
   movimientos: CuentaCorrienteMovimiento[];
-  /** Si se puede liquidar con `saldo_al` como corte y, si no, por qué. */
-  liquidar: { disponible: boolean; motivo: string | null };
-  /** Solo viene con `liquidaciones.ver`. */
+  /** Si se puede rendir con `saldo_al` como corte y, si no, por qué. */
+  rendir: { disponible: boolean; motivo: string | null };
+  /** Solo viene con `rendiciones.ver`. */
   por_documentar?: PorDocumentar;
-  /** Solo viene con `liquidaciones.ver`. */
+  /** Solo viene con `rendiciones.ver`. */
   control?: ControlDocumentos;
-  /** Su solicitud de transferencia pendiente, o null; solo viene con `liquidaciones.ver`. */
+  /** Su solicitud de transferencia pendiente, o null; solo viene con `rendiciones.ver`. */
   solicitud_pendiente?: SolicitudTransferencia | null;
 };
 
-export type LiquidacionEstado = "CONFIRMADA" | "ANULADA";
+export type RendicionEstado = "CONFIRMADA" | "ANULADA";
 
-export const LIQUIDACION_ESTADO_LABEL: Record<LiquidacionEstado, string> = {
+export const RENDICION_ESTADO_LABEL: Record<RendicionEstado, string> = {
   CONFIRMADA: "Confirmada",
   ANULADA: "Anulada",
 };
 
-export type LiquidacionResumen = {
+export type RendicionResumen = {
   id: number;
   /** YYYY-MM-DD */
   corte: string;
   saldo_anterior: string;
   total: string;
   saldo_final: string;
-  estado: LiquidacionEstado;
+  estado: RendicionEstado;
   /** YYYY-MM-DD */
   fecha_anulacion: string | null;
   motivo_anulacion: string | null;
 };
 
-/** Una fila del historial: solo la última liquidación confirmada se puede anular. */
-export type LiquidacionHistorialRow = LiquidacionResumen & { puede_anular: boolean };
+/** Una fila del historial: solo la última rendición confirmada se puede anular. */
+export type RendicionHistorialRow = RendicionResumen & { puede_anular: boolean };
 
-export type LiquidacionDetalle = LiquidacionResumen & {
+export type RendicionDetalle = RendicionResumen & {
   propietario: { id: number; nombre: string; documento: string };
-  /** Vacío en una liquidación anulada: sus líneas volvieron a quedar sin liquidar. */
+  /** Vacío en una rendición anulada: sus líneas volvieron a quedar sin rendir. */
   movimientos: CuentaCorrienteMovimiento[];
 };
 
-export type LiquidacionVistaPrevia = {
+export type RendicionVistaPrevia = {
   propietario: { id: number; nombre: string; documento: string };
   /** YYYY-MM-DD */
   corte: string;
@@ -137,7 +137,7 @@ export type TransferenciaVistaPrevia = {
   propietario: { id: number; nombre: string; documento: string };
   /** YYYY-MM-DD */
   fecha: string;
-  /** Lo liquidado que todavía no se transfirió. */
+  /** Lo rendido que todavía no se transfirió. */
   sugerido: string;
   /** Saldo del propietario a `fecha`: lo máximo que se le puede transferir. */
   tope: string;

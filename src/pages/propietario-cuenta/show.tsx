@@ -11,7 +11,7 @@ import type { PropietarioCuenta } from "./types";
 
 const FORMATO_FECHA = "DD/MM/YYYY";
 
-const rutaLiquidacion = (id: number): string => `/propietario/liquidaciones/show/${id}`;
+const rutaRendicion = (id: number): string => `/propietario/rendiciones/show/${id}`;
 
 // "Mi cuenta": los movimientos del propietario con el saldo acumulado a la fecha que elija. Es el detalle de la cuenta
 // corriente del panel interno sin botones ni lo que es de la administradora. Pide la cuenta de quien está logueado.
@@ -72,7 +72,7 @@ export const PropietarioCuentaShow = () => {
         )}
       </Descriptions>
 
-      <MovimientosTable movimientos={cuenta?.movimientos} loading={cargando} mostrarLiquidacion rutaLiquidacion={rutaLiquidacion} />
+      <MovimientosTable movimientos={cuenta?.movimientos} loading={cargando} mostrarRendicion rutaRendicion={rutaRendicion} />
     </Show>
   );
 };

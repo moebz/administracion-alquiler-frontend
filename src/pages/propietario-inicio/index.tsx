@@ -112,7 +112,7 @@ export const PropietarioInicio = () => {
               }
             >
               <Statistic value={inicio ? formatMonto(inicio.disponible) : undefined} />
-              <Typography.Text type="secondary">Incluye lo que venció hasta hoy, liquidado o no.</Typography.Text>
+              <Typography.Text type="secondary">Incluye lo que venció hasta hoy, rendido o no.</Typography.Text>
             </Card>
 
             {/* La última solicitud: solo si ya pidió alguna. */}

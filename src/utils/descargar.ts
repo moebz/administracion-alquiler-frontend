@@ -1,8 +1,8 @@
 import { extractErrorMessage } from "../providers/auth";
 import { kyInstance } from "../providers/data";
 
-/** Arma el nombre del PDF de una liquidación; es el mismo que arma `nombreDeArchivo()` del backend. `corte` es YYYY-MM-DD. */
-export const nombreDelPdfDeLiquidacion = (id: number, corte: string): string => `liquidacion-${id}-${corte}.pdf`;
+/** Arma el nombre del PDF de una rendición; es el mismo que arma `nombreDeArchivo()` del backend. `corte` es YYYY-MM-DD. */
+export const nombreDelPdfDeRendicion = (id: number, corte: string): string => `rendicion-${id}-${corte}.pdf`;
 
 /**
  * Descarga el archivo de la ruta con el nombre dado. Pide la ruta con `kyInstance` porque manda el token, cosa que
@@ -27,9 +27,9 @@ export const descargarArchivo = async (ruta: string, nombre: string): Promise<vo
   URL.revokeObjectURL(url);
 };
 
-/** Arma la ruta del PDF de la liquidación. El portal del propietario pasa `"propietario/"` como prefijo. */
-export const rutaDelPdfDeLiquidacion = (id: number, prefijo = ""): string => `${prefijo}liquidaciones/${id}/pdf`;
+/** Arma la ruta del PDF de la rendición. El portal del propietario pasa `"propietario/"` como prefijo. */
+export const rutaDelPdfDeRendicion = (id: number, prefijo = ""): string => `${prefijo}rendiciones/${id}/pdf`;
 
-/** Descarga el PDF de la liquidación. `corte` es YYYY-MM-DD. */
-export const descargarPdfDeLiquidacion = (id: number, corte: string, prefijo = ""): Promise<void> =>
-  descargarArchivo(rutaDelPdfDeLiquidacion(id, prefijo), nombreDelPdfDeLiquidacion(id, corte));
+/** Descarga el PDF de la rendición. `corte` es YYYY-MM-DD. */
+export const descargarPdfDeRendicion = (id: number, corte: string, prefijo = ""): Promise<void> =>
+  descargarArchivo(rutaDelPdfDeRendicion(id, prefijo), nombreDelPdfDeRendicion(id, corte));

@@ -3,7 +3,7 @@ import type { SolicitudTransferencia } from "../solicitudes-transferencia/types"
 
 /** Respuesta de `GET /propietario/inicio`. */
 export type PropietarioInicioDatos = {
-  /** Su saldo a hoy: lo que puede pedir, liquidado o no. */
+  /** Su saldo a hoy: lo que puede pedir, rendido o no. */
   disponible: string;
   /** Movimientos que vencen después de hoy, con el saldo acumulado desde `disponible`. */
   por_vencer: CuentaCorrienteMovimiento[];

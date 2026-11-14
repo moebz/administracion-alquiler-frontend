@@ -64,7 +64,7 @@ export const elegirMontoPrecargado = (previa: { sugerido: string; tope: string; 
     return pedido > 0 ? pedido : undefined;
   }
 
-  // Sin solicitud, proponer lo liquidado que todavía no se transfirió.
+  // Sin solicitud, proponer lo rendido que todavía no se transfirió.
   if (Number(previa.sugerido) > 0) {
     return Number(previa.sugerido);
   }

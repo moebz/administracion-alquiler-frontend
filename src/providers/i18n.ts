@@ -157,6 +157,12 @@ const es = {
     "solicitudes-transferencia": {
       "solicitudes-transferencia": "solicitud de transferencia",
     },
+    rendiciones: {
+      rendiciones: "rendición",
+    },
+    "propietario/rendiciones": {
+      "propietario/rendiciones": "rendición",
+    },
   },
 };
 

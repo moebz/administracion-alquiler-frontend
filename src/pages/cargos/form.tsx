@@ -181,7 +181,7 @@ export const CargoForm = ({ formProps }: { formProps: FormProps }) => {
             </Form.Item>
           )}
         </Col>
-        {/* El cargo al propietario no tiene vencimiento: no se le reclama el pago, se le descuenta en la liquidación. */}
+        {/* El cargo al propietario no tiene vencimiento: no se le reclama el pago, se le descuenta en la rendición. */}
         {!alPropietario && (
           <Col xs={24} md={8}>
             <Form.Item

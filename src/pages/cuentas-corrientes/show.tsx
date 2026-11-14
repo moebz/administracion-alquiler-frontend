@@ -13,8 +13,8 @@ import { fraseDeFactura, fraseDeNota, hayPorDocumentar } from "./documentos-prop
 import { FacturarModal } from "./facturar-modal";
 import { FacturasDelPropietario } from "./facturas-del-propietario";
 import { FacturasPropietario } from "./facturas-propietario";
-import { HistorialLiquidaciones } from "./historial-liquidaciones";
-import { LiquidarModal } from "./liquidar-modal";
+import { HistorialRendiciones } from "./historial-rendiciones";
+import { RendirModal } from "./rendir-modal";
 import { MontoCell, MovimientosTable } from "./movimientos-table";
 import { RegistrarFacturaPropietarioModal } from "./registrar-factura-propietario-modal";
 import { RegistrarNcPropietarioModal } from "./registrar-nc-propietario-modal";
@@ -30,29 +30,29 @@ export const CuentaCorrienteShow = () => {
   const { message } = App.useApp();
   const invalidate = useInvalidate();
   const { data: permissions } = usePermissions<string[]>({});
-  const puedeVerLiquidaciones = permissions?.includes("liquidaciones.ver") ?? false;
-  const puedeLiquidar = permissions?.includes("liquidaciones.confirmar") ?? false;
-  const puedeAnular = permissions?.includes("liquidaciones.anular") ?? false;
+  const puedeVerRendiciones = permissions?.includes("rendiciones.ver") ?? false;
+  const puedeRendir = permissions?.includes("rendiciones.confirmar") ?? false;
+  const puedeAnular = permissions?.includes("rendiciones.anular") ?? false;
   // Transferir saca plata de caja: pide el permiso propio y también el de registrar pagos (ver el backend).
-  const puedeTransferir = (permissions?.includes("liquidaciones.transferir") && permissions?.includes("pagos.registrar")) ?? false;
+  const puedeTransferir = (permissions?.includes("rendiciones.transferir") && permissions?.includes("pagos.registrar")) ?? false;
   // Rechazar la solicitud de transferencia del propietario pide el permiso de transferir (ver el backend).
-  const puedeRechazarSolicitud = permissions?.includes("liquidaciones.transferir") ?? false;
+  const puedeRechazarSolicitud = permissions?.includes("rendiciones.transferir") ?? false;
   // Facturar emite una factura (consume numeración): pide el permiso propio y también el de emitir facturas.
-  const puedeFacturar = (permissions?.includes("liquidaciones.facturar") && permissions?.includes("facturas.emitir")) ?? false;
+  const puedeFacturar = (permissions?.includes("rendiciones.facturar") && permissions?.includes("facturas.emitir")) ?? false;
   // Registrar la factura o la NC del propietario carga el papel de otro como compra: pide el permiso propio y el de registrar compras.
-  const puedeRegistrarDocumentos = (permissions?.includes("liquidaciones.registrar_documentos") && permissions?.includes("compras.registrar")) ?? false;
+  const puedeRegistrarDocumentos = (permissions?.includes("rendiciones.registrar_documentos") && permissions?.includes("compras.registrar")) ?? false;
 
   const [saldoAl, setSaldoAl] = useState<Dayjs>(() => dayjs());
   const [detalle, setDetalle] = useState<CuentaCorrienteDetalle>();
   const [cargando, setCargando] = useState(true);
-  const [liquidando, setLiquidando] = useState(false);
+  const [rindiendo, setRindiendo] = useState(false);
   const [transfiriendo, setTransfiriendo] = useState(false);
   const [rechazandoSolicitud, setRechazandoSolicitud] = useState(false);
   const [facturando, setFacturando] = useState(false);
   const [registrandoFactura, setRegistrandoFactura] = useState(false);
   // Factura del propietario sobre la que se registra una NC desde "Por documentar".
   const [facturaConNc, setFacturaConNc] = useState<number>();
-  // Se incrementa al confirmar o anular una liquidación, al transferir, al facturar, al registrar o anular un documento del propietario o al anular una compensación, para recargar el detalle, el historial, las facturas y las compensaciones.
+  // Se incrementa al confirmar o anular una rendición, al transferir, al facturar, al registrar o anular un documento del propietario o al anular una compensación, para recargar el detalle, el historial, las facturas y las compensaciones.
   const [version, setVersion] = useState(0);
 
   const fechaIso = saldoAl.format("YYYY-MM-DD");
@@ -93,7 +93,7 @@ export const CuentaCorrienteShow = () => {
   const porDocumentar = detalle?.por_documentar;
   const solicitudPendiente = detalle?.solicitud_pendiente ?? null;
   const hayPorVencer = detalle !== undefined && Number(detalle.por_vencer) !== 0;
-  const liquidable = detalle?.liquidar.disponible ?? false;
+  const sePuedeRendir = detalle?.rendir.disponible ?? false;
 
   return (
     <Show
@@ -102,12 +102,12 @@ export const CuentaCorrienteShow = () => {
       headerButtons={({ defaultButtons }) => (
         <Space>
           {defaultButtons}
-          {puedeLiquidar && (
-            // El botón usa como corte la fecha de "Saldo al"; si no se puede liquidar con ella, el tooltip dice por qué.
-            <Tooltip title={liquidable ? undefined : detalle?.liquidar.motivo}>
+          {puedeRendir && (
+            // El botón usa como corte la fecha de "Saldo al"; si no se puede rendir con ella, el tooltip dice por qué.
+            <Tooltip title={sePuedeRendir ? undefined : detalle?.rendir.motivo}>
               <span>
-                <Button type="primary" disabled={!liquidable} onClick={() => setLiquidando(true)}>
-                  Liquidar
+                <Button type="primary" disabled={!sePuedeRendir} onClick={() => setRindiendo(true)}>
+                  Rendir
                 </Button>
               </span>
             </Tooltip>
@@ -197,11 +197,11 @@ export const CuentaCorrienteShow = () => {
       {/* Control de saldo contra documentos: se muestra siempre, en verde si cuadra y en amarillo si no. */}
       <ControlDocumentosAlert control={detalle?.control} />
 
-      <MovimientosTable movimientos={detalle?.movimientos} loading={cargando} mostrarLiquidacion />
+      <MovimientosTable movimientos={detalle?.movimientos} loading={cargando} mostrarRendicion />
 
-      {puedeVerLiquidaciones && id && (
+      {puedeVerRendiciones && id && (
         <div style={{ marginTop: 24 }}>
-          <HistorialLiquidaciones
+          <HistorialRendiciones
             propietarioId={Number(id)}
             puedeAnular={puedeAnular}
             version={version}
@@ -210,31 +210,31 @@ export const CuentaCorrienteShow = () => {
         </div>
       )}
 
-      {puedeVerLiquidaciones && id && (
+      {puedeVerRendiciones && id && (
         <div style={{ marginTop: 24 }}>
           <FacturasPropietario propietarioId={Number(id)} version={version} />
         </div>
       )}
 
-      {puedeVerLiquidaciones && id && (
+      {puedeVerRendiciones && id && (
         <div style={{ marginTop: 24 }}>
           <FacturasDelPropietario propietarioId={Number(id)} version={version} onCambio={recargar} />
         </div>
       )}
 
-      {puedeVerLiquidaciones && id && (
+      {puedeVerRendiciones && id && (
         <div style={{ marginTop: 24 }}>
           <Compensaciones propietarioId={Number(id)} version={version} onCambio={recargar} />
         </div>
       )}
 
-      {liquidando && detalle && (
-        <LiquidarModal
+      {rindiendo && detalle && (
+        <RendirModal
           propietarioId={detalle.propietario.id}
           corte={detalle.saldo_al}
-          onClose={() => setLiquidando(false)}
+          onClose={() => setRindiendo(false)}
           onConfirmada={() => {
-            setLiquidando(false);
+            setRindiendo(false);
             recargar();
           }}
         />

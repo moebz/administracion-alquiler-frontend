@@ -6,7 +6,7 @@ import { Badge } from "antd";
 // con estado=PENDIENTE (solo si el usuario puede verlo): cuando Refine invalida el resource, el contador se actualiza.
 export const SolicitudesIcon = () => {
   const { data: permissions } = usePermissions<string[]>({});
-  const puedeVer = permissions?.includes("liquidaciones.ver") ?? false;
+  const puedeVer = permissions?.includes("rendiciones.ver") ?? false;
   const { result } = useList({
     resource: "solicitudes-transferencia",
     filters: [{ field: "estado", operator: "eq", value: "PENDIENTE" }],

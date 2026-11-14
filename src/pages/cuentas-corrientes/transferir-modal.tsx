@@ -26,14 +26,14 @@ type Props = {
   onTransferida: () => void;
 };
 
-// Registra el desembolso al propietario desde su cuenta corriente. Al elegir la fecha pide el monto sugerido (lo liquidado
+// Registra el desembolso al propietario desde su cuenta corriente. Al elegir la fecha pide el monto sugerido (lo rendido
 // que todavía no se transfirió) y el tope (el saldo a esa fecha); el backend rechaza lo que supere el tope. Si el propietario
 // tiene una solicitud pendiente, la transferencia la atiende: precarga su monto y su cuenta en vez del sugerido. Con
 // "Facturar también hasta el período" corre la misma acción de facturar en la misma transacción: si falla, no se transfiere.
 export const TransferirModal = ({ propietarioId, onClose, onTransferida }: Props) => {
   const { message } = App.useApp();
   const { data: permissions } = usePermissions<string[]>({});
-  const puedeFacturar = (permissions?.includes("liquidaciones.facturar") && permissions?.includes("facturas.emitir")) ?? false;
+  const puedeFacturar = (permissions?.includes("rendiciones.facturar") && permissions?.includes("facturas.emitir")) ?? false;
   const [form] = Form.useForm<Valores>();
   const [vistaPrevia, setVistaPrevia] = useState<TransferenciaVistaPrevia>();
   const [error, setError] = useState<string>();

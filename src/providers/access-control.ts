@@ -15,8 +15,8 @@ const RESOURCE_ALIAS: Record<string, string> = {
   "pagos-proveedor": "pagos",
   "puntos-expedicion": "puntos_expedicion",
   "cuentas-corrientes": "cuenta_corriente",
-  // Las solicitudes de transferencia se ven con el permiso de ver las liquidaciones.
-  "solicitudes-transferencia": "liquidaciones",
+  // Las solicitudes de transferencia se ven con el permiso de ver las rendiciones.
+  "solicitudes-transferencia": "rendiciones",
 };
 
 // roles y las pantallas propias de la sección propietario se gatean con un
@@ -34,7 +34,7 @@ const FIXED_PERMISSION: Record<string, string> = {
   "propietario/gastos": "gastos.aprobar_propio",
   "propietario/inicio": "cuenta_corriente.ver_propia",
   "propietario/cuenta": "cuenta_corriente.ver_propia",
-  "propietario/liquidaciones": "cuenta_corriente.ver_propia",
+  "propietario/rendiciones": "cuenta_corriente.ver_propia",
   "propietario/transferencias": "cuenta_corriente.ver_propia",
   "propietario/unidades": "unidades.ver_propias",
 };
@@ -62,7 +62,7 @@ const RESOURCE_SECTION: Record<string, Section> = {
   "propietario/gastos": "propietario",
   "propietario/inicio": "propietario",
   "propietario/cuenta": "propietario",
-  "propietario/liquidaciones": "propietario",
+  "propietario/rendiciones": "propietario",
   "propietario/transferencias": "propietario",
   "propietario/unidades": "propietario",
 };
@@ -87,9 +87,9 @@ const RESOURCE_ACTION_SUFFIX: Record<string, Record<string, string>> = {
 };
 
 // Permiso que también abre una acción de un resource, además del propio. La factura del propietario se abre desde su
-// cuenta corriente, así que `compras/show` alcanza con poder ver las liquidaciones (igual que `GET /compras/{id}`).
+// cuenta corriente, así que `compras/show` alcanza con poder ver las rendiciones (igual que `GET /compras/{id}`).
 const ALTERNATIVE_PERMISSION: Record<string, Record<string, string>> = {
-  compras: { show: "liquidaciones.ver" },
+  compras: { show: "rendiciones.ver" },
 };
 
 const RESOURCES_WITH_PERMISSIONS = new Set([
@@ -118,7 +118,7 @@ const RESOURCES_WITH_PERMISSIONS = new Set([
   "pagos-proveedor",
   "cobros",
   "cuentas-corrientes",
-  "liquidaciones",
+  "rendiciones",
   "solicitudes-transferencia",
   "establecimientos",
   "puntos-expedicion",

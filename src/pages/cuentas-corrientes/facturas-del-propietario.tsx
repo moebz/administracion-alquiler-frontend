@@ -27,8 +27,8 @@ export const FacturasDelPropietario = ({ propietarioId, version, onCambio }: Pro
   const { message, modal } = App.useApp();
   const { data: permissions } = usePermissions<string[]>({});
   // Registrar y anular piden el permiso del módulo y el del core (ver el backend).
-  const puedeRegistrar = (permissions?.includes("liquidaciones.registrar_documentos") && permissions?.includes("compras.registrar")) ?? false;
-  const puedeAnular = (permissions?.includes("liquidaciones.registrar_documentos") && permissions?.includes("compras.anular")) ?? false;
+  const puedeRegistrar = (permissions?.includes("rendiciones.registrar_documentos") && permissions?.includes("compras.registrar")) ?? false;
+  const puedeAnular = (permissions?.includes("rendiciones.registrar_documentos") && permissions?.includes("compras.anular")) ?? false;
   // Anular una NC con aplicaciones activas pide además anular pagos.
   const puedeAnularPagos = permissions?.includes("pagos.anular") ?? false;
 

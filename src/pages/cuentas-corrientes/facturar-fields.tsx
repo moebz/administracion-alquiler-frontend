@@ -15,7 +15,7 @@ import {
 } from "./types";
 
 const PERMISO_LABEL: Record<string, string> = {
-  "liquidaciones.facturar": "Facturar al propietario",
+  "rendiciones.facturar": "Facturar al propietario",
   "facturas.emitir": "Emitir facturas de venta",
   "facturas.emitir_nc": "Emitir notas de crédito de venta",
 };

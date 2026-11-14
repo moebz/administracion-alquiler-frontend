@@ -30,7 +30,7 @@ export const SolicitudTransferenciaList = () => {
   const { data: permissions } = usePermissions<string[]>({});
   const invalidate = useInvalidate();
   // Rechazar pide el permiso de transferir; transferir pide además el de registrar pagos (ver el backend).
-  const puedeRechazar = permissions?.includes("liquidaciones.transferir") ?? false;
+  const puedeRechazar = permissions?.includes("rendiciones.transferir") ?? false;
   const puedeTransferir = (puedeRechazar && permissions?.includes("pagos.registrar")) ?? false;
   const puedeVerCuenta = permissions?.includes("cuenta_corriente.ver") ?? false;
 

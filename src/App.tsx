@@ -92,7 +92,7 @@ import { CompraShow } from "./pages/compras";
 import { PagoProveedorList, PagoProveedorShow } from "./pages/pagos-proveedor";
 import { CobroList, CobroShow } from "./pages/cobros";
 import { CuentaCorrienteList, CuentaCorrienteShow } from "./pages/cuentas-corrientes";
-import { LiquidacionShow } from "./pages/liquidaciones";
+import { RendicionShow } from "./pages/rendiciones";
 import { FacturaVentaShow } from "./pages/facturas-venta";
 import { BancoList, BancoCreate, BancoEdit } from "./pages/bancos";
 import { FondoList, FondoCreate, FondoEdit } from "./pages/fondos";
@@ -143,7 +143,7 @@ import { EmpresaEdit } from "./pages/empresa";
 import { GastoAprobacionList } from "./pages/propietario-gastos";
 import { PropietarioInicio } from "./pages/propietario-inicio";
 import { PropietarioCuentaShow } from "./pages/propietario-cuenta";
-import { PropietarioLiquidacionList } from "./pages/propietario-liquidaciones";
+import { PropietarioRendicionList } from "./pages/propietario-rendiciones";
 import { PropietarioUnidadList } from "./pages/propietario-unidades";
 import { PropietarioTransferenciaList } from "./pages/propietario-transferencias";
 import { SolicitudTransferenciaList, SolicitudesIcon } from "./pages/solicitudes-transferencia";
@@ -355,12 +355,12 @@ function App() {
                   },
                 },
                 {
-                  // Sin `list`: la liquidación no tiene entrada en el menú, se llega desde la cuenta corriente
+                  // Sin `list`: la rendición no tiene entrada en el menú, se llega desde la cuenta corriente
                   // del propietario (ver pages/cuentas-corrientes/show.tsx).
-                  name: "liquidaciones",
-                  show: "/administrador/liquidaciones/show/:id",
+                  name: "rendiciones",
+                  show: "/administrador/rendiciones/show/:id",
                   meta: {
-                    label: "Liquidaciones",
+                    label: "Rendiciones",
                     icon: <ContainerOutlined />,
                   },
                 },
@@ -514,11 +514,11 @@ function App() {
                   },
                 },
                 {
-                  name: "propietario/liquidaciones",
-                  list: "/propietario/liquidaciones",
-                  show: "/propietario/liquidaciones/show/:id",
+                  name: "propietario/rendiciones",
+                  list: "/propietario/rendiciones",
+                  show: "/propietario/rendiciones/show/:id",
                   meta: {
-                    label: "Liquidaciones",
+                    label: "Rendiciones",
                     icon: <FileTextOutlined />,
                   },
                 },
@@ -740,8 +740,8 @@ function App() {
                       <Route path="show/:id" element={<CuentaCorrienteShow />} />
                     </Route>
                     <Route path="solicitudes-transferencia" element={<SolicitudTransferenciaList />} />
-                    <Route path="liquidaciones">
-                      <Route path="show/:id" element={<LiquidacionShow />} />
+                    <Route path="rendiciones">
+                      <Route path="show/:id" element={<RendicionShow />} />
                     </Route>
                     <Route path="facturas-venta">
                       <Route path="show/:id" element={<FacturaVentaShow />} />
@@ -845,9 +845,9 @@ function App() {
                   >
                     <Route path="cuenta" element={<PropietarioCuentaShow />} />
                     <Route path="unidades" element={<PropietarioUnidadList />} />
-                    <Route path="liquidaciones">
-                      <Route index element={<PropietarioLiquidacionList />} />
-                      <Route path="show/:id" element={<LiquidacionShow prefijoPdf="propietario/" />} />
+                    <Route path="rendiciones">
+                      <Route index element={<PropietarioRendicionList />} />
+                      <Route path="show/:id" element={<RendicionShow prefijoPdf="propietario/" />} />
                     </Route>
                     <Route path="transferencias" element={<PropietarioTransferenciaList />} />
                     <Route path="gastos" element={<GastoAprobacionList />} />

@@ -5,29 +5,29 @@ import { App, Button, Space, Table, Tag, Tooltip } from "antd";
 import dayjs from "dayjs";
 import { Link } from "react-router";
 import { PageTitle } from "../../components/page-title";
-import { descargarPdfDeLiquidacion } from "../../utils/descargar";
+import { descargarPdfDeRendicion } from "../../utils/descargar";
 import { MontoCell } from "../cuentas-corrientes/movimientos-table";
-import { LIQUIDACION_ESTADO_LABEL, type LiquidacionResumen } from "../cuentas-corrientes/types";
+import { RENDICION_ESTADO_LABEL, type RendicionResumen } from "../cuentas-corrientes/types";
 
 const FORMATO_FECHA = "DD/MM/YYYY";
 
-/** Dice cuándo y por qué se anuló la liquidación, para el tooltip del estado. */
-const textoDeAnulacion = (liquidacion: LiquidacionResumen): string => {
-  const fecha = liquidacion.fecha_anulacion ? `el ${dayjs(liquidacion.fecha_anulacion).format(FORMATO_FECHA)}` : "";
-  return `Anulada ${fecha}: ${liquidacion.motivo_anulacion ?? ""}`.replace(/\s+/g, " ").trim();
+/** Dice cuándo y por qué se anuló la rendición, para el tooltip del estado. */
+const textoDeAnulacion = (rendicion: RendicionResumen): string => {
+  const fecha = rendicion.fecha_anulacion ? `el ${dayjs(rendicion.fecha_anulacion).format(FORMATO_FECHA)}` : "";
+  return `Anulada ${fecha}: ${rendicion.motivo_anulacion ?? ""}`.replace(/\s+/g, " ").trim();
 };
 
-// Liquidaciones del propietario, también las anuladas. Solo ve y descarga: el PDF está solo en las confirmadas.
-export const PropietarioLiquidacionList = () => {
+// Rendiciones del propietario, también las anuladas. Solo ve y descarga: el PDF está solo en las confirmadas.
+export const PropietarioRendicionList = () => {
   const { message } = App.useApp();
-  const { tableProps } = useTable<LiquidacionResumen>({ resource: "propietario/liquidaciones", syncWithLocation: true });
+  const { tableProps } = useTable<RendicionResumen>({ resource: "propietario/rendiciones", syncWithLocation: true });
   const [descargandoId, setDescargandoId] = useState<number>();
 
-  // Descargar el PDF de la liquidación, o mostrar por qué no se pudo.
-  const descargarPdf = async (liquidacion: LiquidacionResumen) => {
-    setDescargandoId(liquidacion.id);
+  // Descargar el PDF de la rendición, o mostrar por qué no se pudo.
+  const descargarPdf = async (rendicion: RendicionResumen) => {
+    setDescargandoId(rendicion.id);
     try {
-      await descargarPdfDeLiquidacion(liquidacion.id, liquidacion.corte, "propietario/");
+      await descargarPdfDeRendicion(rendicion.id, rendicion.corte, "propietario/");
     } catch (error) {
       message.error((error as { message?: string }).message ?? "No se pudo descargar el PDF.");
     } finally {
@@ -36,12 +36,12 @@ export const PropietarioLiquidacionList = () => {
   };
 
   return (
-    <List title={<PageTitle icon={<ContainerOutlined />}>Liquidaciones</PageTitle>}>
-      <Table<LiquidacionResumen> {...tableProps} rowKey="id" scroll={{ x: "max-content" }}>
+    <List title={<PageTitle icon={<ContainerOutlined />}>Rendiciones</PageTitle>}>
+      <Table<RendicionResumen> {...tableProps} rowKey="id" scroll={{ x: "max-content" }}>
         <Table.Column
           title="N.º"
           dataIndex="id"
-          render={(id: number) => <Link to={`/propietario/liquidaciones/show/${id}`}>N.º {id}</Link>}
+          render={(id: number) => <Link to={`/propietario/rendiciones/show/${id}`}>N.º {id}</Link>}
         />
         <Table.Column title="Corte" dataIndex="corte" render={(corte: string) => dayjs(corte).format(FORMATO_FECHA)} />
         <Table.Column title="Saldo anterior" dataIndex="saldo_anterior" align="right" render={(monto: string) => <MontoCell monto={monto} />} />
@@ -50,14 +50,14 @@ export const PropietarioLiquidacionList = () => {
         <Table.Column
           title="Estado"
           dataIndex="estado"
-          render={(estado: LiquidacionResumen["estado"], liquidacion: LiquidacionResumen) => (
+          render={(estado: RendicionResumen["estado"], rendicion: RendicionResumen) => (
             <Space size={4} wrap>
               {/* Explicar en el tooltip de la anulada cuándo y por qué se anuló. */}
-              <Tooltip title={estado === "ANULADA" ? textoDeAnulacion(liquidacion) : undefined}>
-                <Tag color={estado === "CONFIRMADA" ? "green" : "default"}>{LIQUIDACION_ESTADO_LABEL[estado]}</Tag>
+              <Tooltip title={estado === "ANULADA" ? textoDeAnulacion(rendicion) : undefined}>
+                <Tag color={estado === "CONFIRMADA" ? "green" : "default"}>{RENDICION_ESTADO_LABEL[estado]}</Tag>
               </Tooltip>
               <Tooltip title="Ver detalle">
-                <Link to={`/propietario/liquidaciones/show/${liquidacion.id}`}>
+                <Link to={`/propietario/rendiciones/show/${rendicion.id}`}>
                   <Button size="small" icon={<EyeOutlined />} />
                 </Link>
               </Tooltip>
@@ -67,8 +67,8 @@ export const PropietarioLiquidacionList = () => {
                   <Button
                     size="small"
                     icon={<FilePdfOutlined />}
-                    loading={descargandoId === liquidacion.id}
-                    onClick={() => descargarPdf(liquidacion)}
+                    loading={descargandoId === rendicion.id}
+                    onClick={() => descargarPdf(rendicion)}
                   />
                 </Tooltip>
               )}

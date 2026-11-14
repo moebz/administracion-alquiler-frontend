@@ -15,22 +15,22 @@ export const MontoCell = ({ monto }: { monto: string }) => (
 type Props = {
   movimientos: CuentaCorrienteMovimiento[] | undefined;
   loading?: boolean;
-  /** Agrega la columna "Liquidación", con el enlace al detalle de la que selló cada fila. */
-  mostrarLiquidacion?: boolean;
-  /** Arma el enlace de la columna "Liquidación"; por defecto va al detalle del panel interno. */
-  rutaLiquidacion?: (id: number) => string;
+  /** Agrega la columna "Rendición", con el enlace al detalle de la que selló cada fila. */
+  mostrarRendicion?: boolean;
+  /** Arma el enlace de la columna "Rendición"; por defecto va al detalle del panel interno. */
+  rutaRendicion?: (id: number) => string;
   pageSize?: number;
 };
 
-// Tabla de movimientos de una cuenta corriente, para el detalle de la cuenta, la vista previa de una liquidación y
-// la liquidación misma. Las líneas del mismo cargo, fecha, tipo y liquidación llegan juntas en una sola fila.
-const rutaLiquidacionDeAdmin = (id: number): string => `/administrador/liquidaciones/show/${id}`;
+// Tabla de movimientos de una cuenta corriente, para el detalle de la cuenta, la vista previa de una rendición y
+// la rendición misma. Las líneas del mismo cargo, fecha, tipo y rendición llegan juntas en una sola fila.
+const rutaRendicionDeAdmin = (id: number): string => `/administrador/rendiciones/show/${id}`;
 
 export const MovimientosTable = ({
   movimientos,
   loading,
-  mostrarLiquidacion = false,
-  rutaLiquidacion = rutaLiquidacionDeAdmin,
+  mostrarRendicion = false,
+  rutaRendicion = rutaRendicionDeAdmin,
   pageSize = 20,
 }: Props) => {
   const { data: permissions } = usePermissions<string[]>({});
@@ -73,12 +73,12 @@ export const MovimientosTable = ({
       />
       <Table.Column title="Monto" dataIndex="monto" align="right" render={(monto: string) => <MontoCell monto={monto} />} />
       <Table.Column title="Saldo" dataIndex="saldo" align="right" render={(saldo: string) => <MontoCell monto={saldo} />} />
-      {mostrarLiquidacion && (
+      {mostrarRendicion && (
         <Table.Column
-          title="Liquidación"
-          dataIndex="liquidacion_id"
-          render={(liquidacionId: number | null) =>
-            liquidacionId === null ? "—" : <Link to={rutaLiquidacion(liquidacionId)}>N.º {liquidacionId}</Link>
+          title="Rendición"
+          dataIndex="rendicion_id"
+          render={(rendicionId: number | null) =>
+            rendicionId === null ? "—" : <Link to={rutaRendicion(rendicionId)}>N.º {rendicionId}</Link>
           }
         />
       )}
