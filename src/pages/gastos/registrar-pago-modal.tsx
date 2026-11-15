@@ -166,7 +166,7 @@ export const RegistrarPagoModal = ({
               rules={[{ required: true }]}
               getValueProps={(value) => ({ value: value ? dayjs(value) : undefined })}
             >
-              <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />
+              <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" disabledDate={(dia) => dia.isAfter(dayjs(), "day")} />
             </Form.Item>
           </Col>
           <Col xs={24} md={16}>

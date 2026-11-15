@@ -136,6 +136,10 @@ const es = {
       "contratos-alquiler": "contrato de alquiler",
       titles: { list: "Contratos de alquiler" },
     },
+    "ingresos-egresos": {
+      "ingresos-egresos": "reporte de ingresos vs. egresos",
+      titles: { list: "Ingresos vs. egresos" },
+    },
     conceptos: {
       conceptos: "concepto de venta",
     },
