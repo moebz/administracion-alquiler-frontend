@@ -7,27 +7,23 @@ import dayjs from "dayjs";
 import { Link } from "react-router";
 import { FilterBar } from "../../components/filter-bar";
 import { PageTitle } from "../../components/page-title";
+import { columnasDeBaldes, MontoEnMoneda, PieDeTotales, type Moneda } from "../../components/reporte-de-antiguedad";
 import { kyInstance } from "../../providers/data";
 import { descargarArchivo } from "../../utils/descargar";
 import type { CargoDeudor } from "../cargos/types";
 import {
   armarEtiquetaDeMarca,
   armarTextoDeDocumentos,
-  formatearMontoEnMoneda,
   formatearOrigen,
   nombreDelPdfDeCuentasPorCobrar,
   rutaDelPdfDeCuentasPorCobrar,
 } from "./helpers";
 import {
-  BALDES_COLUMNAS,
-  type Baldes,
   type CuentasPorCobrarDeuda,
   type CuentasPorCobrarReporte,
   type FiltrosCuentasPorCobrar,
   type GrupoDeInquilino,
   type GrupoDePropietario,
-  type Moneda,
-  type TotalesDeMoneda,
 } from "./types";
 
 const FORMATO_FECHA = "DD/MM/YYYY";
@@ -36,62 +32,6 @@ const filtrarPorLabel = (input: string, option?: { label?: unknown }) =>
   String(option?.label ?? "")
     .toLowerCase()
     .includes(input.toLowerCase());
-
-// Un monto negativo (una NC a favor) se resalta.
-const MontoEnMoneda = ({ monto, moneda, fuerte = false }: { monto: string; moneda: Moneda; fuerte?: boolean }) => (
-  <Typography.Text strong={fuerte} type={Number(monto) < 0 ? "danger" : undefined}>
-    {formatearMontoEnMoneda(monto, moneda)}
-  </Typography.Text>
-);
-
-// Arma las columnas de antigüedad y el total de una tabla de resumen, para los grupos y para el pie de totales.
-const columnasDeBaldes = <T,>(moneda: (fila: T) => Moneda, baldes: (fila: T) => Baldes, total: (fila: T) => string) => [
-  ...BALDES_COLUMNAS.map(({ balde, titulo }) => ({
-    title: titulo,
-    key: balde,
-    align: "right" as const,
-    render: (_: unknown, fila: T) => <MontoEnMoneda monto={baldes(fila)[balde]} moneda={moneda(fila)} />,
-  })),
-  {
-    title: "Total",
-    key: "total",
-    align: "right" as const,
-    render: (_: unknown, fila: T) => <MontoEnMoneda fuerte monto={total(fila)} moneda={moneda(fila)} />,
-  },
-];
-
-// Fila de totales al pie de una tabla de resumen: una por moneda, porque nunca se suman monedas distintas.
-const PieDeTotales = ({
-  totales,
-  lado,
-  columnasAntes,
-}: {
-  totales: TotalesDeMoneda[];
-  lado: "inquilinos" | "propietarios";
-  columnasAntes: number;
-}) => (
-  <Table.Summary fixed>
-    {totales
-      .filter((total) => Number(total[lado].total) !== 0 || BALDES_COLUMNAS.some(({ balde }) => Number(total[lado].baldes[balde]) !== 0))
-      .map((total) => (
-        <Table.Summary.Row key={total.moneda.id}>
-          {/* Celda vacía bajo la columna del botón de expandir. */}
-          <Table.Summary.Cell index={0} />
-          <Table.Summary.Cell index={1} colSpan={columnasAntes}>
-            <Typography.Text strong>Total ({total.moneda.codigo})</Typography.Text>
-          </Table.Summary.Cell>
-          {BALDES_COLUMNAS.map(({ balde }, indice) => (
-            <Table.Summary.Cell key={balde} index={indice + 1 + columnasAntes} align="right">
-              <MontoEnMoneda monto={total[lado].baldes[balde]} moneda={total.moneda} />
-            </Table.Summary.Cell>
-          ))}
-          <Table.Summary.Cell index={BALDES_COLUMNAS.length + 1 + columnasAntes} align="right">
-            <MontoEnMoneda fuerte monto={total[lado].total} moneda={total.moneda} />
-          </Table.Summary.Cell>
-        </Table.Summary.Row>
-      ))}
-  </Table.Summary>
-);
 
 // Detalle de las deudas de un grupo. La del inquilino lleva Vence y Atraso; la del propietario no, porque no vence:
 // se compensa al transferirle.

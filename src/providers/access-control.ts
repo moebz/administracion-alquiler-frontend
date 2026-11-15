@@ -18,6 +18,7 @@ const RESOURCE_ALIAS: Record<string, string> = {
   // Las solicitudes de transferencia se ven con el permiso de ver las rendiciones.
   "solicitudes-transferencia": "rendiciones",
   "cuentas-por-cobrar": "cuentas_por_cobrar",
+  "cuentas-por-pagar": "cuentas_por_pagar",
 };
 
 // roles y las pantallas propias de la sección propietario se gatean con un
@@ -54,7 +55,7 @@ const CATALOGOS_CHILDREN = ["bancos", "fondos", "medios-pago", "conceptos", "tip
 const FACTURACION_CHILDREN = ["establecimientos", "puntos-expedicion", "timbrados", "empresa"];
 
 // Mismo criterio, para el agrupador "Reportes".
-const REPORTES_CHILDREN = ["cuentas-por-cobrar"];
+const REPORTES_CHILDREN = ["cuentas-por-cobrar", "cuentas-por-pagar"];
 
 const GROUP_CHILDREN: Record<string, string[]> = {
   catalogos: CATALOGOS_CHILDREN,
@@ -129,6 +130,7 @@ const RESOURCES_WITH_PERMISSIONS = new Set([
   "rendiciones",
   "solicitudes-transferencia",
   "cuentas-por-cobrar",
+  "cuentas-por-pagar",
   "establecimientos",
   "puntos-expedicion",
   "timbrados",

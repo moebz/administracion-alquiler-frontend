@@ -1,7 +1,6 @@
 import dayjs from "dayjs";
-import { formatMonto } from "../../utils/monto";
 import { cargoMarcaLabel, type CargoDeudor, type CargoMarca } from "../cargos/types";
-import type { DocumentosDeDeuda, FiltrosCuentasPorCobrar, Moneda } from "./types";
+import type { DocumentosDeDeuda, FiltrosCuentasPorCobrar } from "./types";
 
 /** Arma el nombre del PDF; es el mismo que arma `nombreDeArchivo()` del backend. `hoy` es YYYY-MM-DD. */
 export const nombreDelPdfDeCuentasPorCobrar = (hoy: string): string => `cuentas-por-cobrar-${hoy}.pdf`;
@@ -48,20 +47,6 @@ export const armarEtiquetaDeMarca = (marca: CargoMarca, deudor: CargoDeudor): st
   }
 
   return cargoMarcaLabel(marca, deudor);
-};
-
-/** Da formato a un monto en la moneda de su deuda: los guaraníes como en el resto de la app. */
-export const formatearMontoEnMoneda = (monto: string | number, moneda: Moneda): string => {
-  if (moneda.codigo === "PYG") {
-    return formatMonto(monto);
-  }
-
-  return Number(monto).toLocaleString("es-PY", {
-    style: "currency",
-    currency: moneda.codigo,
-    minimumFractionDigits: moneda.decimales,
-    maximumFractionDigits: moneda.decimales,
-  });
 };
 
 /** Arma el origen de una deuda: su período MM/YYYY o, si no tiene período, su fecha DD/MM/YYYY. */

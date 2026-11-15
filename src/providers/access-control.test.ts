@@ -129,6 +129,10 @@ describe("requiredPermission", () => {
     expect(requiredPermission("cuentas-por-cobrar", "list")).toBe("cuentas_por_cobrar.ver");
     expect(requiredPermission("reportes", "list")).toBe("acceso.administrador");
   });
+
+  it("resuelve cuentas-por-pagar a su permiso propio", () => {
+    expect(requiredPermission("cuentas-por-pagar", "list")).toBe("cuentas_por_pagar.ver");
+  });
 });
 
 describe("canAccessResource", () => {
@@ -194,10 +198,18 @@ describe("canAccessResource", () => {
     expect(canAccessResource(["acceso.administrador", "cobros.ver", "cuenta_corriente.ver"], "cuentas-por-cobrar", "list")).toBe(false);
   });
 
+  it("permite cuentas-por-pagar solo con acceso.administrador y su permiso propio, sin reusar pagos ni cuenta corriente ni el de cuentas por cobrar", () => {
+    expect(canAccessResource(["acceso.administrador", "cuentas_por_pagar.ver"], "cuentas-por-pagar", "list")).toBe(true);
+    expect(canAccessResource(["cuentas_por_pagar.ver"], "cuentas-por-pagar", "list")).toBe(false);
+    expect(canAccessResource(["acceso.administrador", "pagos.ver", "cuenta_corriente.ver"], "cuentas-por-pagar", "list")).toBe(false);
+    expect(canAccessResource(["acceso.administrador", "cuentas_por_cobrar.ver"], "cuentas-por-pagar", "list")).toBe(false);
+  });
+
   it("permite el agrupador reportes solo con acceso.administrador y el permiso de algun reporte", () => {
     expect(canAccessResource(["acceso.administrador", "cobros.ver"], "reportes", "list")).toBe(false);
     expect(canAccessResource(["cuentas_por_cobrar.ver"], "reportes", "list")).toBe(false);
     expect(canAccessResource(["acceso.administrador", "cuentas_por_cobrar.ver"], "reportes", "list")).toBe(true);
+    expect(canAccessResource(["acceso.administrador", "cuentas_por_pagar.ver"], "reportes", "list")).toBe(true);
   });
 
   it("un resource de la seccion propietario pide el acceso de esa seccion, no el de administrador", () => {

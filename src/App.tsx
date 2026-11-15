@@ -31,6 +31,7 @@ import {
   KeyOutlined,
   BarChartOutlined,
   FundOutlined,
+  PayCircleOutlined,
 } from "@ant-design/icons";
 import { Refine, Authenticated, CanAccess, useGetIdentity } from "@refinedev/core";
 import { RefineKbar, RefineKbarProvider } from "@refinedev/kbar";
@@ -95,6 +96,7 @@ import { PagoProveedorList, PagoProveedorShow } from "./pages/pagos-proveedor";
 import { CobroList, CobroShow } from "./pages/cobros";
 import { CuentaCorrienteList, CuentaCorrienteShow } from "./pages/cuentas-corrientes";
 import { CuentasPorCobrarList } from "./pages/cuentas-por-cobrar";
+import { CuentasPorPagarList } from "./pages/cuentas-por-pagar";
 import { RendicionShow } from "./pages/rendiciones";
 import { FacturaVentaShow } from "./pages/facturas-venta";
 import { BancoList, BancoCreate, BancoEdit } from "./pages/bancos";
@@ -503,6 +505,16 @@ function App() {
                   },
                 },
                 {
+                  // Solo lectura: se arma al pedirlo, no tiene alta ni edición. El reporte y su PDF salen de /reportes/cuentas-por-pagar.
+                  name: "cuentas-por-pagar",
+                  list: "/administrador/cuentas-por-pagar",
+                  meta: {
+                    label: "Cuentas por pagar",
+                    icon: <PayCircleOutlined />,
+                    parent: "reportes",
+                  },
+                },
+                {
                   name: "catalogos",
                   meta: {
                     label: "Catálogos",
@@ -771,6 +783,7 @@ function App() {
                     </Route>
                     <Route path="solicitudes-transferencia" element={<SolicitudTransferenciaList />} />
                     <Route path="cuentas-por-cobrar" element={<CuentasPorCobrarList />} />
+                    <Route path="cuentas-por-pagar" element={<CuentasPorPagarList />} />
                     <Route path="rendiciones">
                       <Route path="show/:id" element={<RendicionShow />} />
                     </Route>
