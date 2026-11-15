@@ -24,7 +24,8 @@ test.describe("login", () => {
     await loginViaUi(page, SEED_ADMIN_EMAIL, SEED_PASSWORD);
 
     await expect(page).toHaveURL(/\/administrador\/home/);
-    await expect(page.getByText(/administrador/i)).toBeVisible();
+    // El home del administrador es el dashboard: verificar que se muestra una de sus tarjetas.
+    await expect(page.getByText("Morosidad", { exact: true })).toBeVisible();
   });
 
   test("password incorrecta muestra un error generico", async ({ page }) => {

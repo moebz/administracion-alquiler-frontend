@@ -65,6 +65,7 @@ import { authProvider } from "./providers/auth";
 import { accessControlProvider } from "./providers/access-control";
 import { i18nProvider } from "./providers/i18n";
 import { RoleHome } from "./pages/role-home";
+import { Dashboard } from "./pages/dashboard";
 import { SectionRoute } from "./components/section-route";
 import { RoleBasedIndex } from "./components/role-based-index";
 import type { Identity } from "./providers/identity";
@@ -156,12 +157,16 @@ import { PropietarioUnidadList } from "./pages/propietario-unidades";
 import { PropietarioTransferenciaList } from "./pages/propietario-transferencias";
 import { SolicitudTransferenciaList, SolicitudesIcon } from "./pages/solicitudes-transferencia";
 
-// Home de cada sección. El propietario con cuenta_corriente.ver_propia ve su inicio; el resto, el home de prueba.
+// Home de cada sección. El administrador ve el dashboard y el propietario con cuenta_corriente.ver_propia su inicio; el resto, el home de prueba.
 const HomeDeSeccion = ({ section }: { section: Section }) => {
   const { data: identity } = useGetIdentity<Identity>();
 
   if (section === "propietario" && identity?.permissions.includes("cuenta_corriente.ver_propia")) {
     return <PropietarioInicio />;
+  }
+
+  if (section === "administrador") {
+    return <Dashboard />;
   }
 
   return <RoleHome section={section} />;
