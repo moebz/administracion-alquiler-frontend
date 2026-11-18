@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   armarTextoDelPeriodo,
+  armarTextoDelPlazo,
+  armarTextoDeIngresosYEgresos,
   armarTextoDeContratosMorosos,
   armarTextoDeMontos,
   armarTextoDeSolicitudes,
@@ -22,11 +24,19 @@ const morosidad = (datos: Partial<Morosidad>): Morosidad => ({
   contratos_morosos: 1,
   porcentaje: 50,
   monto_vencido: [{ moneda: pyg, monto: "1000000.0000" }],
-  terminados: { contratos: 0, monto_vencido: [{ moneda: pyg, monto: "0.0000" }] },
+  terminados: {
+    contratos: 0,
+    monto_vencido: [{ moneda: pyg, monto: "0.0000" }],
+  },
   ...datos,
 });
 
-const ocupacion = (datos: Partial<Ocupacion>): Ocupacion => ({ unidades: 3, alquiladas: 1, porcentaje: 33.3, ...datos });
+const ocupacion = (datos: Partial<Ocupacion>): Ocupacion => ({
+  unidades: 3,
+  alquiladas: 1,
+  porcentaje: 33.3,
+  ...datos,
+});
 
 describe("hayIndicadores", () => {
   it("es falso si la respuesta viene vacia", () => {
@@ -69,22 +79,38 @@ describe("armarTextoDeContratosMorosos", () => {
 
   it("usa el singular con un solo contrato vigente", () => {
     expect(armarTextoDeContratosMorosos(morosidad({ contratos_vigentes: 1, contratos_morosos: 0 }))).toBe(
-      "0 de 1 contrato vigente con deuda vencida",
+      "0 de 1 contrato vigente con deuda vencida"
     );
   });
 
   it("devuelve null sin contratos vigentes", () => {
-    expect(armarTextoDeContratosMorosos(morosidad({ contratos_vigentes: 0, contratos_morosos: 0, porcentaje: null }))).toBeNull();
+    expect(
+      armarTextoDeContratosMorosos(
+        morosidad({
+          contratos_vigentes: 0,
+          contratos_morosos: 0,
+          porcentaje: null,
+        })
+      )
+    ).toBeNull();
   });
 });
 
 describe("armarTextoDeTerminados", () => {
   it("devuelve null si ningun contrato terminado debe algo vencido", () => {
-    expect(armarTextoDeTerminados({ contratos: 0, monto_vencido: [{ moneda: pyg, monto: "0.0000" }] })).toBeNull();
+    expect(
+      armarTextoDeTerminados({
+        contratos: 0,
+        monto_vencido: [{ moneda: pyg, monto: "0.0000" }],
+      })
+    ).toBeNull();
   });
 
   it("nombra la cantidad de contratos y el monto vencido", () => {
-    const texto = armarTextoDeTerminados({ contratos: 2, monto_vencido: [{ moneda: pyg, monto: "700000.0000" }] });
+    const texto = armarTextoDeTerminados({
+      contratos: 2,
+      monto_vencido: [{ moneda: pyg, monto: "700000.0000" }],
+    });
 
     expect(texto).toContain("2 contratos terminados con deuda vencida: ");
     expect(texto).toContain("700.000");
@@ -132,21 +158,88 @@ describe("armarTextoDeMontos", () => {
 
 describe("armarTextoDeSolicitudes", () => {
   it("avisa que no hay ninguna pendiente", () => {
-    expect(armarTextoDeSolicitudes(0)).toBe("Ninguna solicitud pendiente");
+    expect(
+      armarTextoDeSolicitudes({
+        cantidad: 0,
+        montos: [{ moneda: pyg, monto: "0.0000" }],
+      })
+    ).toBe("Ninguna pendiente");
   });
 
-  it("usa el singular con una", () => {
-    expect(armarTextoDeSolicitudes(1)).toBe("1 solicitud pendiente");
-  });
+  it("dice cuanto suman cuando hay pendientes", () => {
+    const texto = armarTextoDeSolicitudes({
+      cantidad: 3,
+      montos: [{ moneda: pyg, monto: "700000.0000" }],
+    });
 
-  it("usa el plural con varias", () => {
-    expect(armarTextoDeSolicitudes(3)).toBe("3 solicitudes pendientes");
+    expect(texto).toContain("Suman ");
+    expect(texto).toContain("700.000");
   });
 });
 
 describe("armarTextoSinContratosPorTerminar", () => {
   it("nombra el plazo", () => {
-    expect(armarTextoSinContratosPorTerminar(60)).toBe("Ningún contrato termina en los próximos 60 días");
+    expect(armarTextoSinContratosPorTerminar(60)).toBe("Ninguno en los próximos 60 días");
+  });
+});
+
+describe("armarTextoDelPlazo", () => {
+  it("nombra los dias del plazo", () => {
+    expect(armarTextoDelPlazo(60)).toBe("Próximos 60 días");
+  });
+});
+
+describe("armarTextoDeIngresosYEgresos", () => {
+  it("junta ingresos y egresos de la moneda", () => {
+    const texto = armarTextoDeIngresosYEgresos({
+      ingresos: [{ moneda: pyg, monto: "600000.0000" }],
+      egresos: [{ moneda: pyg, monto: "200000.0000" }],
+    });
+
+    expect(texto).toContain("Ingresos ");
+    expect(texto).toContain("600.000");
+    expect(texto).toContain(" · Egresos ");
+    expect(texto).toContain("200.000");
+  });
+
+  it("muestra ceros en guaranies si no hubo movimientos", () => {
+    const texto = armarTextoDeIngresosYEgresos({
+      ingresos: [{ moneda: pyg, monto: "0.0000" }],
+      egresos: [{ moneda: pyg, monto: "0.0000" }],
+    });
+
+    expect(texto).toMatch(/^Ingresos .*0 · Egresos .*0$/);
+  });
+
+  it("arma un grupo por cada moneda con movimientos", () => {
+    const texto = armarTextoDeIngresosYEgresos({
+      ingresos: [
+        { moneda: pyg, monto: "1000.0000" },
+        { moneda: usd, monto: "150.0000" },
+      ],
+      egresos: [
+        { moneda: pyg, monto: "0.0000" },
+        { moneda: usd, monto: "0.0000" },
+      ],
+    });
+
+    expect(texto).toContain(" / ");
+  });
+
+  it("no muestra la moneda sin movimientos si otra los tuvo", () => {
+    const texto = armarTextoDeIngresosYEgresos({
+      ingresos: [
+        { moneda: pyg, monto: "0.0000" },
+        { moneda: usd, monto: "150.0000" },
+      ],
+      egresos: [
+        { moneda: pyg, monto: "0.0000" },
+        { moneda: usd, monto: "50.0000" },
+      ],
+    });
+
+    expect(texto).not.toContain(" / ");
+    expect(texto).toContain("150");
   });
 });
 

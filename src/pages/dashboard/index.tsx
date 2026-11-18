@@ -2,14 +2,17 @@ import { useEffect, useState, type ReactNode } from "react";
 import { HomeOutlined } from "@ant-design/icons";
 import { List } from "@refinedev/antd";
 import { usePermissions } from "@refinedev/core";
-import { App, Card, Col, Empty, Row, Space, Statistic, theme, Typography } from "antd";
+import { App, Card, Col, Empty, Flex, Progress, Row, Space, Statistic, theme, Typography } from "antd";
 import dayjs from "dayjs";
 import { Link } from "react-router";
 import { PageTitle } from "../../components/page-title";
 import { formatearMontoEnMoneda } from "../../components/reporte-de-antiguedad";
+import { formatPorcentaje } from "../../utils/porcentaje";
 import { kyInstance } from "../../providers/data";
 import {
   armarTextoDelPeriodo,
+  armarTextoDelPlazo,
+  armarTextoDeIngresosYEgresos,
   armarTextoDeContratosMorosos,
   armarTextoDeMontos,
   armarTextoDeSolicitudes,
@@ -51,15 +54,29 @@ const MontosPorMoneda = ({ montos, resaltarNegativo = false }: { montos: MontoPo
   );
 };
 
+// Dona con el porcentaje de hoy en el centro, a la izquierda, y los textos de apoyo a la derecha.
+const TarjetaConDona = ({ porcentaje, color, children }: { porcentaje: number; color: string; children: ReactNode }) => (
+  <Flex align="center" gap={16}>
+    <Progress type="circle" percent={porcentaje} strokeColor={color} size={120} format={() => formatPorcentaje(porcentaje)} />
+    <div>{children}</div>
+  </Flex>
+);
+
 // Contratos vigentes que terminan pronto: unidad, inquilino y fecha de fin; el contrato es un link si se puede editar.
 const ContratosQueTerminan = ({ indicador, puedeEditar }: { indicador: ContratosPorTerminar; puedeEditar: boolean }) => {
-  // Avisar que no hay ninguno en el plazo.
+  // Avisar que no hay ninguno en el plazo, con el mismo formato que las demás tarjetas: valor grande y línea gris.
   if (indicador.contratos.length === 0) {
-    return <Typography.Text type="secondary">{armarTextoSinContratosPorTerminar(indicador.dias)}</Typography.Text>;
+    return (
+      <>
+        <Statistic value={0} />
+        <Typography.Text type="secondary">{armarTextoSinContratosPorTerminar(indicador.dias)}</Typography.Text>
+      </>
+    );
   }
 
   return (
     <Space direction="vertical" size={8} style={{ width: "100%" }}>
+      <Typography.Text type="secondary">{armarTextoDelPlazo(indicador.dias)}</Typography.Text>
       {indicador.contratos.map((contrato) => (
         <div key={contrato.id}>
           {puedeEditar ? (
@@ -86,6 +103,7 @@ export const Dashboard = () => {
   const { data: permissions } = usePermissions<string[]>({});
   const [datos, setDatos] = useState<DashboardDatos>();
   const [cargando, setCargando] = useState(true);
+  const { token } = theme.useToken();
 
   useEffect(() => {
     let vigente = true;
@@ -119,7 +137,14 @@ export const Dashboard = () => {
   }
 
   const indicadores = datos ?? {};
-  const { morosidad, ocupacion, fondos, neto_del_mes: netoDelMes, solicitudes_pendientes: solicitudes, contratos_por_terminar: contratos } = indicadores;
+  const {
+    morosidad,
+    ocupacion,
+    fondos,
+    neto_del_mes: netoDelMes,
+    solicitudes_pendientes: solicitudes,
+    contratos_por_terminar: contratos,
+  } = indicadores;
   const textoDeContratosMorosos = morosidad && armarTextoDeContratosMorosos(morosidad);
   const textoDeTerminados = morosidad && armarTextoDeTerminados(morosidad.terminados);
   const textoDeUnidades = ocupacion && armarTextoDeUnidades(ocupacion);
@@ -132,10 +157,22 @@ export const Dashboard = () => {
       <Row gutter={[16, 16]}>
         {morosidad && (
           <Tarjeta titulo="Morosidad" enlace={armarEnlace("cuentas_por_cobrar.ver", "/administrador/cuentas-por-cobrar")}>
-            <Statistic value={armarValorDeMorosidad(morosidad)} />
-            {textoDeContratosMorosos && <div>{textoDeContratosMorosos}</div>}
-            {morosidad.contratos_morosos > 0 && <Typography.Text strong>Vencido: {armarTextoDeMontos(morosidad.monto_vencido)}</Typography.Text>}
-            {textoDeTerminados && (
+            {/* Sin contratos vigentes no hay porcentaje: mostrar el texto vacío en vez de la dona. */}
+            {morosidad.porcentaje === null ? (
+              <Statistic value={armarValorDeMorosidad(morosidad)} />
+            ) : (
+              <TarjetaConDona porcentaje={morosidad.porcentaje} color={token.colorError}>
+                <Space direction="vertical" size={4}>
+                  {textoDeContratosMorosos && <Typography.Text type="secondary">{textoDeContratosMorosos}</Typography.Text>}
+                  {morosidad.contratos_morosos > 0 && (
+                    <Typography.Text type="secondary">Vencido: {armarTextoDeMontos(morosidad.monto_vencido)}</Typography.Text>
+                  )}
+                  {textoDeTerminados && <Typography.Text type="secondary">{textoDeTerminados}</Typography.Text>}
+                </Space>
+              </TarjetaConDona>
+            )}
+            {/* Con la dona ausente, los textos de apoyo igual van debajo del texto vacío. */}
+            {morosidad.porcentaje === null && textoDeTerminados && (
               <div style={{ marginTop: 8 }}>
                 <Typography.Text type="secondary">{textoDeTerminados}</Typography.Text>
               </div>
@@ -145,14 +182,20 @@ export const Dashboard = () => {
 
         {ocupacion && (
           <Tarjeta titulo="Ocupación" enlace={armarEnlace("unidades.ver", "/administrador/unidades")}>
-            <Statistic value={armarValorDeOcupacion(ocupacion)} />
-            {textoDeUnidades && <Typography.Text type="secondary">{textoDeUnidades}</Typography.Text>}
+            {/* Sin unidades no hay porcentaje: mostrar el texto vacío en vez de la dona. */}
+            {ocupacion.porcentaje === null ? (
+              <Statistic value={armarValorDeOcupacion(ocupacion)} />
+            ) : (
+              <TarjetaConDona porcentaje={ocupacion.porcentaje} color={token.colorPrimary}>
+                {textoDeUnidades && <Typography.Text type="secondary">{textoDeUnidades}</Typography.Text>}
+              </TarjetaConDona>
+            )}
           </Tarjeta>
         )}
 
         {fondos && (
           // El link va al listado de fondos, que pide fondos.ver además de fondos.ver_saldo.
-          <Tarjeta titulo="Plata en los fondos" enlace={armarEnlace("fondos.ver", "/administrador/fondos")}>
+          <Tarjeta titulo="Saldo en fondos" enlace={armarEnlace("fondos.ver", "/administrador/fondos")}>
             <MontosPorMoneda montos={fondos.montos} />
           </Tarjeta>
         )}
@@ -160,22 +203,22 @@ export const Dashboard = () => {
         {netoDelMes && (
           <Tarjeta titulo="Neto del mes" enlace={armarEnlace("ingresos_egresos.ver", "/administrador/ingresos-egresos")}>
             <MontosPorMoneda montos={netoDelMes.montos} resaltarNegativo />
+            <div>
+              <Typography.Text type="secondary">{armarTextoDeIngresosYEgresos(netoDelMes)}</Typography.Text>
+            </div>
             <Typography.Text type="secondary">{armarTextoDelPeriodo(netoDelMes.desde, netoDelMes.hasta)}</Typography.Text>
           </Tarjeta>
         )}
 
         {solicitudes && (
-          <Tarjeta titulo="Solicitudes de transferencia pendientes" enlace={armarEnlace("rendiciones.ver", "/administrador/solicitudes-transferencia")}>
-            <Statistic value={armarTextoDeSolicitudes(solicitudes.cantidad)} />
-            {solicitudes.cantidad > 0 && <Typography.Text type="secondary">Suman {armarTextoDeMontos(solicitudes.montos)}</Typography.Text>}
+          <Tarjeta titulo="Transferencias pendientes" enlace={armarEnlace("rendiciones.ver", "/administrador/solicitudes-transferencia")}>
+            <Statistic value={solicitudes.cantidad} />
+            <Typography.Text type="secondary">{armarTextoDeSolicitudes(solicitudes)}</Typography.Text>
           </Tarjeta>
         )}
 
         {contratos && (
-          <Tarjeta
-            titulo={`Contratos que terminan en los próximos ${contratos.dias} días`}
-            enlace={armarEnlace("contratos_alquiler.ver", "/administrador/contratos-alquiler")}
-          >
+          <Tarjeta titulo="Contratos por terminar" enlace={armarEnlace("contratos_alquiler.ver", "/administrador/contratos-alquiler")}>
             <ContratosQueTerminan indicador={contratos} puedeEditar={permissions?.includes("contratos_alquiler.editar") ?? false} />
           </Tarjeta>
         )}

@@ -30,10 +30,18 @@ export type NetoDelMes = {
   desde: string;
   /** Hoy, YYYY-MM-DD. */
   hasta: string;
+  /** Neto por moneda: ingresos − egresos. */
   montos: MontoPorMoneda[];
+  /** Σ de los movimientos con monto positivo. */
+  ingresos: MontoPorMoneda[];
+  /** Σ del valor absoluto de los movimientos con monto negativo. */
+  egresos: MontoPorMoneda[];
 };
 
-export type SolicitudesPendientes = { cantidad: number; montos: MontoPorMoneda[] };
+export type SolicitudesPendientes = {
+  cantidad: number;
+  montos: MontoPorMoneda[];
+};
 
 export type ContratoPorTerminar = {
   id: number;
@@ -43,7 +51,10 @@ export type ContratoPorTerminar = {
   fecha_fin: string;
 };
 
-export type ContratosPorTerminar = { dias: number; contratos: ContratoPorTerminar[] };
+export type ContratosPorTerminar = {
+  dias: number;
+  contratos: ContratoPorTerminar[];
+};
 
 /** Respuesta de `GET /dashboard`: solo trae los indicadores que el usuario tiene permitidos. */
 export type DashboardDatos = {
